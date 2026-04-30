@@ -22,6 +22,9 @@ hooks/scripts/*.js           — Hook implementation scripts
 
 ## Key Conventions
 
+- Ollama invocation pattern: `ollama launch claude --model <model> --yes -- -p "prompt"`. The `--yes` flag is required for headless use. The `--` separates ollama flags from Claude Code flags. `-p` is Claude Code's print mode.
+- When interpolating git diffs into `-p` arguments, use heredoc (`cat <<'EOFPROMPT'...EOFPROMPT`) to avoid shell metacharacter injection from diff content.
+- Use `grep -o` not `grep -oP` — the `-P` (Perl regex) flag is not supported by macOS stock BSD grep.
 - Agent model is declared in frontmatter (`model: opus`, `model: haiku`). Use `opus` for complex analysis, `haiku` for lightweight forwarding.
 - Agent color tags in frontmatter control status line display during parallel execution.
 - Skills declare `triggers:` for natural language activation and `arguments:` for flag-based invocation.
@@ -38,3 +41,7 @@ No build step or test suite. Validate changes by:
 ## Plugin Manifest
 
 Changes to skill/agent/hook registration must be reflected in `.claude-plugin/plugin.json`.
+
+## External Config
+
+- `~/.claude/pza-ollama-model` — User's chosen Ollama model (written by `/ollama-setup`, read by all Ollama-powered skills). Fallback default: `kimi-k2.6:cloud`.
