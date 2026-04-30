@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "name": "pza-skills",
+      "description": "Code review, plan verification, hook auditing, and session file tracking.",
+      "source": "./"
+    }
+  ]
+}

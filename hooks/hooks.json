@@ -1,0 +1,14 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"$CLAUDE_PLUGIN_ROOT/hooks/scripts/track-session-files.js\"",
+          "timeout": 5
+        }
+      ]
+    }
+  ]
+}
