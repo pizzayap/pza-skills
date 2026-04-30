@@ -1,16 +1,19 @@
 ---
-name: codex-review
+name: ollama-review
 description: >-
-  Run a Codex code review with smart fallback. Reviews uncommitted changes when
-  dirty; falls back to HEAD~1..HEAD when clean. Supports --wait and --background.
+  Run an Ollama-powered code review with smart fallback. Reviews uncommitted changes
+  when dirty; falls back to HEAD~1..HEAD when clean. Supports --wait and --background.
 user-invocable: true
 argument-hint: '[--wait|--background]'
 ---
 
-# Codex Review with Fallback
+# Ollama Review with Fallback
 
-Companion script path:
-!`ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1`
+Ollama available:
+!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+
+Ollama model:
+!`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Arguments:
 `$ARGUMENTS`
@@ -18,16 +21,16 @@ Arguments:
 ## Core Constraint
 
 - This is a **review-only** command. Do not fix issues, apply patches, or suggest you are about to make changes.
-- Your only job is to run the review and return Codex's output verbatim.
-- The actual review is performed by Codex (GPT model), not Claude. Claude only determines which scope to use.
+- Your only job is to run the review and return the output verbatim.
+- The actual review is performed by an Ollama model (shown above), not Claude. Claude only determines which scope to use and runs the command.
 
 ## Pre-check
 
-If the companion script path above resolves to nothing (empty output), tell the user:
+If the Ollama availability check above shows "no", tell the user:
 
-> "Codex companion script not found. Is the openai-codex plugin installed? Run `/codex:setup` to configure it."
+> "Ollama is not installed. Install it from https://ollama.com and run `/ollama-setup` to configure."
 
-**Stop here** — do not attempt further steps without a valid companion script path.
+**Stop here** — do not attempt further steps without Ollama installed.
 
 ## Step 1 — Determine Review Scope
 
@@ -50,10 +53,16 @@ Evaluate the results:
 
 ### If working tree is dirty (has uncommitted changes)
 
-Use **working-tree** scope. The companion script will review all uncommitted changes.
+Use **working-tree** scope. Gather the diff and send it to the Ollama model (from Session Context above) for review:
 
 ```bash
-node "<companion-script-path>" review --scope auto
+DIFF=$(git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | while read f; do echo "=== NEW FILE: $f ==="; cat "$f" 2>/dev/null; done)
+ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
+You are a code reviewer. Review the following uncommitted changes for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
+EOFPROMPT
+)
+
+$DIFF"
 ```
 
 ### If working tree is clean (no uncommitted changes)
@@ -80,7 +89,13 @@ git diff --quiet HEAD~1 HEAD 2>/dev/null; echo "diff_exit=$?"
 - If `diff_exit=1` (there IS a diff): run the review against the last commit:
 
 ```bash
-node "<companion-script-path>" review --base HEAD~1
+DIFF=$(git diff HEAD~1 HEAD 2>/dev/null)
+ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
+You are a code reviewer. Review the following committed changes (HEAD~1..HEAD) for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
+EOFPROMPT
+)
+
+$DIFF"
 ```
 
 - If `diff_exit=0` (empty diff — e.g. merge commit with no changes): tell the user:
@@ -95,13 +110,13 @@ Determine how to run the review based on the user's arguments:
 
 ### If arguments include `--wait`
 
-Run the review command in the **foreground**. Do not ask the user. Include `--wait` in the companion script arguments.
+Run the review command in the **foreground**. Do not ask the user.
 
 ### If arguments include `--background`
 
-Run the review command in the **background** using `Bash(run_in_background: true)`. Do not ask the user. Note: `--background` is a signal to the agent about execution mode — the companion script always runs reviews in foreground; background mode is achieved by Claude's Bash tool. After launching, tell the user:
+Run the review command in the **background** using `Bash(run_in_background: true)`. Do not ask the user. After launching, tell the user:
 
-> "Codex review started in the background. Check `/codex:status` for progress."
+> "Ollama review started in the background. You'll be notified when it completes."
 
 ### Otherwise (no explicit mode)
 
@@ -118,12 +133,12 @@ Estimate the review size before asking:
 Then use **AskUserQuestion** exactly once with two options, putting the recommended option first and suffixing its label with `(Recommended)`:
 
 ```yaml
-question: "How should we run the Codex review?"
+question: "How should we run the Ollama review?"
 options:
   - label: "Wait for results"
     description: "Run the review in the foreground and wait for completion"
   - label: "Run in background (Recommended)"
-    description: "Launch the review in the background; check /codex:status for progress"
+    description: "Launch the review in the background; you'll be notified when it completes"
 ```
 
 If the user chooses "Wait for results", run the command in the foreground.
@@ -133,7 +148,7 @@ If the user chooses "Run in background", run with `Bash(run_in_background: true)
 
 ### Foreground flow
 
-- Run the companion script command determined in Step 1 (with appropriate flags from Step 2).
+- Run the Ollama review command determined in Step 1 (with appropriate execution from Step 2).
 - Return the command stdout **verbatim**, exactly as-is.
 - Do not paraphrase, summarize, or add commentary before or after it.
 - Do not fix any issues mentioned in the review output.
@@ -141,4 +156,4 @@ If the user chooses "Run in background", run with `Bash(run_in_background: true)
 ### Background flow
 
 - Launch the command with `Bash(run_in_background: true)`.
-- After launching, tell the user: "Codex review started in the background. Check `/codex:status` for progress."
+- After launching, tell the user: "Ollama review started in the background. You'll be notified when it completes."

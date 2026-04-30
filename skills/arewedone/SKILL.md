@@ -4,7 +4,7 @@ description: >-
   Run when the user says "are we done", "review my changes", or "check
   completeness", or after implementing features, refactoring code, or making
   significant modifications. Launches structural completeness review, code
-  standards review, AND Codex code review in parallel, then synthesizes findings.
+  standards review, AND Ollama code review in parallel, then synthesizes findings.
 user-invocable: true
 ---
 
@@ -16,8 +16,11 @@ Session-tracked files (this session only):
 Changed files summary (session-scoped):
 !`if [ -f "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" ]; then FILES=$(cat "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" | node -e "console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).join(' '))"); git diff --stat -- $FILES 2>/dev/null || echo "No git diff available"; else git diff --stat; fi`
 
-Codex companion script:
-!`ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1`
+Ollama available:
+!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+
+Ollama model:
+!`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 # Workflow
 
@@ -41,25 +44,37 @@ Provide context about what files changed (shown above). This agent verifies:
 - No style violations, anti-patterns, or best-practice issues
 - Code quality meets project standards
 
-### Agent C: Codex Code Review (general-purpose agent)
+### Agent C: Ollama Code Review (general-purpose agent)
 
-Launch a **general-purpose** agent that runs the Codex code review against the current git state. Include the companion script path from the session context above in the agent prompt.
+Launch a **general-purpose** agent that runs an Ollama-powered code review against the current git state. Include the Ollama model name from the session context above in the agent prompt.
 
 The agent's prompt should instruct it to:
 
-1. **Determine review scope** by checking for uncommitted changes:
+1. **Check Ollama availability**:
+   ```bash
+   which ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
+   ```
+   If not available, report "Ollama review skipped — Ollama is not installed." and stop.
+
+2. **Determine review scope** by checking for uncommitted changes:
    ```bash
    git diff --cached --quiet 2>/dev/null; echo "staged=$?"
    git diff --quiet 2>/dev/null; echo "unstaged=$?"
    [ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ] && echo "untracked=yes" || echo "untracked=no"
    ```
 
-2. **If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), run:
+3. **If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), gather the diff and run the review:
    ```bash
-   node "<companion-script-path>" review --wait --scope auto
+   DIFF=$(git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | while read f; do echo "=== NEW FILE: $f ==="; cat "$f" 2>/dev/null; done)
+   ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
+   You are a code reviewer. Review the following uncommitted changes for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
+   EOFPROMPT
+   )
+
+   $DIFF"
    ```
 
-3. **If no uncommitted changes** (clean working tree), check for a previous commit:
+4. **If no uncommitted changes** (clean working tree), check for a previous commit:
    ```bash
    git rev-parse HEAD~1 2>/dev/null && echo "has_prev=yes" || echo "has_prev=no"
    ```
@@ -67,16 +82,22 @@ The agent's prompt should instruct it to:
      ```bash
      git diff --quiet HEAD~1 HEAD 2>/dev/null; echo "diff_exit=$?"
      ```
-     - If `diff_exit=1` (has changes): run the review against the last commit. Agent C always uses `--wait` since it must block until the result is available for synthesis:
+     - If `diff_exit=1` (has changes): run the review against the last commit:
        ```bash
-       node "<companion-script-path>" review --wait --base HEAD~1
-       ```
-     - If `diff_exit=0` (empty diff — e.g. merge commit with no changes): report "Codex review skipped — last commit has no diff."
-   - If `has_prev=no` (single-commit repo, orphan branch, or shallow clone): report "Codex review skipped — clean working tree with no parent commit to review against."
+       DIFF=$(git diff HEAD~1 HEAD 2>/dev/null)
+       ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
+       You are a code reviewer. Review the following committed changes (HEAD~1..HEAD) for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
+       EOFPROMPT
+       )
 
-4. Return the full review output verbatim — verdict, findings, summary, and all details.
-5. Do NOT fix any issues or apply patches — review only.
-6. If the script is not found, Codex is not authenticated, or the command fails, report that the Codex review was skipped and include the error message.
+       $DIFF"
+       ```
+     - If `diff_exit=0` (empty diff — e.g. merge commit with no changes): report "Ollama review skipped — last commit has no diff."
+   - If `has_prev=no` (single-commit repo, orphan branch, or shallow clone): report "Ollama review skipped — clean working tree with no parent commit to review against."
+
+5. Return the full review output verbatim — verdict, findings, summary, and all details.
+6. Do NOT fix any issues or apply patches — review only.
+7. If Ollama is not installed or the command fails, report that the Ollama review was skipped and include the error message.
 
 **IMPORTANT**: All three agents MUST be launched in the same message (parallel Agent tool calls). Do NOT run them sequentially. Wait for all three to complete before proceeding.
 
@@ -89,13 +110,13 @@ After **all three** agents return, synthesize their results into a single unifie
    |--------|--------|---------|
    | Structural completeness | Agent A | pass/fail |
    | Code standards | Agent B | pass/fail |
-   | Codex review | Agent C | approve/needs-attention/skipped |
+   | Ollama review | Agent C | approve/needs-attention/skipped |
 
 2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence findings)
 
 3. **Issues list** — deduplicate overlapping findings across all three reviews, categorize by severity (critical > warning > suggestion)
 
-4. **Source label** — tag each issue as [structural], [code-review], or [codex] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
+4. **Source label** — tag each issue as [structural], [code-review], or [ollama] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
 
 If no issues are found from any review, report a clean bill of health and stop — the workflow is complete.
 
@@ -139,7 +160,7 @@ _Generated by /arewedone on YYYY-MM-DD_
 
 | # | Issue | Source | File | Notes |
 |---|-------|--------|------|-------|
-| 1 | [description] | [structural\|code-review\|codex] | `path/to/file` | [any extra context] |
+| 1 | [description] | [structural\|code-review\|ollama] | `path/to/file` | [any extra context] |
 ```
 
 If `REVIEW-BACKLOG.md` already exists, **append** a new dated section rather than overwriting.

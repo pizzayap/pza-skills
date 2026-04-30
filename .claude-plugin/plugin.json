@@ -1,11 +1,11 @@
 {
   "name": "pza-skills",
-  "version": "1.0.0",
-  "description": "Personal Claude Code skills: multi-reviewer completeness checks, Codex code review, hook auditing, and plan verification.",
+  "version": "1.1.0",
+  "description": "Personal Claude Code skills: multi-reviewer completeness checks, Ollama code review, hook auditing, and plan verification.",
   "author": {
     "name": "pizzayap"
   },
   "repository": "https://github.com/pizzayap/pza-skills",
   "license": "MIT",
-  "keywords": ["code-review", "hooks", "plan-verification", "codex"]
+  "keywords": ["code-review", "hooks", "plan-verification", "ollama"]
 }
