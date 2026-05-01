@@ -1,8 +1,10 @@
 ---
-name: verify-plan
+name: areyousure
 description: >-
-  Run when the user says "verify plan", "deep check the plan", or "validate
-  the plan". Launches dual verification agents (Claude + Ollama) in parallel,
+  Run when the user says "are you sure", "are you sure about the plan",
+  "double-check the plan", "verify plan", "deep check the plan", or "validate
+  the plan". Re-validates the plan against the codebase and current stable
+  APIs by launching dual verification agents (Claude + Ollama) in parallel,
   then merges findings with confidence scores and applies corrections.
 user-invocable: true
 argument-hint: '[--claude-only|--ollama-only]'
@@ -38,7 +40,7 @@ Find the current plan file path using this priority order:
 2. **Fallback** — Use the most recently modified `.md` file from the list shown above in Session Context.
 
 **Early exit guard:** If no plan file path is found in the system-reminder AND the session context shows no files in `~/.claude/plans/`, stop immediately and tell the user:
-> "No plan file found. Create a plan first (enter plan mode), then run /verify-plan."
+> "No plan file found. Create a plan first (enter plan mode), then run /areyousure."
 
 Once the path is identified:
 - Read the plan file in full using the `Read` tool

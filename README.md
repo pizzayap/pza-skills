@@ -22,7 +22,7 @@ Runs an Ollama-powered code review with smart scope detection. Reviews uncommitt
 
 ### `/ollama-setup`
 
-Configure the Ollama model used by `/ollama-review`, `/verify-plan`, and `/arewedone`. Fetches the latest cloud models from ollama.com dynamically, lets you pick one, tests it, and saves the choice. Run once to set up, or anytime to change models.
+Configure the Ollama model used by `/ollama-review`, `/areyousure`, and `/arewedone`. Fetches the latest cloud models from ollama.com dynamically, lets you pick one, tests it, and saves the choice. Run once to set up, or anytime to change models.
 
 **Usage:** `/ollama-setup` (interactive) or `/ollama-setup glm-5.1:cloud` (direct)
 
@@ -34,11 +34,11 @@ Session auditor that analyzes your conversation for recurring mistakes, conventi
 
 **Triggers:** "check for hooks", "find hook-worthy patterns", "what should be a hook"
 
-### `/verify-plan`
+### `/areyousure`
 
-Dual-engine plan verification. Launches both a Claude agent (using Context7, DeepWiki, and web search) and an Ollama agent in parallel to independently verify technical decisions in your implementation plan against current documentation. Merges findings with confidence scores and agreement rates.
+Dual-engine plan verification. Launches both a Claude agent (using Context7, DeepWiki, and web search) and an Ollama agent in parallel to independently re-validate the plan against the codebase and current stable APIs. Merges findings with confidence scores and agreement rates.
 
-**Triggers:** "verify plan", "deep check the plan", "validate the plan"
+**Triggers:** "are you sure", "are you sure about the plan", "double-check the plan", "verify plan", "deep check the plan", "validate the plan"
 
 **Flags:** `--claude-only`, `--ollama-only`
 
@@ -56,11 +56,11 @@ Reviews code changes for correctness, security, architecture, and performance. U
 
 ### `plan-verifier`
 
-Verifies implementation plans against current documentation using Context7 (library APIs), DeepWiki (GitHub repo docs), and web search. Returns a structured findings report with exact corrections. Used by `/verify-plan` as Agent 1.
+Verifies implementation plans against current documentation using Context7 (library APIs), DeepWiki (GitHub repo docs), and web search. Returns a structured findings report with exact corrections. Used by `/areyousure` as Agent 1.
 
 ### `ollama-plan-verifier`
 
-Forwards implementation plans to an Ollama model for independent technical review. Returns a structured verification report. Used by `/verify-plan` as Agent 2.
+Forwards implementation plans to an Ollama model for independent technical review. Returns a structured verification report. Used by `/areyousure` as Agent 2.
 
 ## Hook
 
@@ -98,7 +98,7 @@ Some skills depend on [Ollama](https://ollama.com) being installed (external CLI
 | `/ollama-review` | Ollama | — |
 | `/ollama-setup` | Ollama | — |
 | `/hook-worthy` | — | — |
-| `/verify-plan` | — | Ollama |
+| `/areyousure` | — | Ollama |
 
 Skills gracefully degrade when optional dependencies are missing — the Ollama review portion is skipped and the remaining reviewers still run.
 

@@ -8,11 +8,11 @@ description: |
   modify any files.
 
   <example>
-  Context: User invoked /verify-plan after Opus finished planning
-  user: "/verify-plan"
+  Context: User invoked /areyousure after Opus finished planning
+  user: "/areyousure"
   assistant: "I'll launch the plan-verifier agent to deep-check the plan against current docs."
   <commentary>
-  The verify-plan skill spawns this agent as a subagent to keep research out of the main context.
+  The areyousure skill spawns this agent as a subagent to keep research out of the main context.
   </commentary>
   </example>
 

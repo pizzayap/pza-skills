@@ -1,7 +1,7 @@
 ---
 name: ollama-setup
 description: >-
-  Configure the Ollama model used by /ollama-review, /verify-plan, and /arewedone.
+  Configure the Ollama model used by /ollama-review, /areyousure, and /arewedone.
   Fetches the latest cloud models from ollama.com, lets the user pick one, tests it,
   and saves the choice.
 user-invocable: true
@@ -83,7 +83,7 @@ echo "<chosen-model>" > ~/.claude/pza-ollama-model
 
 Tell the user:
 
-> "Model set to `<chosen-model>`. All Ollama-powered skills (`/ollama-review`, `/verify-plan`, `/arewedone`) will use this model."
+> "Model set to `<chosen-model>`. All Ollama-powered skills (`/ollama-review`, `/areyousure`, `/arewedone`) will use this model."
 
 ## Step 5 — Show Current Config
 
