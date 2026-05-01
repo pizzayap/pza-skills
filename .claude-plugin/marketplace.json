@@ -1,11 +1,11 @@
 {
-  "name": "pza-skills",
+  "name": "PZA-skills",
   "owner": {
     "name": "pizzayap"
   },
   "plugins": [
     {
-      "name": "pza-skills",
+      "name": "PZA-skills",
       "description": "Code review, plan verification, hook auditing, and session file tracking.",
       "source": "./"
     }

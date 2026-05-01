@@ -1,4 +1,4 @@
-# pza-skills
+# PZA-skills
 
 A Claude Code plugin with personal productivity skills for code review, plan verification, and session tracking.
 
@@ -77,7 +77,7 @@ Add to your `~/.claude/settings.json`:
 ```json
 {
   "extraKnownMarketplaces": {
-    "pza-skills": {
+    "PZA-skills": {
       "source": {
         "source": "github",
         "repo": "pizzayap/pza-skills"
@@ -85,7 +85,7 @@ Add to your `~/.claude/settings.json`:
     }
   },
   "enabledPlugins": {
-    "pza-skills@pza-skills": true
+    "PZA-skills@PZA-skills": true
   }
 }
 ```
@@ -93,7 +93,7 @@ Add to your `~/.claude/settings.json`:
 ### Via [skills.sh](https://skills.sh) / `npx skills`
 
 ```sh
-npx skills add pizzayap/pza-skills
+npx skills@latest add pizzayap/pza-skills
 ```
 
 ## Dependencies

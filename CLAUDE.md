@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a Claude Code plugin (`pza-skills`) that provides personal skills for code review, plan verification, hook auditing, and session tracking. It uses multi-agent architectures with parallel execution and intelligent result merging.
+This is a Claude Code plugin (`PZA-skills`) that provides personal skills for code review, plan verification, hook auditing, and session tracking. It uses multi-agent architectures with parallel execution and intelligent result merging.
 
 ## Architecture
 
@@ -43,7 +43,7 @@ No build step or test suite. Validate changes by:
 
 ## Plugin Manifest
 
-Skills and agents are auto-discovered from `skills/*/SKILL.md` and `agents/*.md`. Only top-level plugin metadata (name, version, keywords) lives in `.claude-plugin/plugin.json`.
+Skills and agents are auto-discovered from `skills/*/SKILL.md` and `agents/*.md`. Top-level plugin metadata (name, version, keywords) and the explicit `skills` directory listing live in `.claude-plugin/plugin.json`.
 
 ## External Config
 
