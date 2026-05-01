@@ -6,11 +6,11 @@ A Claude Code plugin with personal productivity skills for code review, plan ver
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches three review agents in parallel — structural completeness, code standards, and Ollama code review — then synthesizes findings into a unified report with deduplication and severity tiers.
+Multi-reviewer completeness check. Launches three review agents in parallel — structural completeness, code quality, and Ollama code review — then synthesizes findings into a unified report with deduplication and severity tiers.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
-**Optional:** [Ollama](https://ollama.com) (for Ollama review), [superpowers](https://github.com/anthropics/claude-code-plugins) plugin (for code standards review)
+**Optional:** [Ollama](https://ollama.com) (for Ollama review)
 
 ### `/ollama-review`
 
@@ -49,6 +49,10 @@ Dual-engine plan verification. Launches both a Claude agent (using Context7, Dee
 ### `structural-completeness-reviewer`
 
 Reviews code changes for structural integrity and codebase hygiene. Checks for dead code, orphaned imports, incomplete multi-layer changes, development artifacts, and dependency hygiene. Used by `/arewedone` as Agent A.
+
+### `code-quality-reviewer`
+
+Reviews code changes for correctness, security, architecture, and performance. Uses confidence scoring (0-100) to filter out false positives — only findings with confidence >= 80 are reported. Used by `/arewedone` as Agent B.
 
 ### `plan-verifier`
 
@@ -90,7 +94,7 @@ Some skills depend on [Ollama](https://ollama.com) being installed (external CLI
 
 | Skill | Required | Optional |
 |---|---|---|
-| `/arewedone` | — | Ollama, superpowers plugin |
+| `/arewedone` | — | Ollama |
 | `/ollama-review` | Ollama | — |
 | `/ollama-setup` | Ollama | — |
 | `/hook-worthy` | — | — |

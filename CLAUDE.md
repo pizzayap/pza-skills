@@ -18,6 +18,8 @@ hooks/scripts/*.js           — Hook implementation scripts
 
 **Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches 3 agents simultaneously; `/verify-plan` launches 2 with different AI backends (Claude + Ollama) and merges by confidence scoring.
 
+`/arewedone` review agents have strictly non-overlapping scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness) vs `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring). The Ollama agent provides an independent third opinion.
+
 **Hooks** run automatically on tool events. The `track-session-files` hook fires on every Write/Edit to maintain a JSON manifest of modified files at `/tmp/claude-session-<id>-files.json`, which `/arewedone` uses to scope reviews.
 
 ## Key Conventions
@@ -27,8 +29,9 @@ hooks/scripts/*.js           — Hook implementation scripts
 - Use `grep -o` not `grep -oP` — the `-P` (Perl regex) flag is not supported by macOS stock BSD grep.
 - Agent model is declared in frontmatter (`model: opus`, `model: haiku`). Use `opus` for complex analysis, `haiku` for lightweight forwarding.
 - Agent color tags in frontmatter control status line display during parallel execution.
+- Assigned agent colors: `red` (structural-completeness-reviewer), `yellow` (code-quality-reviewer), `cyan` (plan-verifier), `green` (ollama-plan-verifier). New agents must use a unique color.
 - Skills declare `triggers:` for natural language activation and `arguments:` for flag-based invocation.
-- Optional external dependencies (Ollama, superpowers plugin) are handled with graceful fallback — skills detect availability via `which ollama` and adjust scope rather than failing. Users run `/ollama-setup` to configure their model; config is stored at `~/.claude/pza-ollama-model`.
+- Optional external dependencies (Ollama) are handled with graceful fallback — skills detect availability via `which ollama` and adjust scope rather than failing. Users run `/ollama-setup` to configure their model; config is stored at `~/.claude/pza-ollama-model`.
 - Hook scripts validate `session_id` to prevent path traversal before writing to `/tmp/`.
 
 ## Testing & Validation
@@ -40,7 +43,7 @@ No build step or test suite. Validate changes by:
 
 ## Plugin Manifest
 
-Changes to skill/agent/hook registration must be reflected in `.claude-plugin/plugin.json`.
+Skills and agents are auto-discovered from `skills/*/SKILL.md` and `agents/*.md`. Only top-level plugin metadata (name, version, keywords) lives in `.claude-plugin/plugin.json`.
 
 ## External Config
 
