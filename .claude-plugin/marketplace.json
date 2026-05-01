@@ -1,4 +1,8 @@
 {
+  "name": "pza-skills",
+  "owner": {
+    "name": "pizzayap"
+  },
   "plugins": [
     {
       "name": "pza-skills",

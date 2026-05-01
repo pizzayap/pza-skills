@@ -25,7 +25,7 @@ description: |
   </commentary>
   </example>
 model: opus
-tools: [Read, Grep, Glob, Bash, WebSearch, WebFetch, mcp__context7__*, mcp__deepwiki__*]
+tools: [Read, Grep, Glob, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__deepwiki__read_wiki_structure, mcp__deepwiki__read_wiki_contents, mcp__deepwiki__ask_question]
 color: cyan
 ---
 
