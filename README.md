@@ -70,6 +70,8 @@ A `PostToolUse` hook that tracks every file modified by `Write` or `Edit` during
 
 ## Installation
 
+### Via Claude Code plugin marketplace
+
 Add to your `~/.claude/settings.json`:
 
 ```json
@@ -86,6 +88,12 @@ Add to your `~/.claude/settings.json`:
     "pza-skills@pza-skills": true
   }
 }
+```
+
+### Via [skills.sh](https://skills.sh) / `npx skills`
+
+```sh
+npx skills add pizzayap/pza-skills
 ```
 
 ## Dependencies
