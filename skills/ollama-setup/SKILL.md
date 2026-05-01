@@ -37,13 +37,26 @@ Use the provided model name directly. Skip to Step 3.
 
 ### Otherwise (no arguments)
 
-Fetch the latest cloud models dynamically:
+Fetch the latest cloud models dynamically, with a hardcoded fallback if the scrape fails:
 
 ```bash
-curl -s "https://ollama.com/search?c=cloud" | grep -o 'href="/library/[^"]*' | sed 's|href="/library/||' | awk '{print $0":cloud"}'
+MODELS=$(curl -fsSL --max-time 10 "https://ollama.com/search?c=cloud" 2>/dev/null \
+  | grep -o 'href="/library/[^"]*' \
+  | sed 's|href="/library/||' \
+  | awk '{print $0":cloud"}' \
+  | sort -u)
+
+if [ -z "$MODELS" ]; then
+  echo "(ollama.com scrape failed — using fallback list)" >&2
+  MODELS=$'kimi-k2.6:cloud\nglm-5.1:cloud\ndeepseek-v3.2:cloud\nqwen3-coder:cloud'
+fi
+
+echo "$MODELS" | head -4
 ```
 
-Use **AskUserQuestion** to let the user pick. Show the top 4 models as options (the user can also type a custom model name via "Other"):
+Note the fallback is intentional: if `ollama.com`'s HTML changes, the user-facing list is still well-formed and the user can also type a custom model name via "Other".
+
+Use **AskUserQuestion** to let the user pick. Show the top 4 models as options:
 
 ```yaml
 question: "Which Ollama cloud model should be used for code review?"

@@ -11,8 +11,8 @@ try {
 
 const { session_id, tool_name, tool_input } = input;
 
-// Validate session_id (security: prevent path traversal)
-if (!session_id || /[/\\]|\.\./.test(session_id)) {
+// Validate session_id (security: prevent path traversal and null bytes)
+if (!session_id || /[/\\\0]|\.\./.test(session_id)) {
   console.log(JSON.stringify({ continue: true }));
   process.exit(0);
 }
@@ -34,7 +34,11 @@ if (tool_name === "Edit" || tool_name === "Write") {
 
     if (!files.includes(filePath)) {
       files.push(filePath);
-      fs.writeFileSync(trackFile, JSON.stringify(files, null, 2));
+      // Atomic write: write to a per-pid temp file, then rename. Prevents
+      // lost updates if two Write/Edit hooks run concurrently for the same session.
+      const tmpFile = `${trackFile}.tmp.${process.pid}`;
+      fs.writeFileSync(tmpFile, JSON.stringify(files, null, 2));
+      fs.renameSync(tmpFile, trackFile);
     }
   }
 }
