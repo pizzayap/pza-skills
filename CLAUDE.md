@@ -16,7 +16,7 @@ hooks/hooks.json             — Hook event bindings
 hooks/scripts/*.js           — Hook implementation scripts
 ```
 
-**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches 3 agents simultaneously; `/verify-plan` launches 2 with different AI backends (Claude + Ollama) and merges by confidence scoring.
+**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches 3 agents simultaneously; `/areyousure` launches 2 with different AI backends (Claude + Ollama) and merges by confidence scoring.
 
 `/arewedone` review agents have strictly non-overlapping scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness) vs `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring). The Ollama agent provides an independent third opinion.
 
