@@ -16,7 +16,7 @@ hooks/hooks.json             — Hook event bindings
 hooks/scripts/*.js           — Hook implementation scripts
 ```
 
-**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches 3 agents simultaneously, synthesizes findings, then runs proof commands (tests, build, lint) before declaring done; `/areyousure` launches 2 with different AI backends (Claude + Ollama) and merges by confidence scoring.
+**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches up to 4 agents simultaneously (structural, quality, + optional Ollama and Codex), synthesizes findings, then runs proof commands (tests, build, lint) before declaring done; `/areyousure` launches up to 3 agents (Claude + optional Ollama and Codex) and merges by confidence scoring. Optional integrations (Ollama, Codex) are toggled via `/pza-settings`.
 
 `/arewedone` review agents have strictly non-overlapping scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness) vs `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring). The Ollama agent provides an independent third opinion.
 
@@ -26,12 +26,17 @@ hooks/scripts/*.js           — Hook implementation scripts
 
 - Ollama invocation pattern: `ollama launch claude --model <model> --yes -- -p "prompt"`. The `--yes` flag is required for headless use. The `--` separates ollama flags from Claude Code flags. `-p` is Claude Code's print mode.
 - When interpolating git diffs into `-p` arguments, use heredoc (`cat <<'EOFPROMPT'...EOFPROMPT`) to avoid shell metacharacter injection from diff content.
+- When forwarding file content to CLI tools (e.g., `codex exec`), write the full prompt+content to a temp file and pipe via stdin (`cat "$FILE" | codex exec -`). Do NOT use `$(cat "$FILE")` inside double-quoted command arguments — this re-exposes content to shell expansion, defeating the temp-file safety pattern.
 - Use `grep -o` not `grep -oP` — the `-P` (Perl regex) flag is not supported by macOS stock BSD grep. BRE alternation (`\|`) also fails on macOS BSD grep; use `grep -Eo` with ERE alternation (`|`) instead.
 - Agent model is declared in frontmatter (`model: opus`, `model: haiku`). Use `opus` for complex analysis, `haiku` for lightweight forwarding.
 - Agent color tags in frontmatter control status line display during parallel execution.
-- Assigned agent colors: `red` (structural-completeness-reviewer), `yellow` (code-quality-reviewer), `cyan` (plan-verifier), `green` (ollama-plan-verifier). New agents must use a unique color.
+- Assigned agent colors: `red` (structural-completeness-reviewer), `yellow` (code-quality-reviewer), `cyan` (plan-verifier), `green` (ollama-plan-verifier), `magenta` (codex-code-reviewer), `blue` (codex-plan-verifier). New agents must use a unique color.
 - Skills declare `triggers:` for natural language activation and `arguments:` for flag-based invocation.
-- Optional external dependencies (Ollama) are handled with graceful fallback — skills detect availability via `which ollama` and adjust scope rather than failing. Users run `/ollama-setup` to configure their model; config is stored at `~/.claude/pza-ollama-model`.
+- Optional external dependencies (Ollama, Codex) are handled with graceful fallback — skills detect availability via `which ollama` / `which codex` and adjust scope rather than failing. Users run `/ollama-setup` to configure their Ollama model; config is stored at `~/.claude/pza-ollama-model`. Users run `/pza-settings` to toggle Ollama and Codex on/off; config is stored at `~/.claude/pza-settings.json` (default: both enabled, missing file = both on).
+- Codex invocation patterns: `codex review --uncommitted` for code review (diff-based), `codex exec "prompt"` for arbitrary text analysis (plan verification). Note: `codex review`'s `--uncommitted`/`--commit`/`--base` flags and `[PROMPT]` argument are mutually exclusive.
+- The official Codex CC plugin is installed at `~/.claude/plugins/cache/openai-codex/codex/*/`. Its companion script can be invoked directly, but prefer the `codex` CLI for simpler integration.
+- Codex can be installed but unauthenticated. Agents check for auth errors and report "skipped — not authenticated" distinctly from "not installed".
+- Codex review output is always prose/markdown (not structured JSON). Do not attempt JSON parsing on Codex output — only Ollama output may contain structured JSON.
 - Plugin agents (`agents/*.md`) are dispatched by the skill runtime, not via the `Agent` tool's `subagent_type`. To simulate a plugin agent's work outside a skill, use `general-purpose` agent type with equivalent instructions.
 - In detection scripts using `[ -f "A" ] || [ -f "B" ] && echo "found"`, POSIX left-associative precedence makes this correct, but for clarity prefer `{ [ -f "A" ] || [ -f "B" ]; } && echo "found"`.
 - Hook scripts validate `session_id` to prevent path traversal before writing to `/tmp/`.
@@ -63,3 +68,4 @@ Skills and agents are auto-discovered from `skills/*/SKILL.md` and `agents/*.md`
 ## External Config
 
 - `~/.claude/pza-ollama-model` — User's chosen Ollama model (written by `/ollama-setup`, read by all Ollama-powered skills). Fallback default: `kimi-k2.6:cloud`.
+- `~/.claude/pza-settings.json` — Integration toggles (`{"codex": true, "ollama": true}`). Written by `/pza-settings`, read by `/arewedone` and `/areyousure` at runtime. Missing file = both enabled. Note: `/ollama-review` (standalone) intentionally does NOT check this toggle — direct invocation implies the user wants Ollama regardless of the toggle.

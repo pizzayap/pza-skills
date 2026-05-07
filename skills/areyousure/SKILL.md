@@ -4,10 +4,11 @@ description: >-
   Run when the user says "are you sure", "are you sure about the plan",
   "double-check the plan", "verify plan", "deep check the plan", or "validate
   the plan". Re-validates the plan against the codebase and current stable
-  APIs by launching dual verification agents (Claude + Ollama) in parallel,
-  then merges findings with confidence scores and applies corrections.
+  APIs by launching verification agents (Claude + optional Ollama + optional
+  Codex) in parallel, then merges findings with confidence scores and applies
+  corrections.
 user-invocable: true
-argument-hint: '[--claude-only|--ollama-only]'
+argument-hint: '[--claude-only|--ollama-only|--codex-only]'
 ---
 
 # Session Context
@@ -18,11 +19,20 @@ Most recent plan files:
 Project CLAUDE.md:
 !`test -f ./CLAUDE.md && echo "yes — $(wc -l < ./CLAUDE.md) lines" || echo "no"`
 
+Ollama enabled:
+!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.ollama!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+
 Ollama available:
 !`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
 !`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+
+Codex enabled:
+!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.codex!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+
+Codex CLI available:
+!`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Working directory:
 !`pwd`
@@ -48,18 +58,21 @@ Once the path is identified:
 
 ## Step 2 — Launch Verification Agents
 
-Check the Arguments from Session Context and Ollama availability:
+Check the Arguments from Session Context and availability of each tool. Explicit flags (`--claude-only`, `--ollama-only`, `--codex-only`) override the enabled/disabled toggle in `pza-settings.json` — if a user explicitly requests a specific agent via flag, respect it regardless of settings.
 
-- If `--claude-only`: skip Ollama agent, launch only `plan-verifier`
-- If `--ollama-only`: skip Claude agent, launch only `ollama-plan-verifier`
-- If Ollama not available: warn user, launch only `plan-verifier`
-- Otherwise (default): launch BOTH agents in parallel
+- If `--claude-only`: launch only `plan-verifier`
+- If `--ollama-only`: launch only `ollama-plan-verifier`
+- If `--codex-only`: launch only `codex-plan-verifier`
+- Otherwise (default): launch `plan-verifier` (always) + `ollama-plan-verifier` (if Ollama enabled AND available) + `codex-plan-verifier` (if Codex enabled AND Codex CLI available) — up to 3 agents
 
-### Dual Verification (default)
+If Ollama is enabled but not available: warn user, skip Ollama agent.
+If Codex is enabled but CLI not available: skip Codex agent silently.
 
-Launch TWO Agent tool calls **in the same message** (parallel execution):
+### Multi-Agent Verification (default)
 
-**Agent 1: `plan-verifier` (Claude)**
+Launch all eligible Agent tool calls **in the same message** (parallel execution):
+
+**Agent 1: `plan-verifier` (Claude)** — always launched
 ```
 You are verifying this implementation plan against current documentation.
 
@@ -74,7 +87,7 @@ You are verifying this implementation plan against current documentation.
 Return a structured verification report. Do NOT modify any files.
 ```
 
-**Agent 2: `ollama-plan-verifier` (Ollama)**
+**Agent 2: `ollama-plan-verifier` (Ollama)** — launch if Ollama enabled AND available
 ```
 Verify this implementation plan for technical accuracy.
 
@@ -90,7 +103,21 @@ Return findings in this format:
 - Verified correct items
 ```
 
-Tell the user: "Launching dual verification — Claude and Ollama reviewing in parallel (2–5 min)..."
+**Agent 3: `codex-plan-verifier` (Codex)** — launch if Codex enabled AND CLI available
+```
+Verify this implementation plan for technical accuracy.
+
+**Plan content:**
+[paste the full plan file content here]
+
+Return findings in this format:
+- Critical findings (must fix)
+- Warning findings (should fix)
+- Info findings (minor)
+- Verified correct items
+```
+
+Tell the user how many verifiers are launching, e.g.: "Launching triple verification — Claude, Ollama, and Codex reviewing in parallel (2–5 min)..." or "Launching dual verification — Claude and Ollama reviewing in parallel (2–5 min)..."
 
 ### Single Verification (flag or fallback)
 
@@ -98,31 +125,31 @@ Launch only the specified/available agent. Tell the user which verifier is runni
 
 ## Step 2.5 — Merge Findings
 
-Once both agents return, merge their reports:
+Once all launched agents return, merge their reports. Skip this step for single-verification runs.
 
-1. **Parse both reports** — extract Critical, Warning, Info, and Verified Correct items from each
-2. **Deduplicate** — if both found the same claim with the same issue, mark as "Both" with HIGH confidence
-3. **Mark unique findings** — findings from only one reviewer get source label (Claude/Ollama) with MEDIUM confidence
-4. **Handle conflicts** — if reviewers disagree on the same claim, include both perspectives with LOW confidence
-5. **Calculate agreement rate** — count overlapping findings vs. total unique findings
-
-Skip this step for single-verification runs.
+1. **Parse all reports** — extract Critical, Warning, Info, and Verified Correct items from each agent
+2. **Deduplicate** — if all active reviewers found the same claim with the same issue, mark with HIGH confidence. If a majority agree (e.g., 2 of 3), mark with MEDIUM-HIGH confidence.
+3. **Mark unique findings** — findings from only one reviewer get source label (Claude/Ollama/Codex) with MEDIUM confidence
+4. **Handle conflicts** — if reviewers disagree on the same claim, include all perspectives with LOW confidence
+5. **Calculate agreement rate** — count overlapping findings vs. total unique findings (same formula across N reviewers)
 
 ## Step 3 — Present Findings
 
 Once the agent(s) return, parse the (merged) report and display a summary table:
 
-**For dual verification:**
+**For multi-agent verification:**
 
 | Severity | Count | Source Breakdown |
 |----------|-------|------------------|
-| Critical | N | Claude: X, Ollama: Y, Both: Z |
-| Warning  | N | Claude: X, Ollama: Y, Both: Z |
-| Info     | N | Claude: X, Ollama: Y, Both: Z |
+| Critical | N | Claude: X, Ollama: Y, Codex: Z, Multiple: W |
+| Warning  | N | Claude: X, Ollama: Y, Codex: Z, Multiple: W |
+| Info     | N | Claude: X, Ollama: Y, Codex: Z, Multiple: W |
 | Verified Correct | N | — |
 | Unverifiable | N | — |
 
-**Agreement rate:** X/Y findings overlapped (both reviewers found the same issue)
+Only include source columns for agents that were actually launched. E.g., if only Claude + Ollama ran, omit the Codex column.
+
+**Agreement rate:** X/Y findings overlapped (multiple reviewers found the same issue)
 
 **For single verification:**
 
@@ -164,13 +191,13 @@ Edit the plan file using the agent's "Suggested Plan Updates" section. Each upda
 
 Apply each update using the `Edit` tool. After all edits, append a `## Verification Notes` section at the end of the plan file:
 
-**For dual verification:**
+**For multi-agent verification:**
 ```markdown
 ## Verification Notes
 
 **Verified:** [date]
 **Confidence:** [HIGH/MEDIUM/LOW from merged report]
-**Tools:** plan-verifier (Claude), ollama-plan-verifier (Ollama)
+**Tools:** [list only the agents that were launched, e.g.: plan-verifier (Claude), ollama-plan-verifier (Ollama), codex-plan-verifier (Codex)]
 **Agreement rate:** X/Y findings overlapped
 **Summary:** [one sentence from the merged summary]
 **Findings applied:** [Critical: N, Warning: N, Info: N (if "apply all") or "Critical + Warning only"]
@@ -182,7 +209,7 @@ Apply each update using the `Edit` tool. After all edits, append a `## Verificat
 
 **Verified:** [date]
 **Confidence:** [HIGH/MEDIUM/LOW from agent report]
-**Tool:** [plan-verifier (Claude) OR ollama-plan-verifier (Ollama)]
+**Tool:** [plan-verifier (Claude) OR ollama-plan-verifier (Ollama) OR codex-plan-verifier (Codex)]
 **Summary:** [one sentence from the agent's summary]
 **Findings applied:** [Critical: N, Warning: N, Info: N (if "apply all") or "Critical + Warning only"]
 ```

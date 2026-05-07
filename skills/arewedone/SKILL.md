@@ -4,8 +4,9 @@ description: >-
   Run when the user says "are we done", "review my changes", or "check
   completeness", or after implementing features, refactoring code, or making
   significant modifications. Launches structural completeness review, code
-  quality review, AND Ollama code review in parallel, synthesizes findings,
-  then runs proof commands (tests, build, lint, type checks) before declaring done.
+  quality review, and optional Ollama + Codex code reviews in parallel,
+  synthesizes findings, then runs proof commands (tests, build, lint, type
+  checks) before declaring done.
 user-invocable: true
 ---
 
@@ -17,17 +18,26 @@ Session-tracked files (this session only):
 Changed files summary (session-scoped):
 !`if [ -f "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" ]; then FILES=$(cat "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" | node -e "console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).join(' '))"); git diff --stat -- $FILES 2>/dev/null || echo "No git diff available"; else git diff --stat; fi`
 
+Ollama enabled:
+!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.ollama!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+
 Ollama available:
 !`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
 !`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
+Codex enabled:
+!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.codex!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+
+Codex CLI available:
+!`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
+
 # Workflow
 
-## 1. Launch All Three Reviews in Parallel
+## 1. Launch Reviews in Parallel
 
-Launch **all three** review agents simultaneously in a single message with three Agent tool calls:
+Launch review agents simultaneously in a single message with parallel Agent tool calls. Agents A and B always launch. Agent C (Ollama) launches only if Ollama enabled AND available (both "yes" in session context). Agent D (Codex) launches only if Codex enabled AND Codex CLI available (both "yes" in session context).
 
 ### Agent A: Structural Completeness Review (`structural-completeness-reviewer`)
 
@@ -179,13 +189,23 @@ ${UNTRACKED_SKIPPED}"
 6. Do NOT fix any issues or apply patches — review only.
 7. If Ollama is not installed or the command fails, report that the Ollama review was skipped and include the error message.
 
-**IMPORTANT**: All three agents MUST be launched in the same message (parallel Agent tool calls). Do NOT run them sequentially. Wait for all three to complete before proceeding.
+### Agent D: Codex Code Review (`codex-code-reviewer`)
 
-## 2. Converge: Synthesize All Three Reviews
+**Condition:** Launch this agent ONLY if the session context above shows BOTH "Codex enabled: yes" AND "Codex CLI available: yes". If either is "no", skip this agent entirely.
 
-After **all three** agents return, synthesize their results into a single unified report.
+Launch the `codex-code-reviewer` agent. Its prompt should simply be:
 
-### 2a. Parse Agent C's output (dual-format handling)
+> "Run a Codex code review against the current git state. Return the full output."
+
+This agent handles Codex detection, scope selection, invocation, and error reporting internally. It returns prose/markdown output (not structured JSON).
+
+**IMPORTANT**: All launched agents MUST be in the same message (parallel Agent tool calls). Do NOT run them sequentially. Wait for all agents to complete before proceeding.
+
+## 2. Converge: Synthesize All Reviews
+
+After **all** launched agents return, synthesize their results into a single unified report. The actual number of reviewers varies (2–4) depending on which optional agents were launched.
+
+### 2a. Parse Agent C's output (dual-format handling) — skip if Agent C was not launched
 
 Agent C's Ollama review may return structured JSON or unstructured prose. Attempt to parse it using the same extraction logic as `/ollama-review`:
 
@@ -213,26 +233,29 @@ VALID=$(echo "$EXTRACTED" | node -e "
 1. **If `VALID=yes` (structured):** extract findings directly — each has `severity`, `title`, `file`, `description`
 2. **If `VALID=no` (unstructured):** treat Agent C's output as prose and interpret it the same way you interpret Agent A and Agent B's reports
 
-Agents A and B always return prose. Only Agent C may return JSON.
+Agents A and B always return prose. Only Agent C may return JSON. Agent D (Codex) always returns prose.
 
 ### 2b. Build unified report
 
-1. **Summary table** with pass/fail for each review dimension:
+1. **Summary table** with pass/fail for each launched review:
    | Review | Source | Verdict |
    |--------|--------|---------|
    | Structural completeness | Agent A | pass/fail |
    | Code quality | Agent B | pass/fail |
    | Ollama review | Agent C | approve/needs-attention/skipped |
+   | Codex review | Agent D | approve/needs-attention/skipped |
 
-2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence findings). When Agent C returned structured JSON, match by `file + title + severity` for deduplication. When prose, match by semantic similarity (same file + similar description).
+   Only include rows for agents that were launched. If Agent C or D was not launched (disabled or unavailable), omit its row entirely.
 
-3. **Issues list** — deduplicate overlapping findings across all three reviews, categorize by severity (critical > warning > suggestion)
+2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agent C returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, or Agent C fallback), match by semantic similarity (same file + similar description).
 
-4. **Source label** — tag each issue as [structural], [quality], or [ollama] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
+3. **Issues list** — deduplicate overlapping findings across all launched reviews, categorize by severity (critical > warning > suggestion)
+
+4. **Source label** — tag each issue as [structural], [quality], [ollama], or [codex] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
 
 If no issues are found from any review, report a clean bill of health and proceed to Step 4 (Proof).
 
-**If an agent fails or returns an error:** Still synthesize results from the remaining agents. Mark the failed agent's verdict as "skipped" in the summary table and note the error. Two out of three successful reviews still provide useful signal. If all three fail, report the errors and proceed to Step 4 (Proof) — proof commands are especially valuable when reviews couldn't complete.
+**If an agent fails or returns an error:** Still synthesize results from the remaining agents. Mark the failed agent's verdict as "skipped" in the summary table and note the error. Any combination of 2+ successful reviews still provides useful signal. If all agents fail, report the errors and proceed to Step 4 (Proof) — proof commands are especially valuable when reviews couldn't complete.
 
 ## 3. Conquer: Fix Issues
 
@@ -272,7 +295,7 @@ _Generated by /arewedone on YYYY-MM-DD_
 
 | # | Issue | Source | File | Notes |
 |---|-------|--------|------|-------|
-| 1 | [description] | [structural\|quality\|ollama] | `path/to/file` | [any extra context] |
+| 1 | [description] | [structural\|quality\|ollama\|codex] | `path/to/file` | [any extra context] |
 ```
 
 If `REVIEW-BACKLOG.md` already exists, **append** a new dated section rather than overwriting.
