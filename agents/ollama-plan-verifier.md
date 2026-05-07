@@ -28,7 +28,7 @@ echo "$PLAN_FILE"
 
 Replace `[PLAN_CONTENT]` with the actual plan text from your prompt. The single-quoted heredoc delimiter (`'PLANEOF'`) prevents any expansion of `$`, backticks, or `\` inside the plan content. Capture the printed temp file path for the next call.
 
-**Call 2 — invoke Ollama, reading the plan from the file:**
+**Call 2 — invoke Ollama, reading the plan from the file (use `Bash(timeout: 300000)` — 5 minutes):**
 
 ```bash
 ollama launch claude --model <model-from-prompt> --yes -- -p "$(cat <<'EOFPROMPT'

@@ -65,13 +65,25 @@ The agent's prompt should instruct it to:
    [ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ] && echo "untracked=yes" || echo "untracked=no"
    ```
 
-3. **If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), gather the diff and run the review:
+3. **If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), gather the diff and run the review.
+
+   **Diff gathering** — truncate to prevent overwhelming the model:
    ```bash
-   DIFF=$(git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | while read f; do echo "=== NEW FILE: $f ==="; cat "$f" 2>/dev/null; done)
+   DIFF=$(
+     { git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | while read f; do file "$f" 2>/dev/null | grep -q 'text' && echo "=== NEW FILE: $f ===" && head -c 10000 "$f" 2>/dev/null; done; } | head -c 80000
+   )
+   DIFF_BYTES=$(printf '%s' "$DIFF" | wc -c | tr -d ' ')
+   TRUNC_NOTE=""
+   [ "$DIFF_BYTES" -ge 79000 ] && TRUNC_NOTE="(Note: diff was truncated to ~80KB. Focus on what is shown.)"
+   ```
+
+   **Run the review** — use `Bash(timeout: 300000)` (5 minutes) for the ollama command:
+   ```bash
    ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
    You are a code reviewer. Review the following uncommitted changes for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
    EOFPROMPT
    )
+   $TRUNC_NOTE
 
    $DIFF"
    ```
@@ -86,11 +98,18 @@ The agent's prompt should instruct it to:
      ```
      - If `diff_exit=1` (has changes): run the review against the last commit:
        ```bash
-       DIFF=$(git diff HEAD~1 HEAD 2>/dev/null)
+       DIFF=$(git diff HEAD~1 HEAD 2>/dev/null | head -c 80000)
+       DIFF_BYTES=$(printf '%s' "$DIFF" | wc -c | tr -d ' ')
+       TRUNC_NOTE=""
+       [ "$DIFF_BYTES" -ge 79000 ] && TRUNC_NOTE="(Note: diff was truncated to ~80KB. Focus on what is shown.)"
+       ```
+       Then run (with `Bash(timeout: 300000)`):
+       ```bash
        ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
        You are a code reviewer. Review the following committed changes (HEAD~1..HEAD) for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
        EOFPROMPT
        )
+       $TRUNC_NOTE
 
        $DIFF"
        ```

@@ -53,14 +53,25 @@ Evaluate the results:
 
 ### If working tree is dirty (has uncommitted changes)
 
-Use **working-tree** scope. Gather the diff and send it to the Ollama model (from Session Context above) for review:
+Use **working-tree** scope. Gather the diff (truncated to ~80KB to stay within model context limits, binary files excluded) and send it to the Ollama model (from Session Context above) for review:
 
 ```bash
-DIFF=$(git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | while read f; do echo "=== NEW FILE: $f ==="; cat "$f" 2>/dev/null; done)
+DIFF=$(
+  { git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | while read f; do file "$f" 2>/dev/null | grep -q 'text' && echo "=== NEW FILE: $f ===" && head -c 10000 "$f" 2>/dev/null; done; } | head -c 80000
+)
+DIFF_BYTES=$(printf '%s' "$DIFF" | wc -c | tr -d ' ')
+TRUNC_NOTE=""
+[ "$DIFF_BYTES" -ge 79000 ] && TRUNC_NOTE="(Note: diff was truncated to ~80KB. Focus on what is shown.)"
+```
+
+Run the review with `Bash(timeout: 300000)` (5 minutes):
+
+```bash
 ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
 You are a code reviewer. Review the following uncommitted changes for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
 EOFPROMPT
 )
+$TRUNC_NOTE
 
 $DIFF"
 ```
@@ -89,11 +100,20 @@ git diff --quiet HEAD~1 HEAD 2>/dev/null; echo "diff_exit=$?"
 - If `diff_exit=1` (there IS a diff): run the review against the last commit:
 
 ```bash
-DIFF=$(git diff HEAD~1 HEAD 2>/dev/null)
+DIFF=$(git diff HEAD~1 HEAD 2>/dev/null | head -c 80000)
+DIFF_BYTES=$(printf '%s' "$DIFF" | wc -c | tr -d ' ')
+TRUNC_NOTE=""
+[ "$DIFF_BYTES" -ge 79000 ] && TRUNC_NOTE="(Note: diff was truncated to ~80KB. Focus on what is shown.)"
+```
+
+Run with `Bash(timeout: 300000)` (5 minutes):
+
+```bash
 ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
 You are a code reviewer. Review the following committed changes (HEAD~1..HEAD) for bugs, security issues, code quality problems, and anti-patterns. Provide a verdict (approve/needs-attention) and list findings with severity (critical/warning/suggestion), file path, and description.
 EOFPROMPT
 )
+$TRUNC_NOTE
 
 $DIFF"
 ```
