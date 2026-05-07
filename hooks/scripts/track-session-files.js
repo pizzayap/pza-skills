@@ -40,6 +40,11 @@ if (tool_name === "Edit" || tool_name === "Write") {
       fs.writeFileSync(tmpFile, JSON.stringify(files, null, 2));
       fs.renameSync(tmpFile, trackFile);
     }
+
+    // Clear the review marker if it exists — edits after a review mean
+    // the review is stale and the Stop hook should remind again.
+    const reviewedFile = `/tmp/claude-session-${session_id}-reviewed.json`;
+    try { fs.unlinkSync(reviewedFile); } catch {}
   }
 }
 

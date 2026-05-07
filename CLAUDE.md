@@ -20,7 +20,7 @@ hooks/scripts/*.js           — Hook implementation scripts
 
 `/arewedone` review agents have strictly non-overlapping scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness) vs `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring). The Ollama agent provides an independent third opinion.
 
-**Hooks** run automatically on tool events. The `track-session-files` hook fires on every Write/Edit to maintain a JSON manifest of modified files at `/tmp/claude-session-<id>-files.json`, which `/arewedone` uses to scope reviews.
+**Hooks** run automatically on tool events. The `track-session-files` hook fires on every Write/Edit to maintain a JSON manifest of modified files at `/tmp/claude-session-<id>-files.json`, which `/arewedone` uses to scope reviews. The `review-reminder` hook fires on Stop to nudge the user if files were modified but no review was run (checks for the review marker file).
 
 ## Key Conventions
 
@@ -35,6 +35,17 @@ hooks/scripts/*.js           — Hook implementation scripts
 - Plugin agents (`agents/*.md`) are dispatched by the skill runtime, not via the `Agent` tool's `subagent_type`. To simulate a plugin agent's work outside a skill, use `general-purpose` agent type with equivalent instructions.
 - In detection scripts using `[ -f "A" ] || [ -f "B" ] && echo "found"`, POSIX left-associative precedence makes this correct, but for clarity prefer `{ [ -f "A" ] || [ -f "B" ]; } && echo "found"`.
 - Hook scripts validate `session_id` to prevent path traversal before writing to `/tmp/`.
+- `/ollama-review` supports `--adversarial` for security-focused review (attack surfaces, failure modes, trust boundaries). Flags are orthogonal: `--adversarial --background` is valid.
+- Ollama review requests structured JSON output (verdict + findings array). Structured output is best-effort — if the model returns non-JSON, the raw text is returned verbatim. Use `node -e` (not `jq`) for JSON extraction and validation, since `jq` is not a project dependency.
+- Review marker files: `/ollama-review` and `/arewedone` write `/tmp/claude-session-<id>-reviewed.json` on completion. The `review-reminder` Stop hook checks for this marker's absence alongside the session files manifest.
+- Diff assembly uses budget-aware per-file processing (80KB budget) with generated/binary file exclusion (`*.lock`, `*.min.js`, `*.min.css`, `*.map`, `*.svg`). Files exceeding the remaining budget get a `--stat` summary instead of full diff.
+- When generating `--stat` fallbacks for over-budget files, include both `git diff --stat -- "$file"` and `git diff --cached --stat -- "$file"` — staged-only changes have empty `git diff --stat`.
+- Shell loop variable scoping: `cmd | while read` runs in a subshell — variable mutations are lost. Use heredoc-fed loops (`while read; do ... done <<EOF`) to keep mutations in the parent shell.
+- Use `while IFS= read -r file` not `for file in $FILES` when iterating filenames — `for` splits on spaces in paths.
+- Hook scripts use `execFileSync("git", [...])` (not `execSync`) to avoid shell injection. The `child_process` require is `const { execFileSync } = require("child_process")`.
+- Hook output protocol: `{"continue": true, "systemMessage": "..."}` — the field is `systemMessage`, not `message`. The `continue` field must always be present.
+- Review marker includes a `diffHash` (SHA-256 of diff + cached + untracked). The Stop hook recomputes and compares to detect post-review changes. The `track-session-files` hook deletes the marker on every Write/Edit to invalidate stale reviews.
+- JSON extraction from LLM output: use iterative `JSON.parse` (try progressively shorter substrings from first `{` to each `}` from the end) — regex `/\{[\s\S]*\}/` over-matches when values contain braces.
 
 ## Testing & Validation
 
@@ -42,6 +53,8 @@ No build step or test suite. Validate changes by:
 1. Installing locally: `claude plugins add /Users/pizzayap/Projects/pza-skills`
 2. Running skills in a Claude Code session and checking agent dispatch + result merging
 3. For hooks: trigger a Write/Edit and verify `/tmp/claude-session-*-files.json` updates
+4. For review marker: run `/ollama-review` or `/arewedone` and verify `/tmp/claude-session-*-reviewed.json` exists
+5. For structured output: run `/ollama-review --wait` and check if JSON parsing succeeds (or fallback triggers cleanly)
 
 ## Plugin Manifest
 
