@@ -8,6 +8,7 @@ description: >-
   synthesizes findings, then runs proof commands (tests, build, lint, type
   checks) before declaring done.
 user-invocable: true
+argument-hint: '[--adversarial] [--no-adversarial]'
 ---
 
 # Session Changes Context
@@ -33,11 +34,26 @@ Codex enabled:
 Codex CLI available:
 !`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
+Adversarial enabled:
+!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.adversarial!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+
+Arguments:
+`$ARGUMENTS`
+
 # Workflow
+
+## 0. Parse Arguments
+
+Check the Arguments from session context above. If arguments are present:
+
+- `--adversarial` → force adversarial agents ON for this run (overrides the adversarial toggle only; per-tool ollama/codex toggles still apply)
+- `--no-adversarial` → force adversarial agents OFF for this run
+
+These flags affect only Agents E and F (adversarial). Agents A–D are unaffected.
 
 ## 1. Launch Reviews in Parallel
 
-Launch review agents simultaneously in a single message with parallel Agent tool calls. Agents A and B always launch. Agent C (Ollama) launches only if Ollama enabled AND available (both "yes" in session context). Agent D (Codex) launches only if Codex enabled AND Codex CLI available (both "yes" in session context).
+Launch review agents simultaneously in a single message with parallel Agent tool calls. Agents A and B always launch. Agent C (Ollama) launches only if Ollama enabled AND available (both "yes" in session context). Agent D (Codex) launches only if Codex enabled AND Codex CLI available (both "yes" in session context). Agents E and F (adversarial) launch based on adversarial flag/settings logic from Step 0.
 
 ### Agent A: Structural Completeness Review (`structural-completeness-reviewer`)
 
@@ -199,11 +215,41 @@ Launch the `codex-code-reviewer` agent. Its prompt should simply be:
 
 This agent handles Codex detection, scope selection, invocation, and error reporting internally. It returns prose/markdown output (not structured JSON).
 
+### Agent E: Ollama Adversarial Review (`ollama-adversarial-reviewer`)
+
+**Condition:** Evaluate in order:
+1. If `--no-adversarial` flag was passed in Step 0 → skip this agent entirely
+2. If `--adversarial` flag was passed in Step 0 → launch if BOTH "Ollama available: yes" AND "Ollama enabled: yes" (overrides only the adversarial toggle, not the per-tool toggle)
+3. Otherwise → launch ONLY if ALL three: "Ollama available: yes" AND "Ollama enabled: yes" AND "Adversarial enabled: yes"
+
+If none of the launch conditions are met, skip this agent entirely.
+
+Launch the `ollama-adversarial-reviewer` agent. Its prompt should include:
+
+> "Run an adversarial security review against the current git state using Ollama model `<model>`. Return the full output."
+
+Replace `<model>` with the Ollama model name from the session context above. This agent handles Ollama detection, diff assembly, adversarial prompt invocation, and error reporting internally. It may return structured JSON or prose.
+
+### Agent F: Codex Adversarial Review (`codex-adversarial-reviewer`)
+
+**Condition:** Evaluate in order:
+1. If `--no-adversarial` flag was passed in Step 0 → skip this agent entirely
+2. If `--adversarial` flag was passed in Step 0 → launch if BOTH "Codex CLI available: yes" AND "Codex enabled: yes" (overrides only the adversarial toggle, not the per-tool toggle)
+3. Otherwise → launch ONLY if ALL three: "Codex CLI available: yes" AND "Codex enabled: yes" AND "Adversarial enabled: yes"
+
+If none of the launch conditions are met, skip this agent entirely.
+
+Launch the `codex-adversarial-reviewer` agent. Its prompt should simply be:
+
+> "Run an adversarial security review against the current git state. Return the full output."
+
+This agent handles Codex detection, diff assembly, adversarial prompt invocation, and error reporting internally. It returns prose/markdown output (not structured JSON).
+
 **IMPORTANT**: All launched agents MUST be in the same message (parallel Agent tool calls). Do NOT run them sequentially. Wait for all agents to complete before proceeding.
 
 ## 2. Converge: Synthesize All Reviews
 
-After **all** launched agents return, synthesize their results into a single unified report. The actual number of reviewers varies (2–4) depending on which optional agents were launched.
+After **all** launched agents return, synthesize their results into a single unified report. The actual number of reviewers varies (2–6) depending on which optional agents were launched.
 
 ### 2a. Parse Agent C's output (dual-format handling) — skip if Agent C was not launched
 
@@ -233,7 +279,15 @@ VALID=$(echo "$EXTRACTED" | node -e "
 1. **If `VALID=yes` (structured):** extract findings directly — each has `severity`, `title`, `file`, `description`
 2. **If `VALID=no` (unstructured):** treat Agent C's output as prose and interpret it the same way you interpret Agent A and Agent B's reports
 
-Agents A and B always return prose. Only Agent C may return JSON. Agent D (Codex) always returns prose.
+Agents A and B always return prose. Agents C and E (Ollama) may return JSON. Agents D and F (Codex) always return prose.
+
+### 2a-2. Parse Agent E's output (dual-format handling) — skip if Agent E was not launched
+
+Agent E's adversarial Ollama review uses the same JSON output format as Agent C. Apply the identical extraction and validation logic shown above for Agent C. If valid JSON, extract findings directly. If prose, interpret semantically.
+
+### 2a-3. Parse Agent F's output — skip if Agent F was not launched
+
+Agent F (Codex adversarial) always returns prose. No JSON extraction needed — interpret it the same way as Agent D's output.
 
 ### 2b. Build unified report
 
@@ -244,14 +298,16 @@ Agents A and B always return prose. Only Agent C may return JSON. Agent D (Codex
    | Code quality | Agent B | pass/fail |
    | Ollama review | Agent C | approve/needs-attention/skipped |
    | Codex review | Agent D | approve/needs-attention/skipped |
+   | Ollama adversarial | Agent E | approve/needs-attention/skipped |
+   | Codex adversarial | Agent F | approve/needs-attention/skipped |
 
-   Only include rows for agents that were launched. If Agent C or D was not launched (disabled or unavailable), omit its row entirely.
+   Only include rows for agents that were launched. If an optional agent was not launched (disabled or unavailable), omit its row entirely.
 
-2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agent C returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, or Agent C fallback), match by semantic similarity (same file + similar description).
+2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agents C or E returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, F, or C/E fallback), match by semantic similarity (same file + similar description). If Agent B's security dimension and Agent E or F flag the same issue, this is especially high confidence (independent security-focused corroboration). Note: cross-format dedup (JSON vs prose, or different review framings) is inherently fuzzy — err on the side of reporting both if uncertain whether two findings are the same issue.
 
 3. **Issues list** — deduplicate overlapping findings across all launched reviews, categorize by severity (critical > warning > suggestion)
 
-4. **Source label** — tag each issue as [structural], [quality], [ollama], or [codex] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
+4. **Source label** — tag each issue as [structural], [quality], [ollama], [codex], [ollama-security], or [codex-security] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
 
 If no issues are found from any review, report a clean bill of health and proceed to Step 4 (Proof).
 
@@ -295,7 +351,7 @@ _Generated by /arewedone on YYYY-MM-DD_
 
 | # | Issue | Source | File | Notes |
 |---|-------|--------|------|-------|
-| 1 | [description] | [structural\|quality\|ollama\|codex] | `path/to/file` | [any extra context] |
+| 1 | [description] | [structural\|quality\|ollama\|codex\|ollama-security\|codex-security] | `path/to/file` | [any extra context] |
 ```
 
 If `REVIEW-BACKLOG.md` already exists, **append** a new dated section rather than overwriting.
