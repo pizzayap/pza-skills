@@ -6,11 +6,11 @@ A Claude Code plugin with personal productivity skills for code review, plan ver
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches three review agents in parallel — structural completeness, code quality, and Ollama code review — then synthesizes findings into a unified report with deduplication and severity tiers.
+Multi-reviewer completeness check. Launches up to six review agents in parallel — structural completeness, code quality, Ollama code review, Codex code review, Ollama adversarial security review, and Codex adversarial security review — then synthesizes findings into a unified report with deduplication and severity tiers.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
-**Optional:** [Ollama](https://ollama.com) (for Ollama review)
+**Optional:** [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex) (toggleable via `/pza-settings`)
 
 ### `/ollama-review`
 
@@ -36,13 +36,13 @@ Session auditor that analyzes your conversation for recurring mistakes, conventi
 
 ### `/areyousure`
 
-Dual-engine plan verification. Launches both a Claude agent (using Context7, DeepWiki, and web search) and an Ollama agent in parallel to independently re-validate the plan against the codebase and current stable APIs. Merges findings with confidence scores and agreement rates.
+Multi-engine plan verification. Launches up to three agents in parallel — Claude (using Context7, DeepWiki, Exa, and web search), Ollama, and Codex — to independently re-validate the plan against the codebase and current stable APIs. Merges findings with confidence scores and agreement rates.
 
 **Triggers:** "are you sure", "are you sure about the plan", "double-check the plan", "verify plan", "deep check the plan", "validate the plan"
 
-**Flags:** `--claude-only`, `--ollama-only`
+**Flags:** `--claude-only`, `--ollama-only`, `--codex-only`
 
-**Optional:** [Ollama](https://ollama.com) (for dual verification; falls back to Claude-only if missing)
+**Optional:** [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex) (toggleable via `/pza-settings`)
 
 ## Agents
 
@@ -56,11 +56,27 @@ Reviews code changes for correctness, security, architecture, and performance. U
 
 ### `plan-verifier`
 
-Verifies implementation plans against current documentation using Context7 (library APIs), DeepWiki (GitHub repo docs), and web search. Returns a structured findings report with exact corrections. Used by `/areyousure` as Agent 1.
+Verifies implementation plans against current documentation using Context7 (library APIs), DeepWiki (GitHub repo docs), Exa (code examples, filtered web search), and web search. Returns a structured findings report with exact corrections. Used by `/areyousure` as Agent 1.
 
 ### `ollama-plan-verifier`
 
 Forwards implementation plans to an Ollama model for independent technical review. Returns a structured verification report. Used by `/areyousure` as Agent 2.
+
+### `codex-plan-verifier`
+
+Forwards implementation plans to Codex CLI for independent technical review. Returns a structured verification report. Used by `/areyousure` as Agent 3.
+
+### `codex-code-reviewer`
+
+Forwards uncommitted changes to Codex CLI for code review. Used by `/arewedone` as Agent D.
+
+### `ollama-adversarial-reviewer`
+
+Runs an adversarial security-focused review via Ollama — thinks like an attacker to find exploitable vulnerabilities. Used by `/arewedone` as Agent E.
+
+### `codex-adversarial-reviewer`
+
+Runs an adversarial security-focused review via Codex CLI. Used by `/arewedone` as Agent F.
 
 ## Hook
 
@@ -98,17 +114,17 @@ npx skills@latest add pizzayap/pza-skills
 
 ## Dependencies
 
-Some skills depend on [Ollama](https://ollama.com) being installed (external CLI tool, not a Claude Code plugin):
+Some skills depend on external CLI tools (not Claude Code plugins):
 
 | Skill | Required | Optional |
 |---|---|---|
-| `/arewedone` | — | Ollama |
+| `/arewedone` | — | Ollama, Codex |
 | `/ollama-review` | Ollama | — |
 | `/ollama-setup` | Ollama | — |
 | `/hook-worthy` | — | — |
-| `/areyousure` | — | Ollama |
+| `/areyousure` | — | Ollama, Codex, Exa MCP |
 
-Skills gracefully degrade when optional dependencies are missing — the Ollama review portion is skipped and the remaining reviewers still run.
+Skills gracefully degrade when optional dependencies are missing — the Ollama/Codex review portions are skipped and the remaining reviewers still run. Use `/pza-settings` to toggle integrations on/off.
 
 ## Model Configuration
 

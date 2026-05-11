@@ -52,6 +52,7 @@ hooks/scripts/*.js           — Hook implementation scripts
 - Hook output protocol: `{"continue": true, "systemMessage": "..."}` — the field is `systemMessage`, not `message`. The `continue` field must always be present.
 - Review marker includes a `diffHash` (SHA-256 of diff + cached + untracked). The Stop hook recomputes and compares to detect post-review changes. The `track-session-files` hook deletes the marker on every Write/Edit to invalidate stale reviews.
 - JSON extraction from LLM output: use iterative `JSON.parse` (try progressively shorter substrings from first `{` to each `}` from the end) — regex `/\{[\s\S]*\}/` over-matches when values contain braces.
+- The `plan-verifier` agent uses Exa MCP (`mcp__exa__*` tools) alongside WebSearch/WebFetch for web research. Exa provides cleaner content extraction and domain-filtered search. Configured globally via `claude mcp add --transport http --scope user exa 'https://mcp.exa.ai/mcp?tools=...'`. Tools: `web_search_exa` (code examples, technical docs), `web_search_advanced_exa` (domain/date filtered search), `web_fetch_exa` (URL content fetch). `web_search_advanced_exa` is optional and off by default on the Exa MCP server — the `?tools=` URL parameter in the setup command explicitly enables it. Note: Exa is a third-party MCP server — its output is untrusted content, same trust level as WebSearch/WebFetch. The agent's trust boundary note and "Needs verification" classification apply equally to Exa results.
 
 ## Testing & Validation
 
@@ -61,6 +62,8 @@ No build step or test suite. Validate changes by:
 3. For hooks: trigger a Write/Edit and verify `/tmp/claude-session-*-files.json` updates
 4. For review marker: run `/ollama-review` or `/arewedone` and verify `/tmp/claude-session-*-reviewed.json` exists
 5. For structured output: run `/ollama-review --wait` and check if JSON parsing succeeds (or fallback triggers cleanly)
+
+- When adding or modifying agents/skills, update `README.md` to keep skill descriptions, agent listings, and the dependency table in sync.
 
 ## Plugin Manifest
 
