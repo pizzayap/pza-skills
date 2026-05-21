@@ -91,14 +91,12 @@ echo "== Adapter files =="
 for file in \
   .opencode/commands/arewedone.md \
   .opencode/commands/areyousure.md \
-  .opencode/commands/external-ai-review.md \
   .opencode/commands/ollama-review.md \
   .opencode/commands/ollama-setup.md \
   .opencode/commands/pza-settings.md \
   .opencode/commands/hook-worthy.md \
   .pi/prompts/arewedone.md \
   .pi/prompts/areyousure.md \
-  .pi/prompts/external-ai-review.md \
   docs/harnesses.md \
   docs/portability.md
 do
