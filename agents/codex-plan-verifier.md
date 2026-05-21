@@ -20,7 +20,7 @@ Forward the plan content to Codex for technical review. The plan content is prov
 1. Check Codex availability:
 
 ```bash
-which codex >/dev/null 2>&1 && echo "available" || echo "not_available"
+command -v codex >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
 If `not_available`, report:
@@ -43,7 +43,12 @@ PLAN_SOURCE="<PLAN_SOURCE>"
 PROMPT_FILE=$(mktemp -t plan-codex-verify.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
 node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-cat "$PROMPT_FILE" | codex exec -
+CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+if [ -n "$CODEX_MODEL" ]; then
+  cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
+else
+  cat "$PROMPT_FILE" | codex exec -
+fi
 ```
 
 Replace `<PLAN_FILE>` with the temp plan file path and `<PLAN_SOURCE>` with `conversation-backed`, `file-backed`, or the source label from your prompt.

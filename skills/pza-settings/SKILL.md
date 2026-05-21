@@ -1,98 +1,130 @@
 ---
 name: pza-settings
 description: >-
-  Configure PZA-skills integrations. Toggle Codex, Ollama, and adversarial
-  security review on or off. Run with arguments like '/pza-settings codex off'
-  or interactively without arguments.
+  Configure PZA-skills reviewer backends. Set the native reviewer model label,
+  toggle Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, and
+  adversarial review, and choose exact models for CLI reviewers.
 user-invocable: true
-argument-hint: '[codex on|off] [ollama on|off] [adversarial on|off]'
+argument-hint: '[native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [adversarial on|off]'
 ---
 
 # PZA Settings
 
 Current settings:
-!`node ./lib/pza-runtime.js settings 2>/dev/null || echo '{"settings":{"codex":true,"ollama":true,"adversarial":true}}'`
+!`node ./lib/pza-runtime.js settings 2>/dev/null || echo '{"settings":{"codex":true,"ollama":true,"adversarial":true},"reviewers":[]}'`
 
-Codex CLI available:
-!`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
+Reviewer backends:
+!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
-Ollama available:
-!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+CLI availability:
+!`for cmd in ollama codex opencode kilo cursor-agent agy; do if command -v "$cmd" >/dev/null 2>&1; then echo "$cmd: yes"; else echo "$cmd: no"; fi; done`
+
+Antigravity CLI help probe:
+!`if command -v agy >/dev/null 2>&1; then agy --help 2>&1 | head -40; else echo "agy: not installed"; fi`
 
 Arguments:
 `$ARGUMENTS`
 
 ## Workflow
 
-### Step 1 — Parse Arguments
+`/pza-settings` is the setup surface for `/areyousure` and `/arewedone`. Treat
+Ollama like every other reviewer backend here. `/ollama-review` and
+`/ollama-setup` are only backward-compatible aliases for older installs.
 
-Check the Arguments above.
+### Step 1 - Parse Arguments
 
-**If arguments are provided** (e.g., `codex off`, `ollama on`, `codex on ollama off`):
+If arguments are provided, parse them in one of these forms:
 
-Parse the arguments as space-separated `<key> <value>` pairs. Valid keys: `codex`, `ollama`, `adversarial`. Valid values: `on`, `off`.
+- `<reviewer> on`
+- `<reviewer> off`
+- `<reviewer> model <model>`
+- `adversarial on`
+- `adversarial off`
 
-Apply all pairs through the shared runtime (handles one, two, or three pairs):
+Valid reviewers:
+
+- `native` - the active harness/model label; set manually because most harnesses do not expose it
+- `ollama` - Ollama CLI reviewer; model also writes legacy `~/.pza-skills/ollama-model`
+- `codex` - Codex CLI reviewer
+- `opencode` - OpenCode CLI reviewer
+- `kilo` - Kilo Code CLI reviewer
+- `cursor` - Cursor Agent CLI reviewer
+- `antigravity` - Google Antigravity CLI reviewer
+
+Apply each argument through the shared runtime:
 
 ```bash
-node ./lib/pza-runtime.js set-settings KEY1 on KEY2 off
+node ./lib/pza-runtime.js set-reviewer REVIEWER enabled on
+node ./lib/pza-runtime.js set-reviewer REVIEWER enabled off
+node ./lib/pza-runtime.js set-reviewer REVIEWER model MODEL
+node ./lib/pza-runtime.js set-settings adversarial on
+node ./lib/pza-runtime.js set-settings adversarial off
 ```
 
-Replace `KEY1 on KEY2 off` with the setting pairs from the arguments. For a single pair like `codex off`, run `node ./lib/pza-runtime.js set-settings codex off`.
+Examples:
 
-After updating, display the new settings and stop.
+```bash
+node ./lib/pza-runtime.js set-reviewer native model codex:gpt-5.5
+node ./lib/pza-runtime.js set-reviewer ollama model kimi-k2.6:cloud
+node ./lib/pza-runtime.js set-reviewer opencode enabled on
+node ./lib/pza-runtime.js set-reviewer opencode model openai/gpt-5.3-codex
+node ./lib/pza-runtime.js set-reviewer cursor enabled off
+```
 
-**If no arguments**, proceed to Step 2.
+After updating, display `node ./lib/pza-runtime.js reviewer-settings` and stop.
 
-### Step 2 — Display Status
+### Step 2 - Display Setup Status
 
-Show a status table:
+If no arguments were provided, show a status table from the session context:
 
-| Integration | Enabled | Installed | Notes |
-|-------------|---------|-----------|-------|
-| Codex       | yes/no  | yes/no    |       |
-| Ollama      | yes/no  | yes/no    |       |
-| Adversarial | yes/no  | —         | Requires Ollama and/or Codex |
+| Reviewer | Enabled | Installed | Model | Notes |
+|----------|---------|-----------|-------|-------|
+| Native | yes/no | yes | configured label or default | The current harness model cannot usually be detected automatically |
+| Ollama | yes/no | yes/no | configured model | Used by `/areyousure` and `/arewedone` |
+| Codex | yes/no | yes/no | configured model or CLI default | `codex exec --model` and `codex review -c model=...` where supported |
+| OpenCode | yes/no | yes/no | configured model or CLI default | `opencode run --model provider/model` |
+| Kilo Code | yes/no | yes/no | configured model or CLI default | `kilo run --model provider/model` |
+| Cursor Agent | yes/no | yes/no | configured model or CLI default | `cursor-agent -p --output-format text --model <model>` |
+| Antigravity | yes/no | yes/no | configured model or CLI default | Use only if `agy --help` shows a safe non-interactive prompt/stdin mode |
+| Adversarial | yes/no | - | - | Security-focused review mode for supported backends |
 
-Read "Enabled" from the current settings shown in session context above. Read "Installed" from the availability checks above. Adversarial has no independent install — it uses Ollama and Codex.
+If a reviewer is enabled but not installed, report it clearly and keep going.
+Missing CLIs should never make setup fail.
 
-If an integration is enabled but not installed, note it:
-> Codex is enabled but not installed. Install it with `npm install -g @openai/codex` and run `codex login`.
-> Ollama is enabled but not installed. Install it from https://ollama.com.
+### Step 3 - Interactive Setup
 
-If adversarial is enabled but neither Ollama nor Codex is available, note it:
-> Adversarial is enabled but has no effect — neither Ollama nor Codex is installed.
-
-### Step 3 — Ask User
-
-Use the active harness's user-input tool to let the user toggle:
+If the active harness exposes a user-input tool, ask the user what to configure:
 
 ```yaml
-question: "Which integrations do you want to change?"
+question: "What should PZA-skills configure?"
 multiSelect: true
 options:
-  - label: "Toggle Codex"
-    description: "Currently [on/off] — will switch to [off/on]"
-  - label: "Toggle Ollama"
-    description: "Currently [on/off] — will switch to [off/on]"
-  - label: "Toggle Adversarial"
-    description: "Currently [on/off] — will switch to [off/on]. Controls security-focused adversarial review in /arewedone"
+  - label: "Set native model label"
+    description: "Record the model/harness used by the primary assistant"
+  - label: "Toggle reviewer CLIs"
+    description: "Turn Ollama, Codex, OpenCode, Kilo, Cursor, or Antigravity on/off"
+  - label: "Set reviewer models"
+    description: "Choose exact models for enabled CLI reviewers"
+  - label: "Toggle adversarial review"
+    description: "Enable or disable security-focused adversarial review"
   - label: "No changes"
     description: "Keep current settings"
 ```
 
-Fill in the current state dynamically from the session context.
+When asking for model names, use concrete examples:
 
-### Step 4 — Apply Changes
+- Native: `codex:gpt-5.5`, `claude:opus-4.5`, `opencode:anthropic/claude-sonnet-4.5`
+- Ollama: `kimi-k2.6:cloud`, `glm-5.1:cloud`
+- Codex: `gpt-5.3-codex`, `gpt-5.5`
+- OpenCode/Kilo: `openai/gpt-5.3-codex`, `anthropic/claude-sonnet-4.5`
+- Cursor: any model accepted by local `cursor-agent --model`
+- Antigravity: only set a model if local `agy --help` documents model selection
 
-If the user selected toggles, apply each change:
+### Step 4 - Apply Changes
 
-```bash
-node ./lib/pza-runtime.js set-settings codex CODEX_ON_OFF ollama OLLAMA_ON_OFF adversarial ADVERSARIAL_ON_OFF
-```
+Apply selected changes with `node ./lib/pza-runtime.js set-reviewer` and
+`node ./lib/pza-runtime.js set-settings adversarial ...`.
 
-Replace `CODEX_ON_OFF`, `OLLAMA_ON_OFF`, and `ADVERSARIAL_ON_OFF` with `on` or `off` based on the user's selections. Only include settings the user chose to toggle; keep the others at their current values.
+After updates, show the reviewer table and confirm:
 
-Show the updated settings and confirm:
-
-> Settings saved to `~/.pza-skills/settings.json`. Changes take effect on next skill invocation. Legacy `~/.claude` and `~/.Codex` settings are read as migration fallbacks only.
+> Settings saved to `~/.pza-skills/settings.json`. Ollama model compatibility is also kept at `~/.pza-skills/ollama-model`. Changes take effect on the next `/areyousure` or `/arewedone` run.

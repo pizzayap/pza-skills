@@ -1,109 +1,35 @@
 ---
 name: ollama-setup
 description: >-
-  Configure the Ollama model used by /ollama-review, /areyousure, and /arewedone.
-  Fetches the latest cloud models from ollama.com, lets the user pick one, tests it,
-  and saves the choice.
-user-invocable: true
+  Backward-compatible alias for configuring the Ollama reviewer model. New
+  installs should use /pza-settings so Ollama is configured alongside the other
+  reviewer backends.
+user-invocable: false
 argument-hint: '[model-name]'
 ---
 
-# Ollama Setup
+# Ollama Setup Compatibility
 
-Ollama available:
-!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
-
-Current model:
-!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "(not configured — default: kimi-k2.6:cloud)"`
+Current reviewer backends:
+!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 Arguments:
 `$ARGUMENTS`
 
-## Step 1 — Pre-check
+## Workflow
 
-If the Ollama availability check above shows "no", tell the user:
+Prefer `/pza-settings` for all new setup. This compatibility skill only updates
+the Ollama reviewer model.
 
-> "Ollama is not installed. Install it from https://ollama.com, then run `/ollama-setup` again."
-
-**Stop here.**
-
-## Step 2 — Determine Model
-
-Check Arguments from above:
-
-### If the user passed a model name (e.g. `/ollama-setup glm-5.1:cloud`)
-
-Use the provided model name directly. Skip to Step 3.
-
-### Otherwise (no arguments)
-
-Fetch the latest cloud models dynamically, with a hardcoded fallback if the scrape fails:
+If a model argument was provided, run:
 
 ```bash
-MODELS=$(curl -fsSL --max-time 10 "https://ollama.com/search?c=cloud" 2>/dev/null \
-  | grep -o 'href="/library/[^"]*' \
-  | sed 's|href="/library/||' \
-  | awk '{print $0":cloud"}' \
-  | sort -u)
-
-if [ -z "$MODELS" ]; then
-  echo "(ollama.com scrape failed — using fallback list)" >&2
-  MODELS=$'kimi-k2.6:cloud\nglm-5.1:cloud\ndeepseek-v3.2:cloud\nqwen3-coder:cloud'
-fi
-
-echo "$MODELS" | head -4
+node ./lib/pza-runtime.js set-reviewer ollama model <model-name>
 ```
 
-Note the fallback is intentional: if `ollama.com`'s HTML changes, the user-facing list is still well-formed and the user can also type a custom model name via "Other".
+If no model was provided, tell the user:
 
-Ask the user to pick a model using the active harness's user-input tool when available. Show the top 4 models as options:
+> Ollama setup now lives in `/pza-settings`. Use `/pza-settings ollama model kimi-k2.6:cloud` or run `/pza-settings` for interactive setup.
 
-```yaml
-question: "Which Ollama cloud model should be used for code review?"
-options:
-  - label: "<1st model>"
-    description: "Top-ranked cloud model on ollama.com"
-  - label: "<2nd model>"
-    description: "Second-ranked cloud model"
-  - label: "<3rd model>"
-    description: "Third-ranked cloud model"
-  - label: "<4th model>"
-    description: "Fourth-ranked cloud model"
-```
-
-## Step 3 — Test Model
-
-Run a quick validation to confirm the model works:
-
-```bash
-printf '%s' "Reply with exactly: MODEL_TEST_OK" | node ./lib/pza-runtime.js ollama-run <chosen-model>
-```
-
-- If the output contains `MODEL_TEST_OK` → success, proceed to Step 4.
-- If the command fails or the output does not contain `MODEL_TEST_OK` → report the error and tell the user:
-
-> "Model test failed. Make sure the model name is correct and Ollama is running. Try: `ollama serve` in another terminal."
-
-**Stop here.**
-
-## Step 4 — Save Config
-
-Write the model name to the config file:
-
-```bash
-node ./lib/pza-runtime.js set-model <chosen-model>
-```
-
-Tell the user:
-
-> "Model set to `<chosen-model>`. All Ollama-powered skills (`/ollama-review`, `/areyousure`, `/arewedone`) will use this model."
-
-## Step 5 — Show Current Config
-
-Read back the saved model:
-
-```bash
-node ./lib/pza-runtime.js get-model
-```
-
-Confirm the configuration and remind the user they can change it anytime by running `/ollama-setup` again.
+Do not fetch model lists here. `/pza-settings` is the canonical place to set the
+native model label, toggle reviewer CLIs, and choose exact reviewer models.

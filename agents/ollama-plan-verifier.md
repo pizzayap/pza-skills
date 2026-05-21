@@ -20,7 +20,7 @@ Forward the plan content to Ollama for technical review. The model name and plan
 1. Confirm `ollama` is installed:
 
 ```bash
-which ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
+command -v ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
 If `not_available`, report:

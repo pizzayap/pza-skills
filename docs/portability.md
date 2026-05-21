@@ -4,9 +4,9 @@
 
 - `skills/*/SKILL.md` defines reusable workflows.
 - `agents/*.md` defines reusable reviewer/verifier roles.
-- `lib/pza-runtime.js` owns shared runtime behavior: config, model selection,
-  session files, diff hashes, review markers, plan-review prompt assembly,
-  custom plan reviewer invocation, and Ollama invocation.
+- `lib/pza-runtime.js` owns shared runtime behavior: config, reviewer backend
+  model selection, session files, diff hashes, review markers, plan-review
+  prompt assembly, custom plan reviewer invocation, and Ollama invocation.
 
 ## Harness Adapters
 
@@ -34,6 +34,30 @@ New writes use:
 settings or model choices to the repository.
 
 Legacy Claude/Codex locations are read only as migration fallbacks.
+
+`settings.json` is the canonical setup state for reviewer backends:
+
+```json
+{
+  "codex": true,
+  "ollama": true,
+  "adversarial": true,
+  "nativeModel": "codex:gpt-5.5",
+  "reviewers": {
+    "native": { "enabled": true, "model": "codex:gpt-5.5" },
+    "ollama": { "enabled": true, "model": "kimi-k2.6:cloud" },
+    "codex": { "enabled": true, "model": "gpt-5.3-codex" },
+    "opencode": { "enabled": false, "model": "" },
+    "kilo": { "enabled": false, "model": "" },
+    "cursor": { "enabled": false, "model": "" },
+    "antigravity": { "enabled": false, "model": "" }
+  }
+}
+```
+
+The top-level `codex` and `ollama` booleans remain for backward compatibility.
+`~/.pza-skills/ollama-model` is mirrored when the Ollama reviewer model is set
+through `/pza-settings`.
 
 ## Plan Reviewers
 

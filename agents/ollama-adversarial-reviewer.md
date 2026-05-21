@@ -19,7 +19,7 @@ Gather the diff, write it to a temp file, send it to Ollama with a security-focu
 ### Step 1 — Check Ollama Availability
 
 ```bash
-which ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
+command -v ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
 If `not_available`, report:

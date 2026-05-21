@@ -19,13 +19,17 @@ Install a single skill:
 ```bash
 npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --skill areyousure
-npx skills add pizzayap/pza-skills --skill ollama-review
-npx skills add pizzayap/pza-skills --skill ollama-setup
 npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
 ```
 
-Optional integrations are detected at runtime. Install [Ollama](https://ollama.com) for `/ollama-review` and Ollama-backed reviewers; install the [Codex CLI](https://github.com/openai/codex) for Codex-backed reviewers. Use `/pza-settings` after installation to toggle Codex, Ollama, and adversarial review integrations.
+Optional integrations are detected at runtime. Use `/pza-settings` after installation to record the native reviewer model label, toggle reviewer CLIs, and choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed.
+
+Recommended first run after installation:
+
+```text
+/pza-settings
+```
 
 For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
@@ -39,25 +43,25 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 **Optional:** [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex) (toggleable via `/pza-settings`)
 
-### `/ollama-review`
-
-Runs an Ollama-powered code review with smart scope detection. Reviews uncommitted changes when the working tree is dirty; falls back to reviewing the last commit (`HEAD~1..HEAD`) when clean.
-
-**Triggers:** `/ollama-review`, `/ollama-review --wait`, `/ollama-review --background`
-
-**Requires:** [Ollama](https://ollama.com)
-
-### `/ollama-setup`
-
-Configures the Ollama model used by `/ollama-review`, `/areyousure`, and `/arewedone`. The selected model is saved to `~/.pza-skills/ollama-model`.
-
-**Usage:** `/ollama-setup` or `/ollama-setup glm-5.1:cloud`
-
 ### `/pza-settings`
 
-Toggles Codex, Ollama, and adversarial review integrations. Settings are saved to `~/.pza-skills/settings.json`; legacy `~/.claude` and `~/.Codex` settings are read as migration fallbacks.
+Configures reviewer backends for `/areyousure` and `/arewedone`. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and enable or disable adversarial review. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
-**Usage:** `/pza-settings codex off`, `/pza-settings ollama on`, `/pza-settings adversarial off`
+**Usage:** `/pza-settings`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`
+
+Supported reviewer backends:
+
+| Reviewer | CLI | Model setting |
+|---|---|---|
+| Native | active harness | Manual label, because most harnesses do not expose it |
+| Ollama | `ollama` | `node ./lib/pza-runtime.js ollama-run <model>` |
+| Codex | `codex` | `codex exec --model <model>` and `codex review -c model=<model>` where supported |
+| OpenCode | `opencode` | `opencode run --model provider/model` |
+| Kilo Code | `kilo` | `kilo run --model provider/model` |
+| Cursor Agent | `cursor-agent` | `cursor-agent -p --output-format text --model <model>` |
+| Antigravity | `agy` | Only when local `agy --help` shows a safe non-interactive prompt or stdin mode |
+
+`/ollama-review` and `/ollama-setup` remain compatibility aliases for existing installs, but new setup and review flows should go through `/pza-settings`, `/areyousure`, and `/arewedone`.
 
 ### `/hook-worthy`
 
@@ -109,6 +113,8 @@ New writes use harness-neutral paths:
 
 `~/.pza-skills/` is machine-local user state. Never commit personal settings or model choices into this repository. Legacy Claude/Codex paths are read only as migration fallbacks where needed.
 
+`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility.
+
 ## Harness Adapters
 
 See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portability.md).
@@ -122,12 +128,10 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 
 | Skill | Required | Optional |
 |---|---|---|
-| `/arewedone` | — | Ollama, Codex |
-| `/ollama-review` | Ollama | — |
-| `/ollama-setup` | Ollama | — |
-| `/pza-settings` | — | Codex, Ollama |
+| `/arewedone` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
+| `/pza-settings` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/hook-worthy` | — | — |
-| `/areyousure` | — | Ollama, Codex, custom CLI reviewers, Exa MCP |
+| `/areyousure` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, custom CLI reviewers, Exa MCP |
 
 Skills gracefully degrade when optional dependencies are missing.
 

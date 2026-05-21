@@ -18,7 +18,7 @@ Gather the diff, write it with an adversarial prompt to a temp file, pipe to `co
 ### Step 1 — Check Codex Availability
 
 ```bash
-which codex >/dev/null 2>&1 && echo "available" || echo "not_available"
+command -v codex >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
 If `not_available`, report:
@@ -158,7 +158,12 @@ The single-quoted heredoc writes only the static prompt. The `printf` append wri
 ```bash
 PROMPT_FILE="<PROMPT_FILE>"
 trap 'rm -f "$PROMPT_FILE"' EXIT
-cat "$PROMPT_FILE" | codex exec -
+CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+if [ -n "$CODEX_MODEL" ]; then
+  cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
+else
+  cat "$PROMPT_FILE" | codex exec -
+fi
 ```
 
 Replace `<PROMPT_FILE>` with the temp path from Call 1. The `trap` ensures the temp file is cleaned up even if `codex exec` is killed by the timeout.

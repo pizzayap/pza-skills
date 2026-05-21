@@ -1,5 +1,5 @@
 ---
-description: Toggle PZA Codex, Ollama, and adversarial integrations
+description: Configure PZA reviewer backends, toggles, and model choices
 agent: build
 ---
 

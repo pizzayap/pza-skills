@@ -1,20 +1,20 @@
 ---
 name: ollama-review
 description: >-
-  Run an Ollama-powered code review with smart fallback. Reviews uncommitted changes
-  when dirty; falls back to HEAD~1..HEAD when clean. Supports --wait, --background,
-  and --adversarial for security-focused review. Returns structured JSON when possible.
-user-invocable: true
+  Backward-compatible Ollama-only code review. New installs should use
+  /arewedone, which runs Ollama as one configured reviewer backend through
+  /pza-settings.
+user-invocable: false
 argument-hint: '[--wait|--background] [--adversarial]'
 ---
 
 # Ollama Review with Fallback
 
 Ollama available:
-!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+!`command -v ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Arguments:
 `$ARGUMENTS`
@@ -23,13 +23,13 @@ Arguments:
 
 - This is a **review-only** command. Do not fix issues, apply patches, or suggest you are about to make changes.
 - Your only job is to run the review and return the output (formatted if structured JSON, verbatim otherwise).
-- The actual review is performed by an Ollama model (shown above). The active harness only determines scope, runs the command, and formats the result.
+- The actual review is performed by the Ollama reviewer model configured through `/pza-settings` (shown above). The active harness only determines scope, runs the command, and formats the result.
 
 ## Pre-check
 
 If the Ollama availability check above shows "no", tell the user:
 
-> "Ollama is not installed. Install it from https://ollama.com and run `/ollama-setup` to configure."
+> "Ollama is not installed. Install it from https://ollama.com and run `/pza-settings ollama model <model>` to configure."
 
 **Stop here** — do not attempt further steps without Ollama installed.
 
@@ -264,7 +264,8 @@ cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
 <selected prompt from Step 1.5>
 PZA_OLLAMA_PROMPT
 printf '\n%s\n\n%s\n' "$TRUNC_NOTE" "$DIFF" >> "$PROMPT_FILE"
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+OLLAMA_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model)
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run "$OLLAMA_MODEL"
 EXIT_CODE=$?
 rm -f "$PROMPT_FILE"
 exit $EXIT_CODE

@@ -17,6 +17,13 @@ node -e "
   const data = JSON.parse(fs.readFileSync('/tmp/pza-runtime-defaults.json', 'utf8'));
   if (!data.settings.codex || !data.settings.ollama || !data.settings.adversarial) process.exit(1);
   if (data.model !== 'kimi-k2.6:cloud') process.exit(1);
+  const byName = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.name, reviewer]));
+  if (!byName.native?.enabled) process.exit(1);
+  if (!byName.ollama?.enabled || byName.ollama.model !== 'kimi-k2.6:cloud') process.exit(1);
+  if (!byName.codex?.enabled) process.exit(1);
+  for (const name of ['opencode', 'kilo', 'cursor', 'antigravity']) {
+    if (byName[name]?.enabled !== false) process.exit(1);
+  }
 "
 rm -rf "$tmp_home" /tmp/pza-runtime-defaults.json
 
@@ -32,8 +39,31 @@ node -e "
   if (data.settings.ollama !== true) process.exit(1);
   if (data.settings.codex !== false) process.exit(1);
   if (data.settings.adversarial !== false) process.exit(1);
+  if (data.settings.reviewers.ollama.enabled !== true) process.exit(1);
+  if (data.settings.reviewers.codex.enabled !== false) process.exit(1);
 "
 rm -rf "$tmp_home" /tmp/pza-runtime-merged.json
+
+echo "== Reviewer settings runtime =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-settings.XXXXXX")
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer native model codex:gpt-5.5 >/tmp/pza-reviewer-native.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled on >/tmp/pza-reviewer-opencode-on.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode model openai/gpt-5.3-codex >/tmp/pza-reviewer-opencode-model.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer ollama model glm-5.1:cloud >/tmp/pza-reviewer-ollama-model.json
+HOME="$tmp_home" node ./lib/pza-runtime.js get-model | grep -qx 'glm-5.1:cloud'
+HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-model opencode | grep -qx 'openai/gpt-5.3-codex'
+HOME="$tmp_home" node ./lib/pza-runtime.js reviewer-settings >/tmp/pza-reviewer-settings.json
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync('/tmp/pza-reviewer-settings.json', 'utf8'));
+  const byName = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.name, reviewer]));
+  if (byName.native.model !== 'codex:gpt-5.5') process.exit(1);
+  if (byName.opencode.enabled !== true) process.exit(1);
+  if (byName.opencode.model !== 'openai/gpt-5.3-codex') process.exit(1);
+  if (byName.ollama.model !== 'glm-5.1:cloud') process.exit(1);
+"
+rm -rf "$tmp_home"
+rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-settings.json
 
 echo "== Plan reviewer runtime =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-plan-reviewers.XXXXXX")
@@ -91,12 +121,12 @@ echo "== Adapter files =="
 for file in \
   .opencode/commands/arewedone.md \
   .opencode/commands/areyousure.md \
-  .opencode/commands/ollama-review.md \
-  .opencode/commands/ollama-setup.md \
   .opencode/commands/pza-settings.md \
   .opencode/commands/hook-worthy.md \
   .pi/prompts/arewedone.md \
   .pi/prompts/areyousure.md \
+  .pi/prompts/pza-settings.md \
+  .pi/prompts/hook-worthy.md \
   docs/harnesses.md \
   docs/portability.md
 do

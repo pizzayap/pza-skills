@@ -17,7 +17,7 @@ Invoke the `codex review` CLI and return the output verbatim. Use exactly the st
 ### Step 1 — Check Codex Availability
 
 ```bash
-which codex >/dev/null 2>&1 && echo "available" || echo "not_available"
+command -v codex >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
 If `not_available`, report:
@@ -48,11 +48,21 @@ git diff --quiet 2>/dev/null; echo "unstaged=$?"
 Run the chosen command with the active harness shell tool and a 5 minute timeout:
 
 ```bash
-codex review --uncommitted
+CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+if [ -n "$CODEX_MODEL" ]; then
+  codex review -c "model=$CODEX_MODEL" --uncommitted
+else
+  codex review --uncommitted
+fi
 ```
 or
 ```bash
-codex review --commit HEAD
+CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+if [ -n "$CODEX_MODEL" ]; then
+  codex review -c "model=$CODEX_MODEL" --commit HEAD
+else
+  codex review --commit HEAD
+fi
 ```
 
 ### Step 4 — Return Output

@@ -1,7 +1,7 @@
 {
   "name": "PZA-skills",
   "version": "1.2.0",
-  "description": "Portable Agent Skills compatibility package: multi-reviewer completeness checks, Ollama and Codex code review, hook auditing, plan verification, and integration settings.",
+  "description": "Portable Agent Skills compatibility package: multi-reviewer completeness checks, configurable AI reviewer backends, hook auditing, plan verification, and integration settings.",
   "author": {
     "name": "pizzayap"
   },
@@ -12,8 +12,6 @@
     "./skills/arewedone",
     "./skills/areyousure",
     "./skills/hook-worthy",
-    "./skills/ollama-review",
-    "./skills/ollama-setup",
     "./skills/pza-settings"
   ]
 }

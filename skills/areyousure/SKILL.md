@@ -4,10 +4,11 @@ description: >-
   Run when the user says "are you sure", "are you sure about the plan",
   "double-check the plan", "verify plan", "deep check the plan", or "validate
   the plan". Re-validates the current implementation plan against the codebase
-  and current stable APIs by launching native and CLI-backed verifiers, then
-  merges findings with confidence scores and applies or returns corrections.
+  and current stable APIs by launching native and configured CLI-backed
+  verifiers, then merges findings with confidence scores and applies or returns
+  corrections.
 user-invocable: true
-argument-hint: '[--native-only|--claude-only|--ollama-only|--codex-only|--cli-only|--no-cli|--custom-only]'
+argument-hint: '[--native-only|--claude-only|--ollama-only|--codex-only|--opencode-only|--kilo-only|--cursor-only|--antigravity-only|--cli-only|--no-cli|--custom-only]'
 ---
 
 # Session Context
@@ -18,20 +19,23 @@ Recent plan-like markdown files (best effort only):
 Project instructions:
 !`{ test -f ./AGENTS.md && echo "AGENTS.md - $(wc -l < ./AGENTS.md) lines"; test -f ./CLAUDE.md && echo "CLAUDE.md compatibility - $(wc -l < ./CLAUDE.md) lines"; } || true`
 
+Reviewer backend settings:
+!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+
 Ollama enabled:
-!`node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
+!`node ./lib/pza-runtime.js get-reviewer-enabled ollama 2>/dev/null || node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
 
 Ollama available:
-!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+!`command -v ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Codex enabled:
-!`node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
+!`node ./lib/pza-runtime.js get-reviewer-enabled codex 2>/dev/null || node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
 
 Codex CLI available:
-!`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
+!`command -v codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Custom plan reviewers:
 !`node ./lib/pza-runtime.js plan-reviewers 2>/dev/null || echo '{"reviewers":[]}'`
@@ -72,17 +76,25 @@ Once the plan is resolved:
 Check Arguments from Session Context. Explicit flags override `pza-settings.json`.
 
 Verifier types:
-- **Native verifier** - `plan-verifier`, always available unless `--cli-only`, `--ollama-only`, `--codex-only`, or `--custom-only` is used.
-- **Ollama CLI verifier** - run when Ollama is enabled and `which ollama` succeeds, or when `--ollama-only` is explicit.
-- **Codex CLI verifier** - run when Codex is enabled and `which codex` succeeds, or when `--codex-only` is explicit.
+- **Native verifier** - `plan-verifier`, run when the `native` reviewer is enabled unless a CLI-only flag is used.
+- **Ollama CLI verifier** - run when the `ollama` reviewer is enabled and `command -v ollama` succeeds, or when `--ollama-only` is explicit.
+- **Codex CLI verifier** - run when the `codex` reviewer is enabled and `command -v codex` succeeds, or when `--codex-only` is explicit.
+- **OpenCode CLI verifier** - run when the `opencode` reviewer is enabled and `command -v opencode` succeeds, or when `--opencode-only` is explicit.
+- **Kilo Code CLI verifier** - run when the `kilo` reviewer is enabled and `command -v kilo` succeeds, or when `--kilo-only` is explicit.
+- **Cursor Agent CLI verifier** - run when the `cursor` reviewer is enabled and `command -v cursor-agent` succeeds, or when `--cursor-only` is explicit.
+- **Antigravity CLI verifier** - run when the `antigravity` reviewer is enabled, `command -v agy` succeeds, and `agy --help` confirms a safe non-interactive prompt/stdin path; also run when `--antigravity-only` is explicit and the safe path is confirmed.
 - **Custom CLI verifiers** - enabled reviewers from `~/.pza-skills/plan-reviewers.json`, run by default and with `--cli-only`/`--custom-only`.
 
 Flag behavior:
 - `--native-only` or deprecated `--claude-only`: native verifier only.
 - `--ollama-only`: Ollama CLI verifier only.
 - `--codex-only`: Codex CLI verifier only.
+- `--opencode-only`: OpenCode CLI verifier only.
+- `--kilo-only`: Kilo Code CLI verifier only.
+- `--cursor-only`: Cursor Agent CLI verifier only.
+- `--antigravity-only`: Antigravity CLI verifier only, if the local CLI exposes a safe scriptable path.
 - `--custom-only`: custom CLI verifiers only.
-- `--cli-only`: Ollama CLI + Codex CLI + custom CLI verifiers, no native verifier.
+- `--cli-only`: all enabled CLI verifiers + custom CLI verifiers, no native verifier.
 - `--no-cli`: native verifier only.
 - Default: native verifier + all enabled and available CLI verifiers.
 
@@ -92,11 +104,13 @@ If Ollama is enabled but not installed, report `Ollama skipped - not installed`.
 
 If Codex is enabled but not installed, report `Codex skipped - not installed`. If Codex returns an authentication error, report `Codex skipped - not authenticated`.
 
+For OpenCode, Kilo, Cursor, or Antigravity: if the reviewer is enabled but the CLI is missing, report `<Tool> skipped - not installed`. If a CLI reports a login/authentication failure, report `<Tool> skipped - not authenticated`. If Antigravity is installed but `agy --help` does not show a safe non-interactive prompt/stdin form, report `Antigravity skipped - installed but unsupported for automated review`.
+
 After applying flags and availability checks, if zero verifiers are selected, stop with a clear message:
 
 > Plan verification skipped - no selected verifiers are available.
 
-For explicit `--ollama-only`, `--codex-only`, `--custom-only`, or `--cli-only`, do not silently fall back to native verification unless the user asks for a fallback. Report which requested verifier class was unavailable.
+For explicit `--ollama-only`, `--codex-only`, `--opencode-only`, `--kilo-only`, `--cursor-only`, `--antigravity-only`, `--custom-only`, or `--cli-only`, do not silently fall back to native verification unless the user asks for a fallback. Report which requested verifier class was unavailable.
 
 ## Step 2.1 - Prepare CLI Prompt
 
@@ -125,16 +139,22 @@ Use `PLAN_SOURCE` as `conversation-backed`, `file-backed`, or a more specific la
 
 Run all eligible CLI verifiers in parallel when the active harness supports parallel tool calls; otherwise run them sequentially.
 
+For every external CLI verifier, enforce review-only behavior:
+- The prompt must say to review the attached context only and not modify files.
+- Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent.
+- Compare `node ./lib/pza-runtime.js diff-hash` before and after each CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
+
 **Ollama CLI:**
 
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-ollama.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
 node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+OLLAMA_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model)
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run "$OLLAMA_MODEL"
 ```
 
-Replace `<ollama-model>` with the model from Session Context.
+The runtime reads the configured Ollama reviewer model from `/pza-settings`.
 
 **Codex CLI:**
 
@@ -142,10 +162,81 @@ Replace `<ollama-model>` with the model from Session Context.
 PROMPT_FILE=$(mktemp -t pza-plan-codex.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
 node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-cat "$PROMPT_FILE" | codex exec -
+CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+if [ -n "$CODEX_MODEL" ]; then
+  cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
+else
+  cat "$PROMPT_FILE" | codex exec -
+fi
 ```
 
 Use `codex exec`, not `codex review`, because plan verification uses a custom prompt and does not review only a git diff.
+
+**OpenCode CLI:**
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-opencode.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
+OPENCODE_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model opencode 2>/dev/null || true)
+if [ -n "$OPENCODE_MODEL" ]; then
+  opencode run --model "$OPENCODE_MODEL" --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
+else
+  opencode run --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
+fi
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "OpenCode review stopped - worktree changed during review."
+  exit 3
+fi
+```
+
+**Kilo Code CLI:**
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-kilo.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
+KILO_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model kilo 2>/dev/null || true)
+if [ -n "$KILO_MODEL" ]; then
+  kilo run --model "$KILO_MODEL" --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
+else
+  kilo run --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
+fi
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "Kilo review stopped - worktree changed during review."
+  exit 3
+fi
+```
+
+**Cursor Agent CLI:**
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-cursor.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
+CURSOR_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model cursor 2>/dev/null || true)
+if [ -n "$CURSOR_MODEL" ]; then
+  cat "$PROMPT_FILE" | cursor-agent -p --output-format text --model "$CURSOR_MODEL"
+else
+  cat "$PROMPT_FILE" | cursor-agent -p --output-format text
+fi
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "Cursor review stopped - worktree changed during review."
+  exit 3
+fi
+```
+
+**Antigravity CLI:**
+
+Run `agy --help` first. Only use Antigravity if the local help text documents a non-interactive prompt, file, or stdin form that can accept the generated prompt without opening an interactive editor. If no safe form exists, report:
+
+> Antigravity skipped - installed but unsupported for automated review.
 
 **Custom CLI reviewers:**
 
@@ -189,7 +280,7 @@ Project conventions (AGENTS.md or compatibility excerpt):
 Return a structured verification report. Do NOT modify any files.
 ```
 
-Tell the user which verifiers are launching, for example: "Launching plan verification with native, Ollama CLI, Codex CLI, and 1 custom reviewer..."
+Tell the user which verifiers are launching, for example: "Launching plan verification with native, Ollama CLI, OpenCode CLI, and 1 custom reviewer..."
 
 ## Step 3 - Merge Findings
 
@@ -210,9 +301,9 @@ Display a summary table using only verifiers that were selected:
 
 | Severity | Count | Source Breakdown |
 |----------|-------|------------------|
-| Critical | N | Native: X, Ollama: Y, Codex: Z, Custom: W, Multiple: V |
-| Warning | N | Native: X, Ollama: Y, Codex: Z, Custom: W, Multiple: V |
-| Info | N | Native: X, Ollama: Y, Codex: Z, Custom: W, Multiple: V |
+| Critical | N | Native: X, Ollama: Y, Codex: Z, OpenCode: A, Kilo: B, Cursor: C, Antigravity: D, Custom: W, Multiple: V |
+| Warning | N | Native: X, Ollama: Y, Codex: Z, OpenCode: A, Kilo: B, Cursor: C, Antigravity: D, Custom: W, Multiple: V |
+| Info | N | Native: X, Ollama: Y, Codex: Z, OpenCode: A, Kilo: B, Cursor: C, Antigravity: D, Custom: W, Multiple: V |
 | Verified Correct | N | - |
 | Unverifiable | N | - |
 
@@ -271,7 +362,7 @@ After edits, append:
 **Verified:** [date]
 **Plan source:** file-backed
 **Confidence:** [HIGH/MEDIUM/LOW]
-**Tools:** [native, Ollama CLI, Codex CLI, custom reviewer names actually run]
+**Tools:** [native, Ollama CLI, Codex CLI, OpenCode CLI, Kilo CLI, Cursor CLI, Antigravity CLI, custom reviewer names actually run]
 **Agreement rate:** X/Y findings overlapped
 **Summary:** [one sentence]
 **Findings applied:** [Critical: N, Warning: N, Info: N if applied]
@@ -289,7 +380,7 @@ Do not edit files. Return a complete replacement plan in the response, followed 
 **Verified:** [date]
 **Plan source:** conversation-backed
 **Confidence:** [HIGH/MEDIUM/LOW]
-**Tools:** [native, Ollama CLI, Codex CLI, custom reviewer names actually run]
+**Tools:** [native, Ollama CLI, Codex CLI, OpenCode CLI, Kilo CLI, Cursor CLI, Antigravity CLI, custom reviewer names actually run]
 **Agreement rate:** X/Y findings overlapped
 **Summary:** [one sentence]
 **Findings applied:** [Critical: N, Warning: N, Info: N if applied]

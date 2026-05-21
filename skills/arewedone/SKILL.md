@@ -4,9 +4,9 @@ description: >-
   Run when the user says "are we done", "review my changes", or "check
   completeness", or after implementing features, refactoring code, or making
   significant modifications. Launches structural completeness review, code
-  quality review, and optional Ollama + Codex code reviews in parallel,
-  synthesizes findings, then runs proof commands (tests, build, lint, type
-  checks) before declaring done.
+  quality review, and configured CLI-backed AI reviews in parallel, synthesizes
+  findings, then runs proof commands (tests, build, lint, type checks) before
+  declaring done.
 user-invocable: true
 argument-hint: '[--adversarial] [--no-adversarial]'
 ---
@@ -19,20 +19,23 @@ Session-tracked files (this session only):
 Changed files summary (session-scoped):
 !`node ./lib/pza-runtime.js session-stat 2>/dev/null || git diff --stat`
 
+Reviewer backend settings:
+!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+
 Ollama enabled:
-!`node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
+!`node ./lib/pza-runtime.js get-reviewer-enabled ollama 2>/dev/null || node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
 
 Ollama available:
-!`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+!`command -v ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Codex enabled:
-!`node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
+!`node ./lib/pza-runtime.js get-reviewer-enabled codex 2>/dev/null || node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
 
 Codex CLI available:
-!`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
+!`command -v codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Adversarial enabled:
 !`node ./lib/pza-runtime.js get-setting adversarial 2>/dev/null || echo "yes"`
@@ -49,11 +52,18 @@ Check the Arguments from session context above. If arguments are present:
 - `--adversarial` → force adversarial agents ON for this run (overrides the adversarial toggle only; per-tool ollama/codex toggles still apply)
 - `--no-adversarial` → force adversarial agents OFF for this run
 
-These flags affect only Agents E and F (adversarial). Agents A–D are unaffected.
+These flags affect only adversarial reviewers. Structural, quality, and standard CLI reviewers are unaffected.
 
 ## 1. Launch Reviews in Parallel
 
-Launch review agents simultaneously in a single message with parallel Agent tool calls. Agents A and B always launch. Agent C (Ollama) launches only if Ollama enabled AND available (both "yes" in session context). Agent D (Codex) launches only if Codex enabled AND Codex CLI available (both "yes" in session context). Agents E and F (adversarial) launch based on adversarial flag/settings logic from Step 0.
+Launch review agents simultaneously in a single message with parallel Agent tool calls where the active harness supports it. Agents A and B always launch. Optional CLI-backed reviewers launch from `/pza-settings` reviewer backend settings:
+
+- Agent C (Ollama) launches only if Ollama is enabled and installed.
+- Agent D (Codex) launches only if Codex is enabled and installed.
+- Additional external CLI review lanes launch only when enabled and installed: OpenCode (`opencode`), Kilo Code (`kilo`), Cursor Agent (`cursor-agent`), and Antigravity (`agy`) when `agy --help` confirms a safe non-interactive prompt/stdin mode.
+- Agents E and F (adversarial) launch based on adversarial flag/settings logic from Step 0.
+
+Every CLI-backed review is review-only. Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent. Compare `node ./lib/pza-runtime.js diff-hash` before and after each external CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
 
 ### Agent A: Structural Completeness Review (`structural-completeness-reviewer`)
 
@@ -81,7 +91,7 @@ The agent's prompt should instruct it to:
 
 1. **Check Ollama availability**:
    ```bash
-   which ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
+   command -v ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
    ```
    If not available, report "Ollama review skipped — Ollama is not installed." and stop.
 
@@ -185,7 +195,8 @@ JSON FORMAT:
 If no issues found, return: {"verdict":"approve","summary":"No issues found.","findings":[]}
 PZA_OLLAMA_PROMPT
    printf '\n%s\n\n%s\n' "$TRUNC_NOTE" "$DIFF" >> "$PROMPT_FILE"
-   cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+   OLLAMA_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model)
+   cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run "$OLLAMA_MODEL"
    EXIT_CODE=$?
    rm -f "$PROMPT_FILE"
    exit $EXIT_CODE
@@ -216,6 +227,24 @@ Launch the `codex-code-reviewer` agent. Its prompt should simply be:
 > "Run a Codex code review against the current git state. Return the full output."
 
 This agent handles Codex detection, scope selection, invocation, and error reporting internally. It returns prose/markdown output (not structured JSON).
+
+### Additional External CLI Code Reviews
+
+For each enabled and installed reviewer backend from `/pza-settings`, launch a general-purpose review-only agent unless a dedicated plugin agent exists. These reviewers should all inspect the same current git state and return prose/markdown output.
+
+Supported command shapes:
+
+```bash
+opencode run [--model provider/model] --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
+kilo run [--model provider/model] --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
+cat "$PROMPT_FILE" | cursor-agent -p --output-format text [--model model]
+```
+
+For Antigravity, run `agy --help` first. Only use it if the local help text documents a non-interactive prompt, file, or stdin form. Otherwise report:
+
+> Antigravity review skipped — installed but unsupported for automated review.
+
+The prompt file should contain the same review-only instructions and gathered diff context used by the Ollama review. Use the model configured in `node ./lib/pza-runtime.js get-reviewer-model <reviewer>` when non-empty. If a reviewer is enabled but missing, report `<Tool> review skipped — not installed`. If it returns an auth/login error, report `<Tool> review skipped — not authenticated`.
 
 ### Agent E: Ollama Adversarial Review (`ollama-adversarial-reviewer`)
 
@@ -251,7 +280,7 @@ This agent handles Codex detection, diff assembly, adversarial prompt invocation
 
 ## 2. Converge: Synthesize All Reviews
 
-After **all** launched agents return, synthesize their results into a single unified report. The actual number of reviewers varies (2–6) depending on which optional agents were launched.
+After **all** launched agents return, synthesize their results into a single unified report. The actual number of reviewers varies depending on which optional reviewer backends are enabled and available.
 
 ### 2a. Parse Agent C's output (dual-format handling) — skip if Agent C was not launched
 
@@ -300,16 +329,20 @@ Agent F (Codex adversarial) always returns prose. No JSON extraction needed — 
    | Code quality | Agent B | pass/fail |
    | Ollama review | Agent C | approve/needs-attention/skipped |
    | Codex review | Agent D | approve/needs-attention/skipped |
+   | OpenCode review | External CLI | approve/needs-attention/skipped |
+   | Kilo Code review | External CLI | approve/needs-attention/skipped |
+   | Cursor Agent review | External CLI | approve/needs-attention/skipped |
+   | Antigravity review | External CLI | approve/needs-attention/skipped |
    | Ollama adversarial | Agent E | approve/needs-attention/skipped |
    | Codex adversarial | Agent F | approve/needs-attention/skipped |
 
    Only include rows for agents that were launched. If an optional agent was not launched (disabled or unavailable), omit its row entirely.
 
-2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agents C or E returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, F, or C/E fallback), match by semantic similarity (same file + similar description). If Agent B's security dimension and Agent E or F flag the same issue, this is especially high confidence (independent security-focused corroboration). Note: cross-format dedup (JSON vs prose, or different review framings) is inherently fuzzy — err on the side of reporting both if uncertain whether two findings are the same issue.
+2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agents C or E returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, F, external CLI reviewers, or C/E fallback), match by semantic similarity (same file + similar description). If Agent B's security dimension and Agent E or F flag the same issue, this is especially high confidence (independent security-focused corroboration). Note: cross-format dedup (JSON vs prose, or different review framings) is inherently fuzzy — err on the side of reporting both if uncertain whether two findings are the same issue.
 
 3. **Issues list** — deduplicate overlapping findings across all launched reviews, categorize by severity (critical > warning > suggestion)
 
-4. **Source label** — tag each issue as [structural], [quality], [ollama], [codex], [ollama-security], or [codex-security] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
+4. **Source label** — tag each issue as [structural], [quality], [ollama], [codex], [opencode], [kilo], [cursor], [antigravity], [ollama-security], or [codex-security] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
 
 If no issues are found from any review, report a clean bill of health and proceed to Step 4 (Proof).
 
