@@ -19,13 +19,14 @@ Install a single skill:
 ```bash
 npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --skill areyousure
+npx skills add pizzayap/pza-skills --skill external-ai-review
 npx skills add pizzayap/pza-skills --skill ollama-review
 npx skills add pizzayap/pza-skills --skill ollama-setup
 npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
 ```
 
-Optional integrations are detected at runtime. Install [Ollama](https://ollama.com) for `/ollama-review` and Ollama-backed reviewers; install the [Codex CLI](https://github.com/openai/codex) for Codex-backed reviewers. Use `/pza-settings` after installation to toggle Codex, Ollama, and adversarial review integrations.
+Optional integrations are detected at runtime. Install [Ollama](https://ollama.com) for `/ollama-review` and Ollama-backed reviewers; install the [Codex CLI](https://github.com/openai/codex) for Codex-backed reviewers. `/external-ai-review` can use local OpenCode, Kilo Code, Cursor Agent, or Antigravity CLIs when they expose scriptable review commands. Use `/pza-settings` after installation to toggle Codex, Ollama, and adversarial review integrations.
 
 For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
@@ -46,6 +47,21 @@ Runs an Ollama-powered code review with smart scope detection. Reviews uncommitt
 **Triggers:** `/ollama-review`, `/ollama-review --wait`, `/ollama-review --background`
 
 **Requires:** [Ollama](https://ollama.com)
+
+### `/external-ai-review`
+
+Runs a review-only second pass through one locally installed external AI CLI. Auto mode checks OpenCode first, then Kilo Code, Cursor Agent, and Antigravity; missing or unauthenticated CLIs are reported and skipped.
+
+**Usage:**
+
+```bash
+/external-ai-review
+/external-ai-review --tool opencode --model openai/gpt-5.3-codex
+/external-ai-review --tool cursor --scope staged
+/external-ai-review --scope pr --base origin/main
+```
+
+**Optional:** OpenCode (`opencode run`), Kilo Code (`kilo run`), Cursor Agent (`cursor-agent -p --output-format text`), Antigravity (`agy`, only when local help confirms a non-interactive prompt-file/stdin command).
 
 ### `/ollama-setup`
 
@@ -124,6 +140,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 |---|---|---|
 | `/arewedone` | — | Ollama, Codex |
 | `/ollama-review` | Ollama | — |
+| `/external-ai-review` | — | OpenCode, Kilo Code, Cursor Agent, Antigravity CLI |
 | `/ollama-setup` | Ollama | — |
 | `/pza-settings` | — | Codex, Ollama |
 | `/hook-worthy` | — | — |
