@@ -1,8 +1,33 @@
 # PZA-skills
 
+[![skills.sh](https://skills.sh/b/pizzayap/pza-skills)](https://skills.sh/pizzayap/pza-skills)
+
 Portable Agent Skills for code review, plan verification, hook auditing, and session tracking across Codex, OpenCode, Pi, and Claude Code compatibility installs.
 
 The canonical workflows live in `skills/*/SKILL.md` and `agents/*.md`. Harness-specific files are thin adapters; they should not fork the core workflow logic. Shared runtime behavior lives in `lib/pza-runtime.js`.
+
+## Installation
+
+Install all skills from skills.sh:
+
+```bash
+npx skills add pizzayap/pza-skills
+```
+
+Install a single skill:
+
+```bash
+npx skills add pizzayap/pza-skills --skill arewedone
+npx skills add pizzayap/pza-skills --skill areyousure
+npx skills add pizzayap/pza-skills --skill ollama-review
+npx skills add pizzayap/pza-skills --skill ollama-setup
+npx skills add pizzayap/pza-skills --skill pza-settings
+npx skills add pizzayap/pza-skills --skill hook-worthy
+```
+
+Optional integrations are detected at runtime. Install [Ollama](https://ollama.com) for `/ollama-review` and Ollama-backed reviewers; install the [Codex CLI](https://github.com/openai/codex) for Codex-backed reviewers. Use `/pza-settings` after installation to toggle Codex, Ollama, and adversarial review integrations.
+
+For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ## Skills
 
