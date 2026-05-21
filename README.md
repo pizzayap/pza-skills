@@ -65,9 +65,26 @@ Audits the current session for recurring mistakes, convention violations, or dan
 
 ### `/areyousure`
 
-Multi-engine plan verification. Launches native, optional Ollama, and optional Codex verifiers to re-check a plan against the codebase and current stable APIs.
+Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, optional Ollama CLI, optional Codex CLI, and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs.
 
-**Flags:** `--native-only`, `--ollama-only`, `--codex-only`; `--claude-only` remains a deprecated alias for `--native-only`.
+**Flags:** `--native-only`, `--ollama-only`, `--codex-only`, `--cli-only`, `--no-cli`, `--custom-only`; `--claude-only` remains a deprecated alias for `--native-only`.
+
+**Custom plan reviewers:** add local-only reviewers to `~/.pza-skills/plan-reviewers.json`:
+
+```json
+{
+  "reviewers": [
+    {
+      "name": "my-reviewer",
+      "command": ["my-reviewer-cli", "review-plan", "--stdin"],
+      "enabled": true
+    }
+  ]
+}
+```
+
+Custom reviewer commands receive the full plan-review prompt on stdin and should return markdown/prose with Critical, Warning, Info, and Verified Correct sections.
+The runtime keeps command arrays private; skill context only shows reviewer names and enabled status.
 
 ## Agents
 
@@ -86,6 +103,7 @@ New writes use harness-neutral paths:
 
 - `~/.pza-skills/settings.json`
 - `~/.pza-skills/ollama-model`
+- `~/.pza-skills/plan-reviewers.json`
 - `/tmp/pza-skills-session-<id>-files.json`
 - `/tmp/pza-skills-session-<id>-reviewed.json`
 
@@ -109,7 +127,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/ollama-setup` | Ollama | — |
 | `/pza-settings` | — | Codex, Ollama |
 | `/hook-worthy` | — | — |
-| `/areyousure` | — | Ollama, Codex, Exa MCP |
+| `/areyousure` | — | Ollama, Codex, custom CLI reviewers, Exa MCP |
 
 Skills gracefully degrade when optional dependencies are missing.
 

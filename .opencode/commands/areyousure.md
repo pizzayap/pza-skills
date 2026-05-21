@@ -1,5 +1,5 @@
 ---
-description: Verify the current implementation plan with native, Ollama, and Codex reviewers
+description: Verify the current implementation plan with native and CLI-backed reviewers
 agent: plan
 ---
 

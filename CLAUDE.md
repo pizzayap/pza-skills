@@ -10,14 +10,14 @@ This is a portable Agent Skills package (`PZA-skills`) with Claude Code compatib
 
 ```
 .claude-plugin/plugin.json   — Claude Code compatibility manifest
-lib/pza-runtime.js           — Shared runtime for config, session markers, diff hashes, and Ollama invocation
+lib/pza-runtime.js           — Shared runtime for config, session markers, diff hashes, plan-review prompts, custom reviewers, and Ollama invocation
 skills/*/SKILL.md            — Skill definitions (markdown with frontmatter)
 agents/*.md                  — Agent definitions (markdown with frontmatter + tools)
 hooks/hooks.json             — Hook event bindings
 hooks/scripts/*.js           — Hook implementation scripts
 ```
 
-**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches up to 6 agents simultaneously (structural, quality, + optional Ollama, Codex, Ollama adversarial, and Codex adversarial), synthesizes findings, then runs proof commands (tests, build, lint) before declaring done; `/areyousure` launches up to 3 agents (native + optional Ollama and Codex) and merges by confidence scoring. Optional integrations (Ollama, Codex, adversarial) are toggled via `/pza-settings`.
+**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches up to 6 agents simultaneously (structural, quality, + optional Ollama, Codex, Ollama adversarial, and Codex adversarial), synthesizes findings, then runs proof commands (tests, build, lint) before declaring done; `/areyousure` verifies file-backed or conversation-backed plans with native, optional Ollama CLI, optional Codex CLI, and configured custom CLI reviewers, then merges by confidence scoring. Optional integrations (Ollama, Codex, adversarial) are toggled via `/pza-settings`.
 
 `/arewedone` review agents have strictly non-overlapping scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness) vs `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring). The Ollama agent provides an independent third opinion. The adversarial agents (`ollama-adversarial-reviewer`, `codex-adversarial-reviewer`) provide security-focused review with attacker mindset — their security scope intentionally overlaps with `code-quality-reviewer`'s security dimension, with overlap handled by dedup (corroborated findings get HIGH confidence).
 
@@ -26,6 +26,7 @@ hooks/scripts/*.js           — Hook implementation scripts
 ## Key Conventions
 
 - Ollama invocation pattern: prefer `node ./lib/pza-runtime.js ollama-run <model>` with prompt content on stdin. The runtime handles current `ollama run` usage and a compatibility fallback.
+- Plan-review CLI prompt pattern: write or materialize the plan to a temp file, then run `node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"` and pipe `"$PROMPT_FILE"` to the reviewer. Custom reviewers must run through `node ./lib/pza-runtime.js run-plan-reviewer <name>` so commands are executed as argv arrays from `~/.pza-skills/plan-reviewers.json`.
 - When interpolating git diffs into `-p` arguments, use heredoc (`cat <<'EOFPROMPT'...EOFPROMPT`) to avoid shell metacharacter injection from diff content.
 - When forwarding file content to CLI tools (e.g., `codex exec`), write the full prompt+content to a temp file and pipe via stdin (`cat "$FILE" | codex exec -`). Do NOT use `$(cat "$FILE")` inside double-quoted command arguments — this re-exposes content to shell expansion, defeating the temp-file safety pattern.
 - When assembling prompt+diff temp files, write the static prompt via single-quoted heredoc, then append untrusted content (diffs, untracked file content) via `printf '%s' "$VAR" >> "$FILE"`. Never embed untrusted content inside a heredoc body — content containing the delimiter string on its own line closes the heredoc early, exposing subsequent lines to shell interpretation.
@@ -35,7 +36,7 @@ hooks/scripts/*.js           — Hook implementation scripts
 - Assigned agent colors: `red` (structural-completeness-reviewer), `yellow` (code-quality-reviewer), `cyan` (plan-verifier), `green` (ollama-plan-verifier), `magenta` (codex-code-reviewer), `blue` (codex-plan-verifier), `white` (ollama-adversarial-reviewer), `gray` (codex-adversarial-reviewer). New agents must use a unique color.
 - Skills declare `triggers:` for natural language activation and `arguments:` for flag-based invocation.
 - Optional external dependencies (Ollama, Codex) are handled with graceful fallback — skills detect availability via `which ollama` / `which codex` and adjust scope rather than failing. Users run `/ollama-setup` to configure their Ollama model; config is stored at `~/.pza-skills/ollama-model`. Users run `/pza-settings` to toggle Ollama, Codex, and adversarial on/off; config is stored at `~/.pza-skills/settings.json` (default: all enabled, missing file = all on). Legacy `~/.claude` config is read as a migration fallback only.
-- Codex invocation patterns: `codex review --uncommitted` for code review (diff-based), `codex exec "prompt"` for arbitrary text analysis (plan verification, adversarial security review). Note: `codex review`'s `--uncommitted`/`--commit`/`--base` flags and `[PROMPT]` argument are mutually exclusive. The `codex-adversarial-reviewer` agent uses `codex exec` (not `codex review`) because it needs a custom adversarial prompt with the diff piped in.
+- Codex invocation patterns: `codex review --uncommitted` for code review (diff-based), `codex exec -` with prompt content on stdin for arbitrary text analysis (plan verification, adversarial security review). Note: `codex review`'s `--uncommitted`/`--commit`/`--base` flags and `[PROMPT]` argument are mutually exclusive. The `codex-adversarial-reviewer` agent uses `codex exec` (not `codex review`) because it needs a custom adversarial prompt with the diff piped in.
 - Prefer the `codex` CLI for Codex integrations. Do not depend on a harness-specific plugin cache path.
 - Codex can be installed but unauthenticated. Agents check for auth errors and report "skipped — not authenticated" distinctly from "not installed".
 - Codex review output is always prose/markdown (not structured JSON). Do not attempt JSON parsing on Codex output — only Ollama output may contain structured JSON.
@@ -74,3 +75,4 @@ Skills and agents are auto-discovered from `skills/*/SKILL.md` and `agents/*.md`
 
 - `~/.pza-skills/ollama-model` — User's chosen Ollama model (written by `/ollama-setup`, read by all Ollama-powered skills). Fallback default: `kimi-k2.6:cloud`.
 - `~/.pza-skills/settings.json` — Integration toggles (`{"codex": true, "ollama": true, "adversarial": true}`). Written by `/pza-settings`, read by `/arewedone` and `/areyousure` at runtime. Missing file = all enabled. The `adversarial` toggle controls both `ollama-adversarial-reviewer` and `codex-adversarial-reviewer` as a single concept; individual tool availability is gated by the `ollama`/`codex` toggles. `/arewedone --adversarial` overrides the adversarial toggle only (still respects per-tool `ollama`/`codex` toggles), `--no-adversarial` forces adversarial off. Note: `/ollama-review` (standalone) intentionally does NOT check this toggle — direct invocation implies the user wants Ollama regardless of the toggle.
+- `~/.pza-skills/plan-reviewers.json` — Local-only custom `/areyousure` CLI reviewers. Shape: `{"reviewers":[{"name":"my-reviewer","command":["my-reviewer-cli","review-plan","--stdin"],"enabled":true}]}`. Commands receive the full plan-review prompt on stdin. The `plan-reviewers` status output must redact command arrays and expose only names/enabled state.

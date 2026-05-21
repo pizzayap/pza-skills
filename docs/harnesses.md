@@ -25,6 +25,7 @@ Codex translation notes:
 - Claude-style `AskUserQuestion` means Codex `request_user_input` when available, or a concise direct question when it is not.
 - Claude-style `Task(...)` means Codex subagent/collaboration tools such as `spawn_agent`; omit inline model selection unless Codex exposes it.
 - `AGENTS.md` is the primary project instruction file. `CLAUDE.md` is compatibility-only.
+- Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when invoking CLI reviewers.
 
 ## OpenCode
 
@@ -39,6 +40,9 @@ Command filenames become slash commands, so `.opencode/commands/arewedone.md`
 provides `/arewedone`. Agent files mirror canonical `agents/*.md` with OpenCode
 frontmatter such as `mode: subagent` and read-only reviewer permissions.
 
+OpenCode plan mode may use `.opencode/plans/*.md`. `/areyousure` should prefer
+that file when present, then fall back to conversation-visible plan content.
+
 ## Pi
 
 Pi can load the canonical skills directly. Use any supported skill location:
@@ -52,6 +56,10 @@ Pi can load the canonical skills directly. Use any supported skill location:
 
 Pi also exposes loaded skills as `/skill:name`. The optional `.pi/prompts/*.md`
 files are only for slash-command parity with the existing command names.
+
+Core Pi has no built-in plan mode. If a Pi extension places a plan in the editor
+or conversation, `/areyousure` should treat that visible content as a
+conversation-backed plan unless the user provides a file path.
 
 ## Claude Code Compatibility
 

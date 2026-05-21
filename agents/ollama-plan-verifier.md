@@ -13,58 +13,46 @@ You are a forwarding wrapper that sends plan verification to an Ollama model.
 
 ## Your Job
 
-Forward the plan content to Ollama for technical review. The model name is provided in your prompt by the parent skill.
+Forward the plan content to Ollama for technical review. The model name and plan content are provided in your prompt by the parent skill.
 
-Plan content can contain `"`, `` ` ``, `$`, `\`, and other shell metacharacters, so do NOT inline it into a shell command argument. Instead, write the plan to a temp file and embed it via heredoc + `cat`. Use exactly two shell calls:
+## Steps
 
-**Call 1 — write the plan to a temp file:**
+1. Confirm `ollama` is installed:
 
 ```bash
-PLAN_FILE=$(mktemp -t plan-verify.XXXXXX) && cat > "$PLAN_FILE" <<'PLANEOF'
-[PLAN_CONTENT]
-PLANEOF
-echo "$PLAN_FILE"
+which ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
-Replace `[PLAN_CONTENT]` with the actual plan text from your prompt. The single-quoted heredoc delimiter (`'PLANEOF'`) prevents any expansion of `$`, backticks, or `\` inside the plan content. Capture the printed temp file path for the next call.
+If `not_available`, report:
 
-**Call 2 — invoke Ollama, reading the plan from the file:** Use the active harness shell tool with a 5 minute timeout.
+> Ollama plan verification skipped - Ollama is not installed.
+
+2. Confirm the parent prompt provided a plan file path.
+
+For conversation-backed plans, the parent `/areyousure` workflow is responsible for safely materializing the plan under `/tmp` before launching this Bash-only wrapper. Do not invent a heredoc from raw plan content inside this agent.
+
+If no plan file path is provided, report:
+
+> Ollama plan verification skipped - unable to materialize conversation plan safely.
+
+3. Build the review prompt and run Ollama in one shell call:
 
 ```bash
 PLAN_FILE="<PLAN_FILE>"
+PLAN_SOURCE="<PLAN_SOURCE>"
 PROMPT_FILE=$(mktemp -t plan-ollama-prompt.XXXXXX)
-cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
-Review this implementation plan for technical accuracy. Check for:
-- Outdated APIs or deprecated patterns
-- Wrong method signatures or return types
-- Incorrect configuration formats
-- Missing steps or dependencies
-- Assumptions that don't match current library docs
-
-Plan content:
-PZA_OLLAMA_PROMPT
-cat "$PLAN_FILE" >> "$PROMPT_FILE"
-cat >> "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
-
-Return a structured report with:
-- Critical findings (must fix)
-- Warning findings (should fix)
-- Info findings (minor)
-- Verified correct items
-
-Format each finding as: Claim | Issue | Correction | Confidence
-PZA_OLLAMA_PROMPT
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
 cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <model-from-prompt>
-EXIT_CODE=$?
-rm -f "$PLAN_FILE" "$PROMPT_FILE"
-exit $EXIT_CODE
 ```
 
-Replace `<PLAN_FILE>` with the temp path from Call 1, and `<model-from-prompt>` with the Ollama model name from your prompt. Always `rm -f` the temp file after the call, even if Ollama fails.
+Replace `<PLAN_FILE>` with the temp plan file path, `<PLAN_SOURCE>` with `conversation-backed`, `file-backed`, or the source label from your prompt, and `<model-from-prompt>` with the Ollama model name from your prompt.
+
+4. Clean up the temp plan file after the call. The `trap` cleans up the prompt file.
 
 ## Rules
 
-- Do not inspect files, read code, or do independent work
-- Return the Ollama output exactly as-is
-- If Ollama fails or times out, return an error message
-- Always clean up the temp plan file
+- Do not inspect files, read code, or do independent work.
+- Return the Ollama output exactly as-is.
+- If Ollama fails or times out, return an error message.
+- Always clean up temp files.

@@ -35,6 +35,51 @@ node -e "
 "
 rm -rf "$tmp_home" /tmp/pza-runtime-merged.json
 
+echo "== Plan reviewer runtime =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-plan-reviewers.XXXXXX")
+mkdir -p "$tmp_home/.pza-skills"
+cat > "$tmp_home/.pza-skills/plan-reviewers.json" <<'JSON'
+{
+  "reviewers": [
+    {
+      "name": "fake",
+      "command": [
+        "node",
+        "-e",
+        "process.stdin.resume();let input='';process.stdin.on('data',d=>input+=d);process.stdin.on('end',()=>{if(!input.includes('Plan content:')) process.exit(2); console.log('Critical findings\\n- none\\nVerified correct items\\n- fake reviewer ran');});"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "invalid-empty-command",
+      "command": [],
+      "enabled": true
+    }
+  ]
+}
+JSON
+plan_file="/tmp/pza-plan-validate-$$.md"
+prompt_file="/tmp/pza-plan-prompt-$$.md"
+review_out="/tmp/pza-plan-review-$$.out"
+reviewers_json="/tmp/pza-plan-reviewers-$$.json"
+printf '%s\n' '# Plan' '' '- Do the safe thing' > "$plan_file"
+HOME="$tmp_home" node ./lib/pza-runtime.js plan-reviewers > "$reviewers_json"
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+  if (data.reviewers.length !== 1 || data.reviewers[0].name !== 'fake') process.exit(1);
+  if ('command' in data.reviewers[0]) process.exit(1);
+  if (data.reviewers[0].commandConfigured !== true) process.exit(1);
+" "$reviewers_json"
+HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt "$plan_file" file-backed > "$prompt_file"
+grep -q 'Plan source: file-backed' "$prompt_file"
+printf '%s\n' '# Plan from stdin' | HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt - conversation-backed > "$prompt_file"
+grep -q 'Plan source: conversation-backed' "$prompt_file"
+HOME="$tmp_home" node ./lib/pza-runtime.js run-plan-reviewer fake < "$prompt_file" > "$review_out"
+grep -q 'fake reviewer ran' "$review_out"
+rm -rf "$tmp_home"
+rm -f "$plan_file" "$prompt_file" "$review_out" "$reviewers_json"
+
 echo "== Hook session tracking =="
 session_id="pza-validate-$$"
 printf '%s' "{\"session_id\":\"$session_id\",\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"/tmp/example.txt\"}}" \

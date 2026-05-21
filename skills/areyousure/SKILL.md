@@ -3,21 +3,20 @@ name: areyousure
 description: >-
   Run when the user says "are you sure", "are you sure about the plan",
   "double-check the plan", "verify plan", "deep check the plan", or "validate
-  the plan". Re-validates the plan against the codebase and current stable
-  APIs by launching verification agents (native + optional Ollama + optional
-  Codex) in parallel, then merges findings with confidence scores and applies
-  corrections.
+  the plan". Re-validates the current implementation plan against the codebase
+  and current stable APIs by launching native and CLI-backed verifiers, then
+  merges findings with confidence scores and applies or returns corrections.
 user-invocable: true
-argument-hint: '[--native-only|--claude-only|--ollama-only|--codex-only]'
+argument-hint: '[--native-only|--claude-only|--ollama-only|--codex-only|--cli-only|--no-cli|--custom-only]'
 ---
 
 # Session Context
 
-Recent plan-like markdown files:
-!`{ find . -maxdepth 3 -type f \\( -iname '*plan*.md' -o -iname 'PLAN.md' \\) 2>/dev/null; ls -t ~/.codex/plans/*.md ~/.Codex/plans/*.md ~/.claude/plans/*.md 2>/dev/null; } | head -10`
+Recent plan-like markdown files (best effort only):
+!`{ find . -maxdepth 4 -type f \\( -path './.opencode/plans/*.md' -o -iname '*plan*.md' -o -iname 'PLAN.md' \\) 2>/dev/null; ls -t ~/.codex/plans/*.md ~/.Codex/plans/*.md ~/.claude/plans/*.md 2>/dev/null; } | head -10`
 
 Project instructions:
-!`{ test -f ./AGENTS.md && echo "AGENTS.md — $(wc -l < ./AGENTS.md) lines"; test -f ./CLAUDE.md && echo "CLAUDE.md compatibility — $(wc -l < ./CLAUDE.md) lines"; } || true`
+!`{ test -f ./AGENTS.md && echo "AGENTS.md - $(wc -l < ./AGENTS.md) lines"; test -f ./CLAUDE.md && echo "CLAUDE.md compatibility - $(wc -l < ./CLAUDE.md) lines"; } || true`
 
 Ollama enabled:
 !`node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
@@ -34,6 +33,9 @@ Codex enabled:
 Codex CLI available:
 !`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
+Custom plan reviewers:
+!`node ./lib/pza-runtime.js plan-reviewers 2>/dev/null || echo '{"reviewers":[]}'`
+
 Working directory:
 !`pwd`
 
@@ -42,133 +44,191 @@ $ARGUMENTS
 
 # Workflow
 
-## Step 1 — Locate and Read Plan
+## Step 1 - Resolve Plan Content
 
-Find the current plan file path using this priority order:
+Resolve a single plan and label it with `planSource`:
 
-1. **Explicit path/content** — If the user supplied a plan path or pasted plan content, use that.
-2. **Harness context** — Extract a path from any current plan metadata exposed by the active harness.
-3. **Project/repo plans** — Use the most relevant recent plan-like markdown file from the list shown above.
-4. **Legacy fallback** — Use the most recently modified file under `~/.claude/plans/` only when no Codex/project plan is available.
+1. **Explicit path/content** - If the user supplied a plan path or pasted plan content, use that.
+2. **Harness authoritative plan file** - Use current harness metadata when exposed. In OpenCode, prefer `.opencode/plans/*.md` when present because plan mode may store the working plan there.
+3. **Current conversation** - If no harness plan file is available and a plan exists in the current chat, use the latest complete plan. Prefer the latest `<proposed_plan>...</proposed_plan>` block. If no tag exists, use the latest assistant message that is clearly an implementation plan.
+4. **Project/repo plan file** - Use the most relevant recent plan-like markdown file from the list shown above.
+5. **Legacy fallback** - Use the most recently modified file under `~/.claude/plans/` only when no conversation, Codex, OpenCode, or project plan is available.
+
+Set:
+- `planSource=conversation-backed` when the plan comes from the current chat.
+- `planSource=file-backed` when the plan comes from a path.
+- `planPath=<path>` only for file-backed plans.
+- `planContent=<full plan text>` for all plans.
 
 **Early exit guard:** If no plan path or plan content is found, stop immediately and ask the user to provide a plan path or paste the plan content.
 
-Once the path is identified:
-- Read the plan file in full using the `Read` tool
+Once the plan is resolved:
+- If file-backed, read the plan file in full.
+- If conversation-backed, do not invent a plan file as the source of truth. Only materialize a temporary copy under `/tmp` if a CLI verifier needs stdin.
 - If `./AGENTS.md` exists, read it for project conventions. If absent, read `./CLAUDE.md` as a compatibility fallback. If the file is longer than 200 lines, read only the first 200 lines for context.
 
-## Step 2 — Launch Verification Agents
+## Step 2 - Select Verifiers
 
-Check the Arguments from Session Context and availability of each tool. Explicit flags (`--native-only`, deprecated alias `--claude-only`, `--ollama-only`, `--codex-only`) override the enabled/disabled toggle in `pza-settings.json` — if a user explicitly requests a specific agent via flag, respect it regardless of settings.
+Check Arguments from Session Context. Explicit flags override `pza-settings.json`.
 
-- If `--native-only` or deprecated `--claude-only`: launch only `plan-verifier`
-- If `--ollama-only`: launch only `ollama-plan-verifier`
-- If `--codex-only`: launch only `codex-plan-verifier`
-- Otherwise (default): launch `plan-verifier` (always) + `ollama-plan-verifier` (if Ollama enabled AND available) + `codex-plan-verifier` (if Codex enabled AND Codex CLI available) — up to 3 agents
+Verifier types:
+- **Native verifier** - `plan-verifier`, always available unless `--cli-only`, `--ollama-only`, `--codex-only`, or `--custom-only` is used.
+- **Ollama CLI verifier** - run when Ollama is enabled and `which ollama` succeeds, or when `--ollama-only` is explicit.
+- **Codex CLI verifier** - run when Codex is enabled and `which codex` succeeds, or when `--codex-only` is explicit.
+- **Custom CLI verifiers** - enabled reviewers from `~/.pza-skills/plan-reviewers.json`, run by default and with `--cli-only`/`--custom-only`.
 
-If Ollama is enabled but not available: warn user, skip Ollama agent.
-If Codex is enabled but CLI not available: skip Codex agent silently.
+Flag behavior:
+- `--native-only` or deprecated `--claude-only`: native verifier only.
+- `--ollama-only`: Ollama CLI verifier only.
+- `--codex-only`: Codex CLI verifier only.
+- `--custom-only`: custom CLI verifiers only.
+- `--cli-only`: Ollama CLI + Codex CLI + custom CLI verifiers, no native verifier.
+- `--no-cli`: native verifier only.
+- Default: native verifier + all enabled and available CLI verifiers.
 
-### Multi-Agent Verification (default)
+If a named verifier agent is not callable in the active harness, do not skip the corresponding CLI verifier. If a shell/tool runner is available, run the CLI lane directly from this workflow. If no shell/tool runner is available, report that CLI verifier as `skipped - shell unavailable` and continue with native verification.
 
-Launch all eligible Agent tool calls **in the same message** (parallel execution):
+If Ollama is enabled but not installed, report `Ollama skipped - not installed`. If explicit `--ollama-only` was requested, stop after reporting the skip.
 
-**Agent 1: `plan-verifier` (native)** — always launched
+If Codex is enabled but not installed, report `Codex skipped - not installed`. If Codex returns an authentication error, report `Codex skipped - not authenticated`.
+
+After applying flags and availability checks, if zero verifiers are selected, stop with a clear message:
+
+> Plan verification skipped - no selected verifiers are available.
+
+For explicit `--ollama-only`, `--codex-only`, `--custom-only`, or `--cli-only`, do not silently fall back to native verification unless the user asks for a fallback. Report which requested verifier class was unavailable.
+
+## Step 2.1 - Prepare CLI Prompt
+
+CLI verifiers receive the same plan-review prompt. For file-backed plans, use `planPath` directly. For conversation-backed plans, materialize `planContent` to a temporary file under `/tmp` only for the duration of CLI review.
+
+Rules for temporary plan files:
+- Never write conversation-backed plans into the repo.
+- Prefer a harness file-write primitive for `/tmp` when available.
+- If the harness can pass `planContent` directly to a process on stdin without shell interpolation, the runtime also accepts `-` as the plan file: `node ./lib/pza-runtime.js plan-review-prompt - "$PLAN_SOURCE"`.
+- If the plan cannot be materialized safely, skip CLI verifiers with `skipped - unable to materialize conversation plan safely`.
+- Clean up all temporary plan and prompt files.
+
+Each CLI verifier command must build the prompt and run the verifier in the same shell call. Do not create `PROMPT_FILE` in one shell call and consume it in a later shell call.
+
+Build the CLI prompt with the runtime helper instead of hand-assembling prompt text in shell:
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-review-prompt.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
 ```
+
+Use `PLAN_SOURCE` as `conversation-backed`, `file-backed`, or a more specific label such as `conversation-backed:codex`.
+
+## Step 2.2 - Run CLI Verifiers
+
+Run all eligible CLI verifiers in parallel when the active harness supports parallel tool calls; otherwise run them sequentially.
+
+**Ollama CLI:**
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-ollama.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+```
+
+Replace `<ollama-model>` with the model from Session Context.
+
+**Codex CLI:**
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-codex.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+cat "$PROMPT_FILE" | codex exec -
+```
+
+Use `codex exec`, not `codex review`, because plan verification uses a custom prompt and does not review only a git diff.
+
+**Custom CLI reviewers:**
+
+List configured reviewers with:
+
+```bash
+node ./lib/pza-runtime.js plan-reviewers
+```
+
+For each enabled reviewer:
+
+```bash
+PROMPT_FILE=$(mktemp -t pza-plan-custom.XXXXXX)
+trap 'rm -f "$PROMPT_FILE"' EXIT
+node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js run-plan-reviewer "<reviewer-name>"
+```
+
+The runtime executes custom commands as argv arrays from `~/.pza-skills/plan-reviewers.json`; do not convert custom commands to shell strings.
+
+## Step 2.3 - Launch Native Verifier
+
+Launch the native verifier if selected.
+
+If the active harness exposes the plugin agent named `plan-verifier`, launch it. Otherwise use the closest read-only subagent/delegation tool available, or perform the native verification inline.
+
+Prompt:
+
+```text
 You are verifying this implementation plan against current documentation.
 
-**Working directory:** [pwd from session context above]
+Working directory: [pwd from session context above]
+Plan source: [planSource]
 
-**Plan content:**
-[paste the full plan file content here]
+Plan content:
+[paste planContent here]
 
-**Project conventions (AGENTS.md or compatibility excerpt):**
+Project conventions (AGENTS.md or compatibility excerpt):
 [paste AGENTS.md content here, or CLAUDE.md compatibility content if AGENTS.md is absent]
 
 Return a structured verification report. Do NOT modify any files.
 ```
 
-**Agent 2: `ollama-plan-verifier` (Ollama)** — launch if Ollama enabled AND available
-```
-Verify this implementation plan for technical accuracy.
+Tell the user which verifiers are launching, for example: "Launching plan verification with native, Ollama CLI, Codex CLI, and 1 custom reviewer..."
 
-**Ollama model to use:** [model from session context above]
+## Step 3 - Merge Findings
 
-**Plan content:**
-[paste the full plan file content here]
+Once all selected verifiers return, merge their reports. Skip merge only when exactly one verifier ran.
 
-Return findings in this format:
-- Critical findings (must fix)
-- Warning findings (should fix)
-- Info findings (minor)
-- Verified correct items
-```
+1. Extract Critical, Warning, Info, Unverifiable, and Verified Correct items from each verifier.
+2. Deduplicate findings by the affected claim and correction.
+3. Mark findings reported by multiple verifiers as HIGH confidence.
+4. Mark findings reported by one verifier as MEDIUM confidence with a source label.
+5. If reviewers disagree on the same claim, include both perspectives with LOW confidence.
+6. Calculate agreement rate as overlapping findings divided by total unique findings.
 
-**Agent 3: `codex-plan-verifier` (Codex)** — launch if Codex enabled AND CLI available
-```
-Verify this implementation plan for technical accuracy.
+Include skipped verifiers separately from findings so missing tools are visible but do not reduce plan confidence.
 
-**Plan content:**
-[paste the full plan file content here]
+## Step 4 - Present Findings
 
-Return findings in this format:
-- Critical findings (must fix)
-- Warning findings (should fix)
-- Info findings (minor)
-- Verified correct items
-```
-
-Tell the user how many verifiers are launching, e.g.: "Launching triple verification — native, Ollama, and Codex reviewing in parallel (2–5 min)..." or "Launching dual verification — native and Ollama reviewing in parallel (2–5 min)..."
-
-### Single Verification (flag or fallback)
-
-Launch only the specified/available agent. Tell the user which verifier is running and why.
-
-## Step 2.5 — Merge Findings
-
-Once all launched agents return, merge their reports. Skip this step for single-verification runs.
-
-1. **Parse all reports** — extract Critical, Warning, Info, and Verified Correct items from each agent
-2. **Deduplicate** — if all active reviewers found the same claim with the same issue, mark with HIGH confidence. If a majority agree (e.g., 2 of 3), mark with MEDIUM-HIGH confidence.
-3. **Mark unique findings** — findings from only one reviewer get source label (native/Ollama/Codex) with MEDIUM confidence
-4. **Handle conflicts** — if reviewers disagree on the same claim, include all perspectives with LOW confidence
-5. **Calculate agreement rate** — count overlapping findings vs. total unique findings (same formula across N reviewers)
-
-## Step 3 — Present Findings
-
-Once the agent(s) return, parse the (merged) report and display a summary table:
-
-**For multi-agent verification:**
+Display a summary table using only verifiers that were selected:
 
 | Severity | Count | Source Breakdown |
 |----------|-------|------------------|
-| Critical | N | Native: X, Ollama: Y, Codex: Z, Multiple: W |
-| Warning  | N | Native: X, Ollama: Y, Codex: Z, Multiple: W |
-| Info     | N | Native: X, Ollama: Y, Codex: Z, Multiple: W |
-| Verified Correct | N | — |
-| Unverifiable | N | — |
+| Critical | N | Native: X, Ollama: Y, Codex: Z, Custom: W, Multiple: V |
+| Warning | N | Native: X, Ollama: Y, Codex: Z, Custom: W, Multiple: V |
+| Info | N | Native: X, Ollama: Y, Codex: Z, Custom: W, Multiple: V |
+| Verified Correct | N | - |
+| Unverifiable | N | - |
 
-Only include source columns for agents that were actually launched. E.g., if only native + Ollama ran, omit the Codex column.
+Then show:
+- **Agreement rate:** X/Y findings overlapped
+- **Skipped verifiers:** list tool, reason, and whether the user explicitly requested it
+- **Overall confidence:** HIGH/MEDIUM/LOW
+- **Summary:** one short paragraph
 
-**Agreement rate:** X/Y findings overlapped (multiple reviewers found the same issue)
+If zero Critical + Warning findings: tell the user the plan looks solid, show the Verified Correct list, and stop.
 
-**For single verification:**
+## Step 5 - User Choice
 
-| Severity | Count |
-|----------|-------|
-| Critical | N |
-| Warning  | N |
-| Info     | N |
-| Verified Correct | N |
-| Unverifiable | N |
+Use the active harness's user-input tool when available. If not available, ask a concise direct question.
 
-Show the Overall Confidence rating and the Summary paragraph from the report.
-
-If zero Critical + Warning findings: tell the user the plan looks solid and show the "Verified Correct" list. Offer to show the full report anyway. Stop.
-
-## Step 4 — User Choice
-
-Use the active harness's user-input tool to let the user decide:
+For file-backed plans:
 
 ```yaml
 question: "How should we update the plan with these findings?"
@@ -176,47 +236,67 @@ options:
   - label: "Apply all corrections"
     description: "Update the plan with all Critical, Warning, and Info corrections"
   - label: "Apply critical + warning only"
-    description: "Update plan with high-severity items; append Info findings as notes at the bottom"
+    description: "Update plan with high-severity items; append Info findings as notes"
   - label: "Show full report only"
     description: "Display the complete verification report without modifying the plan"
 ```
 
-## Step 5 — Apply Corrections
+For conversation-backed plans:
 
-### Apply all / Apply critical + warning only
+```yaml
+question: "How should we handle these findings?"
+options:
+  - label: "Return corrected replacement plan"
+    description: "Rewrite the conversation plan with all accepted corrections"
+  - label: "Return critical + warning replacement"
+    description: "Rewrite only high-severity corrections and list Info findings below"
+  - label: "Show full report only"
+    description: "Display the complete verification report without rewriting the plan"
+```
 
-Edit the plan file using the agent's "Suggested Plan Updates" section. Each update specifies:
-- Which plan section to edit
+## Step 6 - Apply or Return Corrections
+
+### File-backed plans
+
+Edit the plan file using the merged "Suggested Plan Updates" section. Each update should specify:
+- The plan section to edit
 - The exact current text to replace
 - The corrected replacement text
 
-Apply each update using the `Edit` tool. After all edits, append a `## Verification Notes` section at the end of the plan file:
+After edits, append:
 
-**For multi-agent verification:**
 ```markdown
 ## Verification Notes
 
 **Verified:** [date]
-**Confidence:** [HIGH/MEDIUM/LOW from merged report]
-**Tools:** [list only the agents that were launched, e.g.: plan-verifier (native), ollama-plan-verifier (Ollama), codex-plan-verifier (Codex)]
+**Plan source:** file-backed
+**Confidence:** [HIGH/MEDIUM/LOW]
+**Tools:** [native, Ollama CLI, Codex CLI, custom reviewer names actually run]
 **Agreement rate:** X/Y findings overlapped
-**Summary:** [one sentence from the merged summary]
-**Findings applied:** [Critical: N, Warning: N, Info: N (if "apply all") or "Critical + Warning only"]
+**Summary:** [one sentence]
+**Findings applied:** [Critical: N, Warning: N, Info: N if applied]
 ```
 
-**For single verification:**
+For "Apply critical + warning only", append `## Info Findings (Deferred)` with the info-level items.
+
+### Conversation-backed plans
+
+Do not edit files. Return a complete replacement plan in the response, followed by:
+
 ```markdown
 ## Verification Notes
 
 **Verified:** [date]
-**Confidence:** [HIGH/MEDIUM/LOW from agent report]
-**Tool:** [plan-verifier (native) OR ollama-plan-verifier (Ollama) OR codex-plan-verifier (Codex)]
-**Summary:** [one sentence from the agent's summary]
-**Findings applied:** [Critical: N, Warning: N, Info: N (if "apply all") or "Critical + Warning only"]
+**Plan source:** conversation-backed
+**Confidence:** [HIGH/MEDIUM/LOW]
+**Tools:** [native, Ollama CLI, Codex CLI, custom reviewer names actually run]
+**Agreement rate:** X/Y findings overlapped
+**Summary:** [one sentence]
+**Findings applied:** [Critical: N, Warning: N, Info: N if applied]
 ```
 
-For "Apply critical + warning only": also append an `## Info Findings (Deferred)` section listing the info-level items from the report without applying them as edits.
+For "Return critical + warning replacement", include `## Info Findings (Deferred)` after the replacement plan.
 
 ### Show full report only
 
-Display the agent's complete markdown report in full. Do not modify the plan file.
+Display the complete verifier reports and merged report. Do not modify files and do not rewrite the conversation plan.
