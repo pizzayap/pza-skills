@@ -39,7 +39,7 @@ git diff --quiet 2>/dev/null; echo "unstaged=$?"
 
 ### Step 3 — Gather Diff and Write to Temp File
 
-**If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), gather the diff with budget-aware assembly and write to a temp file in a single Bash call:
+**If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), gather the diff with budget-aware assembly and write to a temp file in a single shell call:
 
 ```bash
 BUDGET=80000
@@ -128,12 +128,13 @@ git rev-parse HEAD~1 2>/dev/null && echo "has_prev=yes" || echo "has_prev=no"
 
 ### Step 4 — Run Ollama Review
 
-Use `Bash(timeout: 300000)` (5 minutes). Read the diff from the temp file and pass to Ollama:
+Use the active harness shell tool with a 5 minute timeout. Read the diff from the temp file and pass to Ollama:
 
 ```bash
 DIFF_FILE="<DIFF_FILE>"
 trap 'rm -f "$DIFF_FILE"' EXIT
-ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
+PROMPT_FILE=$(mktemp -t adversarial-ollama-prompt.XXXXXX)
+cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
 You are a security auditor performing an adversarial review. Assume an attacker is looking for ways to exploit this code.
 
 FOCUS AREAS:
@@ -157,10 +158,11 @@ JSON FORMAT:
 {"verdict":"approve or needs-attention","summary":"1-2 sentence security assessment","findings":[{"severity":"critical or warning or suggestion","title":"short title","file":"path/to/file","description":"the vulnerability or risk","context":"relevant code snippet if helpful","recommendation":"mitigation or fix"}]}
 
 If no security issues found, return: {"verdict":"approve","summary":"No security issues found.","findings":[]}
-EOFPROMPT
-)
+PZA_OLLAMA_PROMPT
 
-$(cat "$DIFF_FILE")"
+cat "$DIFF_FILE" >> "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+rm -f "$PROMPT_FILE"
 ```
 
 Replace `<DIFF_FILE>` with the temp path from Step 3, and `<ollama-model>` with the model name from your prompt. The `trap` ensures the temp file is cleaned up even if Ollama times out.

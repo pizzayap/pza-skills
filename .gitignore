@@ -6,4 +6,5 @@ node_modules/
 .vscode/
 .idea/
 .claude/*.lock
+.pza-skills/
 Thumbs.db

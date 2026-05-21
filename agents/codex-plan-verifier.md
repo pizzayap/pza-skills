@@ -58,7 +58,9 @@ echo "$PROMPT_FILE"
 
 Replace `[PLAN_CONTENT]` with the actual plan text from your prompt. The single-quoted heredoc delimiter (`'PROMPTEOF'`) prevents any expansion of `$`, backticks, or `\` inside the plan content. Capture the printed temp file path for the next call.
 
-### Step 3 — Invoke Codex (use `Bash(timeout: 300000)` — 5 minutes)
+### Step 3 — Invoke Codex
+
+Use the active harness shell tool with a 5 minute timeout.
 
 Pipe the prompt file to `codex exec` via stdin (using `-` to read from stdin), then clean up:
 

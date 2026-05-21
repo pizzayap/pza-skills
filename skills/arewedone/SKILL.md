@@ -14,28 +14,28 @@ argument-hint: '[--adversarial] [--no-adversarial]'
 # Session Changes Context
 
 Session-tracked files (this session only):
-!`cat "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" 2>/dev/null | node -e "JSON.parse(require('fs').readFileSync(0,'utf8')).forEach(f=>console.log(f))" || { echo "(no session tracking - showing git status)"; git status --short; }`
+!`node ./lib/pza-runtime.js session-files 2>/dev/null || { echo "(no session tracking - showing git status)"; git status --short; }`
 
 Changed files summary (session-scoped):
-!`if [ -f "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" ]; then FILES=$(cat "/tmp/claude-session-${CLAUDE_SESSION_ID}-files.json" | node -e "console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).join(' '))"); git diff --stat -- $FILES 2>/dev/null || echo "No git diff available"; else git diff --stat; fi`
+!`node ./lib/pza-runtime.js session-stat 2>/dev/null || git diff --stat`
 
 Ollama enabled:
-!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.ollama!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+!`node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
 
 Ollama available:
 !`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Codex enabled:
-!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.codex!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+!`node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
 
 Codex CLI available:
 !`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Adversarial enabled:
-!`node -e "try{const s=JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.claude/pza-settings.json','utf8'));console.log(s.adversarial!==false?'yes':'no')}catch{console.log('yes')}" 2>/dev/null`
+!`node ./lib/pza-runtime.js get-setting adversarial 2>/dev/null || echo "yes"`
 
 Arguments:
 `$ARGUMENTS`
@@ -157,36 +157,38 @@ ${SKIPPED}"
 ${UNTRACKED_SKIPPED}"
    ```
 
-   **Run the review** — use `Bash(timeout: 300000)` (5 minutes) for the ollama command with the enhanced structured prompt:
+   **Run the review** — use the active harness shell tool with a 5 minute timeout for the ollama command with the enhanced structured prompt:
    ```bash
-   ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
-   You are a senior code reviewer. Review the following uncommitted changes.
+   PROMPT_FILE=$(mktemp -t pza-ollama-review.XXXXXX)
+   cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
+You are a senior code reviewer. Review the following uncommitted changes.
 
-   REVIEW DIMENSIONS:
-   - Correctness: logic errors, off-by-one, null/undefined paths, unhandled error cases, state management bugs
-   - Security: injection (SQL/command/XSS), auth bypass, secrets in code, missing input validation
-   - Architecture: pattern inconsistency, tight coupling, module boundary violations
-   - Performance: N+1 queries, unbounded operations, async misuse, missing pagination
+REVIEW DIMENSIONS:
+- Correctness: logic errors, off-by-one, null/undefined paths, unhandled error cases, state management bugs
+- Security: injection (SQL/command/XSS), auth bypass, secrets in code, missing input validation
+- Architecture: pattern inconsistency, tight coupling, module boundary violations
+- Performance: N+1 queries, unbounded operations, async misuse, missing pagination
 
-   SEVERITY LEVELS:
-   - critical: will cause bugs or security holes in production
-   - warning: likely problems or significant maintainability issues
-   - suggestion: improvement opportunities, not blocking
+SEVERITY LEVELS:
+- critical: will cause bugs or security holes in production
+- warning: likely problems or significant maintainability issues
+- suggestion: improvement opportunities, not blocking
 
-   RULES:
-   - Do NOT flag style or formatting issues
-   - Do NOT report more than 10 findings
-   - Respond with ONLY a JSON object, no markdown fences, no text before or after
+RULES:
+- Do NOT flag style or formatting issues
+- Do NOT report more than 10 findings
+- Respond with ONLY a JSON object, no markdown fences, no text before or after
 
-   JSON FORMAT:
-   {"verdict":"approve or needs-attention","summary":"1-2 sentence summary","findings":[{"severity":"critical or warning or suggestion","title":"short title","file":"path/to/file","description":"what is wrong and why","context":"relevant code snippet if helpful","recommendation":"how to fix it"}]}
+JSON FORMAT:
+{"verdict":"approve or needs-attention","summary":"1-2 sentence summary","findings":[{"severity":"critical or warning or suggestion","title":"short title","file":"path/to/file","description":"what is wrong and why","context":"relevant code snippet if helpful","recommendation":"how to fix it"}]}
 
-   If no issues found, return: {"verdict":"approve","summary":"No issues found.","findings":[]}
-   EOFPROMPT
-   )
-   $TRUNC_NOTE
-
-   $DIFF"
+If no issues found, return: {"verdict":"approve","summary":"No issues found.","findings":[]}
+PZA_OLLAMA_PROMPT
+   printf '\n%s\n\n%s\n' "$TRUNC_NOTE" "$DIFF" >> "$PROMPT_FILE"
+   cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+   EXIT_CODE=$?
+   rm -f "$PROMPT_FILE"
+   exit $EXIT_CODE
    ```
 
 4. **If no uncommitted changes** (clean working tree), check for a previous commit:
@@ -322,7 +324,7 @@ When presenting the unified report in step 2, categorize every finding into one 
 
 "High risk" = critical + warning. "Low risk" = suggestion.
 
-If issues were found, use **AskUserQuestion** to let the user choose a fix strategy:
+If issues were found, use the active harness's user-input tool to let the user choose a fix strategy:
 
 ```yaml
 question: "How should we handle the issues?"
@@ -367,7 +369,7 @@ Before declaring work complete, run the project's proof commands (tests, build, 
 
 ### 4a. Detect Proof Commands
 
-Run this detection script in a single Bash call:
+Run this detection script in a single shell call:
 
 ```bash
 # Detect package manager
@@ -419,9 +421,9 @@ Build the proof command list from detection results:
 
 **Deno**: `deno lint`, `deno test`. For `deno check`, pass explicit entry point files (e.g., `deno check main.ts`) — running without arguments may fail or check unexpected files. Detect entry points from `deno.json` `tasks` or `compilerOptions` fields, or skip `deno check` if no entry point is obvious.
 
-**Monorepo detected** (root package.json has `workspaces`): Tell the user "Monorepo detected — only root-level scripts are checked. Root scripts may delegate to workspace tooling (Turborepo, Nx, etc.) which is fine, but workspace-specific scripts are not auto-detected. Enter additional commands manually if needed." Still run any detected root-level scripts, then fall through to the AskUserQuestion below to offer adding workspace-specific commands.
+**Monorepo detected** (root package.json has `workspaces`): Tell the user "Monorepo detected — only root-level scripts are checked. Root scripts may delegate to workspace tooling (Turborepo, Nx, etc.) which is fine, but workspace-specific scripts are not auto-detected. Enter additional commands manually if needed." Still run any detected root-level scripts, then use the active harness's user-input tool to offer adding workspace-specific commands.
 
-**If nothing detected** — use **AskUserQuestion**:
+**If nothing detected** — use the active harness's user-input tool:
 
 ```yaml
 question: "No proof commands detected. What verification commands should I run?"
@@ -436,7 +438,7 @@ If "Enter commands": ask the user for commands (one per line), parse by newlines
 
 ### 4b. Run Proof Commands
 
-Run each detected command sequentially in order using `Bash(timeout: 300000)` (5 minutes per command). Capture exit code and output for each. If output exceeds 80 lines, keep only the last 80 lines (`tail -80`).
+Run each detected command sequentially in order using the active harness shell tool with a 5 minute timeout per command. Capture exit code and output for each. If output exceeds 80 lines, keep only the last 80 lines (`tail -80`).
 
 If a command times out (5 minutes), record the result as TIMEOUT (not FAIL or PASS).
 
@@ -503,6 +505,5 @@ The workflow is complete (with caveats noted).
 After the workflow completes (regardless of outcome), write a marker file so other tools can detect that a review was run this session:
 
 ```bash
-DIFF_HASH=$({ git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | shasum -a 256 | cut -d' ' -f1)
-echo '{"reviewed":true,"skill":"arewedone","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","diffHash":"'"$DIFF_HASH"'"}' > "/tmp/claude-session-${CLAUDE_SESSION_ID}-reviewed.json"
+node ./lib/pza-runtime.js mark-reviewed arewedone
 ```

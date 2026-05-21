@@ -45,7 +45,7 @@ git diff --quiet 2>/dev/null; echo "unstaged=$?"
 
 ### Step 3 — Run Review
 
-Run the chosen command with `Bash(timeout: 300000)` (5 minutes):
+Run the chosen command with the active harness shell tool and a 5 minute timeout:
 
 ```bash
 codex review --uncommitted

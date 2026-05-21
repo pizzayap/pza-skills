@@ -153,7 +153,7 @@ echo "$PROMPT_FILE"
 
 The single-quoted heredoc writes only the static prompt. The `printf` append writes the truncation note and diff content as data — shell metacharacters in the diff are never interpreted because they pass through a variable, not through shell source.
 
-**Call 2 — invoke Codex (use `Bash(timeout: 300000)` — 5 minutes):**
+**Call 2 — invoke Codex:** Use the active harness shell tool with a 5 minute timeout.
 
 ```bash
 PROMPT_FILE="<PROMPT_FILE>"

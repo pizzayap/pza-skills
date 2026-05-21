@@ -14,7 +14,7 @@ Ollama available:
 !`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Arguments:
 `$ARGUMENTS`
@@ -23,7 +23,7 @@ Arguments:
 
 - This is a **review-only** command. Do not fix issues, apply patches, or suggest you are about to make changes.
 - Your only job is to run the review and return the output (formatted if structured JSON, verbatim otherwise).
-- The actual review is performed by an Ollama model (shown above), not Claude. Claude only determines scope, runs the command, and formats the result.
+- The actual review is performed by an Ollama model (shown above). The active harness only determines scope, runs the command, and formats the result.
 
 ## Pre-check
 
@@ -259,22 +259,24 @@ Determine how to run the review based on the user's arguments:
 Using the selected prompt from Step 1.5 and the diff from Step 1, construct the command:
 
 ```bash
-ollama launch claude --model <ollama-model> --yes -- -p "$(cat <<'EOFPROMPT'
+PROMPT_FILE=$(mktemp -t pza-ollama-review.XXXXXX)
+cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
 <selected prompt from Step 1.5>
-EOFPROMPT
-)
-$TRUNC_NOTE
-
-$DIFF"
+PZA_OLLAMA_PROMPT
+printf '\n%s\n\n%s\n' "$TRUNC_NOTE" "$DIFF" >> "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+EXIT_CODE=$?
+rm -f "$PROMPT_FILE"
+exit $EXIT_CODE
 ```
 
 ### If arguments include `--wait`
 
-Run the review command in the **foreground** with `Bash(timeout: 300000)`. Do not ask the user.
+Run the review command in the **foreground** with the active harness shell tool and a 5 minute timeout. Do not ask the user.
 
 ### If arguments include `--background`
 
-Run the review command in the **background** using `Bash(run_in_background: true)`. Do not ask the user. After launching, tell the user:
+Run the review command in the **background** using the active harness background shell mode. Do not ask the user. After launching, tell the user:
 
 > "Ollama review started in the background. You'll be notified when it completes."
 
@@ -290,7 +292,7 @@ Estimate the review size before asking:
 - In every other case, recommend **background**
 - When in doubt, run the review instead of declaring there is nothing to review
 
-Then use **AskUserQuestion** exactly once with two options, putting the recommended option first and suffixing its label with `(Recommended)`:
+Then use the active harness's user-input tool exactly once with two options, putting the recommended option first and suffixing its label with `(Recommended)`:
 
 ```yaml
 question: "How should we run the Ollama review?"
@@ -302,7 +304,7 @@ options:
 ```
 
 If the user chooses "Wait for results", run the command in the foreground.
-If the user chooses "Run in background", run with `Bash(run_in_background: true)`.
+If the user chooses "Run in background", run with the active harness background shell mode.
 
 ## Step 3 — Return Results
 
@@ -360,7 +362,7 @@ Return the raw `$RESULT` **verbatim**, exactly as-is. Do not paraphrase, summari
 
 ### Background flow
 
-- Launch the command with `Bash(run_in_background: true)`.
+- Launch the command with the active harness background shell mode.
 - After launching, tell the user: "Ollama review started in the background. You'll be notified when it completes."
 - When the background job completes and you present results, apply the same structured output parsing from the foreground flow above.
 
@@ -369,6 +371,5 @@ Return the raw `$RESULT` **verbatim**, exactly as-is. Do not paraphrase, summari
 After the review completes (foreground or background), write a marker file so other tools can detect that a review was run this session:
 
 ```bash
-DIFF_HASH=$({ git diff 2>/dev/null; git diff --cached 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | shasum -a 256 | cut -d' ' -f1)
-echo '{"reviewed":true,"skill":"ollama-review","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","diffHash":"'"$DIFF_HASH"'"}' > "/tmp/claude-session-${CLAUDE_SESSION_ID}-reviewed.json"
+node ./lib/pza-runtime.js mark-reviewed ollama-review
 ```

@@ -11,7 +11,7 @@ argument-hint: '[codex on|off] [ollama on|off] [adversarial on|off]'
 # PZA Settings
 
 Current settings:
-!`cat ~/.claude/pza-settings.json 2>/dev/null || echo '{"codex":true,"ollama":true,"adversarial":true}'`
+!`node ./lib/pza-runtime.js settings 2>/dev/null || echo '{"settings":{"codex":true,"ollama":true,"adversarial":true}}'`
 
 Codex CLI available:
 !`which codex >/dev/null 2>&1 && echo "yes" || echo "no"`
@@ -32,24 +32,13 @@ Check the Arguments above.
 
 Parse the arguments as space-separated `<key> <value>` pairs. Valid keys: `codex`, `ollama`, `adversarial`. Valid values: `on`, `off`.
 
-Apply all pairs in a single `node -e` call (handles one, two, or three pairs):
+Apply all pairs through the shared runtime (handles one, two, or three pairs):
 
 ```bash
-node -e "
-  const fs = require('fs');
-  const path = require('os').homedir() + '/.claude/pza-settings.json';
-  let s = {};
-  try { s = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
-  // Set each key-value pair parsed from arguments:
-  s['KEY1'] = VALUE1;
-  // If a second pair was provided, add: s['KEY2'] = VALUE2;
-  // If a third pair was provided, add: s['KEY3'] = VALUE3;
-  fs.writeFileSync(path, JSON.stringify(s, null, 2) + '\n');
-  console.log(JSON.stringify(s));
-"
+node ./lib/pza-runtime.js set-settings KEY1 on KEY2 off
 ```
 
-Replace `KEY1`/`VALUE1` (and optionally `KEY2`/`VALUE2`, `KEY3`/`VALUE3`) with the setting names and `true` (for `on`) or `false` (for `off`). For a single pair like `codex off`, only one assignment is needed.
+Replace `KEY1 on KEY2 off` with the setting pairs from the arguments. For a single pair like `codex off`, run `node ./lib/pza-runtime.js set-settings codex off`.
 
 After updating, display the new settings and stop.
 
@@ -76,7 +65,7 @@ If adversarial is enabled but neither Ollama nor Codex is available, note it:
 
 ### Step 3 — Ask User
 
-Use **AskUserQuestion** to let the user toggle:
+Use the active harness's user-input tool to let the user toggle:
 
 ```yaml
 question: "Which integrations do you want to change?"
@@ -99,22 +88,11 @@ Fill in the current state dynamically from the session context.
 If the user selected toggles, apply each change:
 
 ```bash
-node -e "
-  const fs = require('fs');
-  const path = require('os').homedir() + '/.claude/pza-settings.json';
-  let s = {};
-  try { s = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
-  s['codex'] = CODEX_VALUE;
-  s['ollama'] = OLLAMA_VALUE;
-  s['adversarial'] = ADVERSARIAL_VALUE;
-  fs.writeFileSync(path, JSON.stringify(s, null, 2) + '\n');
-  console.log('Settings updated:');
-  console.log(JSON.stringify(s, null, 2));
-"
+node ./lib/pza-runtime.js set-settings codex CODEX_ON_OFF ollama OLLAMA_ON_OFF adversarial ADVERSARIAL_ON_OFF
 ```
 
-Replace `CODEX_VALUE`, `OLLAMA_VALUE`, and `ADVERSARIAL_VALUE` with the new boolean values based on the user's selections. Only include assignments for settings the user chose to toggle; keep the others at their current values.
+Replace `CODEX_ON_OFF`, `OLLAMA_ON_OFF`, and `ADVERSARIAL_ON_OFF` with `on` or `off` based on the user's selections. Only include settings the user chose to toggle; keep the others at their current values.
 
 Show the updated settings and confirm:
 
-> Settings saved to `~/.claude/pza-settings.json`. Changes take effect on next skill invocation.
+> Settings saved to `~/.pza-skills/settings.json`. Changes take effect on next skill invocation. Legacy `~/.claude` and `~/.Codex` settings are read as migration fallbacks only.

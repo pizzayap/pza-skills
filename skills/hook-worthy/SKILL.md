@@ -1,12 +1,12 @@
 ---
 name: hook-worthy
-description: This skill should be used when the user asks to "check for hooks", "find hook-worthy patterns", "are there any hooks worth adding", "hook-worthy", "what should be a hook", or wants to audit the current session for patterns that should become Claude Code hooks.
+description: This skill should be used when the user asks to "check for hooks", "find hook-worthy patterns", "are there any hooks worth adding", "hook-worthy", "what should be a hook", or wants to audit the current session for patterns that should become harness hooks.
 user-invocable: true
 ---
 
 # Hook-Worthy Session Auditor
 
-Analyze the current conversation session for recurring patterns, mistakes, or convention violations that would benefit from being enforced as Claude Code hooks. Filter out noise and generate properly formatted hook configurations following the latest standards.
+Analyze the current conversation session for recurring patterns, mistakes, or convention violations that would benefit from being enforced as harness hooks. Filter out noise and generate properly formatted hook configurations only for harnesses with stable hook support. Claude Code hooks are currently the implemented compatibility target.
 
 ## When to Run
 
@@ -19,17 +19,17 @@ Run at the end of a session or after a code review surfaces repeated issues. The
 Review the full conversation for these hook-worthy signals:
 
 **Strong signals (likely hook-worthy):**
-- Claude made the same type of mistake more than once
-- A code review caught a convention violation that CLAUDE.md already documents
-- The user corrected Claude on a project-specific rule (e.g., "always add schema aliases")
+- The active agent made the same type of mistake more than once
+- A code review caught a convention violation that AGENTS.md or a compatibility instruction file already documents
+- The user corrected the active agent on a project-specific rule (e.g., "always add schema aliases")
 - A dangerous operation was attempted without safeguards
-- A multi-step checklist was required that Claude forgot steps of
+- A multi-step checklist was required that the active agent forgot steps of
 
 **Weak signals (probably NOT hook-worthy):**
 - A one-time bug fix or feature addition
 - Subjective code quality preferences (readability, naming)
 - Things already caught by linters, formatters, or CI
-- General programming best practices Claude already knows
+- General programming best practices the active agent already knows
 - Patterns that only apply to a single file or function
 
 ### Step 2: Apply the Hook-Worthy Filter
@@ -41,7 +41,7 @@ For each candidate pattern, evaluate against these criteria:
 | **Recurrence** | Yes | Will this happen again in future sessions? |
 | **Automation** | Yes | Can a hook actually catch this? (matcher + prompt/command) |
 | **Signal-to-noise** | Yes | Will this fire only when relevant, not on every edit? |
-| **Not already covered** | Yes | Is this already handled by linters, CI, or CLAUDE.md awareness? |
+| **Not already covered** | Yes | Is this already handled by linters, CI, or AGENTS.md awareness? |
 | **Specificity** | Yes | Can the hook prompt be specific enough to be useful? |
 
 Discard any candidate that fails even one criterion. Be conservative — a noisy hook is worse than no hook.
@@ -62,7 +62,7 @@ For each hook, produce:
 
 1. **Rationale** — What session pattern triggered this, and why it's recurring
 2. **Hook JSON** — Complete, copy-paste-ready configuration block
-3. **Target location** — Whether it belongs in project `.claude/settings.json` (project-specific convention) or user `~/.claude/settings.json` (applies everywhere)
+3. **Target location** — For Claude Code compatibility hooks, whether it belongs in project `.claude/settings.json` (project-specific convention) or user `~/.claude/settings.json` (applies everywhere). For other harnesses, document the recommendation unless that harness has a verified stable hook payload.
 
 Format each hook as:
 
@@ -71,7 +71,7 @@ Format each hook as:
 
 **Pattern observed**: [What happened in this session]
 **Why it's recurring**: [Why this will happen again]
-**Target**: project `.claude/settings.json` | user `~/.claude/settings.json`
+**Target**: Claude compatibility project `.claude/settings.json` | Claude compatibility user `~/.claude/settings.json` | documented recommendation for other harnesses
 
 ​```json
 {

@@ -15,7 +15,7 @@ You are a forwarding wrapper that sends plan verification to an Ollama model.
 
 Forward the plan content to Ollama for technical review. The model name is provided in your prompt by the parent skill.
 
-Plan content can contain `"`, `` ` ``, `$`, `\`, and other shell metacharacters, so do NOT inline it into a shell command argument. Instead, write the plan to a temp file and embed it via heredoc + `cat`. Use exactly two Bash calls:
+Plan content can contain `"`, `` ` ``, `$`, `\`, and other shell metacharacters, so do NOT inline it into a shell command argument. Instead, write the plan to a temp file and embed it via heredoc + `cat`. Use exactly two shell calls:
 
 **Call 1 — write the plan to a temp file:**
 
@@ -28,10 +28,12 @@ echo "$PLAN_FILE"
 
 Replace `[PLAN_CONTENT]` with the actual plan text from your prompt. The single-quoted heredoc delimiter (`'PLANEOF'`) prevents any expansion of `$`, backticks, or `\` inside the plan content. Capture the printed temp file path for the next call.
 
-**Call 2 — invoke Ollama, reading the plan from the file (use `Bash(timeout: 300000)` — 5 minutes):**
+**Call 2 — invoke Ollama, reading the plan from the file:** Use the active harness shell tool with a 5 minute timeout.
 
 ```bash
-ollama launch claude --model <model-from-prompt> --yes -- -p "$(cat <<'EOFPROMPT'
+PLAN_FILE="<PLAN_FILE>"
+PROMPT_FILE=$(mktemp -t plan-ollama-prompt.XXXXXX)
+cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
 Review this implementation plan for technical accuracy. Check for:
 - Outdated APIs or deprecated patterns
 - Wrong method signatures or return types
@@ -40,10 +42,9 @@ Review this implementation plan for technical accuracy. Check for:
 - Assumptions that don't match current library docs
 
 Plan content:
-EOFPROMPT
-)
-
-$(cat "<PLAN_FILE>")
+PZA_OLLAMA_PROMPT
+cat "$PLAN_FILE" >> "$PROMPT_FILE"
+cat >> "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
 
 Return a structured report with:
 - Critical findings (must fix)
@@ -51,8 +52,12 @@ Return a structured report with:
 - Info findings (minor)
 - Verified correct items
 
-Format each finding as: Claim | Issue | Correction | Confidence"
-rm -f "<PLAN_FILE>"
+Format each finding as: Claim | Issue | Correction | Confidence
+PZA_OLLAMA_PROMPT
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <model-from-prompt>
+EXIT_CODE=$?
+rm -f "$PLAN_FILE" "$PROMPT_FILE"
+exit $EXIT_CODE
 ```
 
 Replace `<PLAN_FILE>` with the temp path from Call 1, and `<model-from-prompt>` with the Ollama model name from your prompt. Always `rm -f` the temp file after the call, even if Ollama fails.

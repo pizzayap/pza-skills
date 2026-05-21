@@ -1,7 +1,7 @@
 {
   "name": "PZA-skills",
   "version": "1.2.0",
-  "description": "Personal Claude Code skills: multi-reviewer completeness checks, Ollama and Codex code review, hook auditing, plan verification, and integration settings.",
+  "description": "Portable Agent Skills compatibility package: multi-reviewer completeness checks, Ollama and Codex code review, hook auditing, plan verification, and integration settings.",
   "author": {
     "name": "pizzayap"
   },

@@ -14,7 +14,7 @@ Ollama available:
 !`which ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Current model:
-!`cat ~/.claude/pza-ollama-model 2>/dev/null || echo "(not configured — default: kimi-k2.6:cloud)"`
+!`node ./lib/pza-runtime.js get-model 2>/dev/null || echo "(not configured — default: kimi-k2.6:cloud)"`
 
 Arguments:
 `$ARGUMENTS`
@@ -56,7 +56,7 @@ echo "$MODELS" | head -4
 
 Note the fallback is intentional: if `ollama.com`'s HTML changes, the user-facing list is still well-formed and the user can also type a custom model name via "Other".
 
-Use **AskUserQuestion** to let the user pick. Show the top 4 models as options:
+Ask the user to pick a model using the active harness's user-input tool when available. Show the top 4 models as options:
 
 ```yaml
 question: "Which Ollama cloud model should be used for code review?"
@@ -76,7 +76,7 @@ options:
 Run a quick validation to confirm the model works:
 
 ```bash
-ollama launch claude --model <chosen-model> --yes -- -p "Reply with exactly: MODEL_TEST_OK"
+printf '%s' "Reply with exactly: MODEL_TEST_OK" | node ./lib/pza-runtime.js ollama-run <chosen-model>
 ```
 
 - If the output contains `MODEL_TEST_OK` → success, proceed to Step 4.
@@ -91,7 +91,7 @@ ollama launch claude --model <chosen-model> --yes -- -p "Reply with exactly: MOD
 Write the model name to the config file:
 
 ```bash
-echo "<chosen-model>" > ~/.claude/pza-ollama-model
+node ./lib/pza-runtime.js set-model <chosen-model>
 ```
 
 Tell the user:
@@ -103,7 +103,7 @@ Tell the user:
 Read back the saved model:
 
 ```bash
-cat ~/.claude/pza-ollama-model
+node ./lib/pza-runtime.js get-model
 ```
 
 Confirm the configuration and remind the user they can change it anytime by running `/ollama-setup` again.

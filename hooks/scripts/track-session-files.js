@@ -21,7 +21,7 @@ if (!session_id || /[/\\\0]|\.\./.test(session_id)) {
 if (tool_name === "Edit" || tool_name === "Write") {
   const filePath = tool_input?.file_path;
   if (filePath && typeof filePath === "string") {
-    const trackFile = `/tmp/claude-session-${session_id}-files.json`;
+    const trackFile = `/tmp/pza-skills-session-${session_id}-files.json`;
 
     let files = [];
     try {
@@ -43,8 +43,13 @@ if (tool_name === "Edit" || tool_name === "Write") {
 
     // Clear the review marker if it exists — edits after a review mean
     // the review is stale and the Stop hook should remind again.
-    const reviewedFile = `/tmp/claude-session-${session_id}-reviewed.json`;
-    try { fs.unlinkSync(reviewedFile); } catch {}
+    for (const reviewedFile of [
+      `/tmp/pza-skills-session-${session_id}-reviewed.json`,
+      `/tmp/claude-session-${session_id}-reviewed.json`,
+      `/tmp/Codex-session-${session_id}-reviewed.json`,
+    ]) {
+      try { fs.unlinkSync(reviewedFile); } catch {}
+    }
   }
 }
 

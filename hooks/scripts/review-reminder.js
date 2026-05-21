@@ -18,19 +18,29 @@ if (!session_id || /[/\\\0]|\.\./.test(session_id)) {
   process.exit(0);
 }
 
-const filesPath = `/tmp/claude-session-${session_id}-files.json`;
-const reviewedPath = `/tmp/claude-session-${session_id}-reviewed.json`;
+const filePaths = [
+  `/tmp/pza-skills-session-${session_id}-files.json`,
+  `/tmp/claude-session-${session_id}-files.json`,
+  `/tmp/Codex-session-${session_id}-files.json`,
+];
+const reviewedPaths = [
+  `/tmp/pza-skills-session-${session_id}-reviewed.json`,
+  `/tmp/claude-session-${session_id}-reviewed.json`,
+  `/tmp/Codex-session-${session_id}-reviewed.json`,
+];
 
 const hasFiles =
-  fs.existsSync(filesPath) &&
-  (() => {
-    try {
-      const arr = JSON.parse(fs.readFileSync(filesPath, "utf8"));
-      return Array.isArray(arr) && arr.length > 0;
-    } catch {
-      return false;
-    }
-  })();
+  filePaths.some((filesPath) =>
+    fs.existsSync(filesPath) &&
+    (() => {
+      try {
+        const arr = JSON.parse(fs.readFileSync(filesPath, "utf8"));
+        return Array.isArray(arr) && arr.length > 0;
+      } catch {
+        return false;
+      }
+    })()
+  );
 
 function currentDiffHash() {
   const hash = crypto.createHash("sha256");
@@ -47,14 +57,16 @@ function currentDiffHash() {
 }
 
 let reviewCurrent = false;
-if (fs.existsSync(reviewedPath)) {
-  try {
-    const marker = JSON.parse(fs.readFileSync(reviewedPath, "utf8"));
-    if (marker.diffHash) {
-      reviewCurrent = currentDiffHash() === marker.diffHash;
+for (const reviewedPath of reviewedPaths) {
+  if (!reviewCurrent && fs.existsSync(reviewedPath)) {
+    try {
+      const marker = JSON.parse(fs.readFileSync(reviewedPath, "utf8"));
+      if (marker.diffHash) {
+        reviewCurrent = currentDiffHash() === marker.diffHash;
+      }
+    } catch {
+      reviewCurrent = false;
     }
-  } catch {
-    reviewCurrent = false;
   }
 }
 
