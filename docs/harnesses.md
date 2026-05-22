@@ -9,6 +9,11 @@ After installing skills in any harness, run `/pza-settings` to record the native
 model label, toggle optional reviewer CLIs, and choose backend-specific model
 names.
 
+By default `/pza-settings` starts a localhost-only visual settings companion
+when the harness can run a local server. Open the printed tokenized URL, make
+changes, then click **Save and Stop Server**. Terminal-only harnesses can use
+`/pza-settings --status` plus direct `/pza-settings <reviewer> ...` arguments.
+
 ## Codex
 
 Install skills by copying or symlinking each skill directory into:

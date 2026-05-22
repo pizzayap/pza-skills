@@ -1,5 +1,5 @@
 ---
-description: Configure PZA reviewer backends, toggles, and model choices
+description: Configure PZA reviewer backends, toggles, model choices, and the visual setup companion
 agent: build
 ---
 

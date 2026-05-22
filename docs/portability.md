@@ -59,6 +59,12 @@ The top-level `codex` and `ollama` booleans remain for backward compatibility.
 `~/.pza-skills/ollama-model` is mirrored when the Ollama reviewer model is set
 through `/pza-settings`.
 
+`/pza-settings` may launch `node ./lib/pza-runtime.js settings-ui` as a visual
+companion. The server binds only to localhost, requires a random URL token, and
+writes the same `~/.pza-skills/` files as the terminal commands. If a harness
+cannot run or expose a local server, use `/pza-settings --status` and direct
+CLI arguments instead.
+
 ## Plan Reviewers
 
 `/areyousure` can verify file-backed plans or conversation-backed plans. When a

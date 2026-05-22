@@ -70,6 +70,22 @@ node -e "
 rm -rf "$tmp_home"
 rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json
 
+echo "== Settings UI runtime =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-settings-ui.XXXXXX")
+HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --help | grep -q 'localhost-only visual settings companion'
+HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --token fixed-token --print-html >/tmp/pza-settings-ui.html
+grep -q 'PZA Settings' /tmp/pza-settings-ui.html
+grep -q '/api/save' /tmp/pza-settings-ui.html
+grep -q 'Save and Stop Server' /tmp/pza-settings-ui.html
+grep -q 'fixed-token' /tmp/pza-settings-ui.html
+if HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --host 0.0.0.0 --print-html >/tmp/pza-settings-ui-invalid.out 2>/tmp/pza-settings-ui-invalid.err; then
+  echo "settings-ui accepted a non-localhost bind address" >&2
+  exit 1
+fi
+grep -q 'only binds to localhost' /tmp/pza-settings-ui-invalid.err
+rm -rf "$tmp_home"
+rm -f /tmp/pza-settings-ui.html /tmp/pza-settings-ui-invalid.out /tmp/pza-settings-ui-invalid.err
+
 echo "== Diff hash untracked content =="
 tmp_untracked="pza-diff-hash-untracked-$$.txt"
 printf '%s\n' 'one' > "$tmp_untracked"

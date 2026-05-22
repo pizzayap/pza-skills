@@ -23,13 +23,18 @@ npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
 ```
 
-Optional integrations are detected at runtime. Use `/pza-settings` after installation to record the native reviewer model label, toggle reviewer CLIs, and choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed.
+Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, and choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed.
 
 Recommended first run after installation:
 
 ```text
 /pza-settings
 ```
+
+That command starts a localhost-only settings UI when the harness can run a local
+server. Open the printed `http://127.0.0.1:.../?token=...` URL, choose enabled
+reviewers and models, then click **Save and Stop Server**. For terminal-only
+setup, use `/pza-settings --status` or the direct examples below.
 
 For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
@@ -45,9 +50,15 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 ### `/pza-settings`
 
-Configures reviewer backends for `/areyousure` and `/arewedone`. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and enable or disable adversarial review. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
+Configures reviewer backends for `/areyousure` and `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and enable or disable adversarial review. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
-**Usage:** `/pza-settings`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`
+**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`
+
+The visual companion can also be run directly from this repository:
+
+```bash
+node ./lib/pza-runtime.js settings-ui
+```
 
 Supported reviewer backends:
 

@@ -3,9 +3,10 @@ name: pza-settings
 description: >-
   Configure PZA-skills reviewer backends. Set the native reviewer model label,
   toggle Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, and
-  adversarial review, and choose exact models for CLI reviewers.
+  adversarial review, choose exact models for CLI reviewers, and launch the
+  local visual settings companion.
 user-invocable: true
-argument-hint: '[native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [adversarial on|off]'
+argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [adversarial on|off]'
 ---
 
 # PZA Settings
@@ -31,7 +32,26 @@ Arguments:
 Ollama like every other reviewer backend here. Legacy Ollama-only skill files
 remain for migration/reference, but new installs should use this setup flow.
 
-### Step 1 - Parse Arguments
+### Step 1 - Choose Interface
+
+If no arguments were provided, or the user passed `--ui`, launch the local
+visual settings companion:
+
+```bash
+node ./lib/pza-runtime.js settings-ui
+```
+
+Report the printed `PZA Settings UI: http://127.0.0.1:.../?token=...` URL and
+tell the user to keep that command running until they click **Save and Stop
+Server** or press Ctrl-C. The companion binds only to localhost, uses a random
+URL token, writes the same local config files as the CLI flow, and detects CLI
+availability with `command -v`.
+
+If the UI cannot start because the harness cannot run a localhost server, fall
+back to the status table and direct CLI commands below. If the user passed
+`--status`, do not start the UI; only display current status.
+
+### Step 2 - Parse Direct Arguments
 
 If arguments are provided, parse them in one of these forms:
 
@@ -40,6 +60,8 @@ If arguments are provided, parse them in one of these forms:
 - `<reviewer> model <model>`
 - `adversarial on`
 - `adversarial off`
+- `--status`
+- `--ui`
 
 Valid reviewers:
 
@@ -73,9 +95,10 @@ node ./lib/pza-runtime.js set-reviewer cursor enabled off
 
 After updating, display `node ./lib/pza-runtime.js reviewer-settings` and stop.
 
-### Step 2 - Display Setup Status
+### Step 3 - Display Setup Status
 
-If no arguments were provided, show a status table from the session context:
+For `--status`, or when the visual companion cannot be used, show a status table
+from the session context:
 
 | Reviewer | Enabled | Installed | Model | Notes |
 |----------|---------|-----------|-------|-------|
@@ -91,9 +114,11 @@ If no arguments were provided, show a status table from the session context:
 If a reviewer is enabled but not installed, report it clearly and keep going.
 Missing CLIs should never make setup fail.
 
-### Step 3 - Interactive Setup
+### Step 4 - Terminal Interactive Fallback
 
-If the active harness exposes a user-input tool, ask the user what to configure:
+Prefer the visual companion for no-argument setup. If the visual companion is
+not usable and the active harness exposes a user-input tool, ask the user what
+to configure:
 
 ```yaml
 question: "What should PZA-skills configure?"
@@ -120,7 +145,7 @@ When asking for model names, use concrete examples:
 - Cursor: any model accepted by local `cursor-agent --model`
 - Antigravity: only set a model if local `agy --help` documents model selection
 
-### Step 4 - Apply Changes
+### Step 5 - Apply Changes
 
 Apply selected changes with `node ./lib/pza-runtime.js set-reviewer` and
 `node ./lib/pza-runtime.js set-settings adversarial ...`.
