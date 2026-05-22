@@ -237,7 +237,7 @@ Supported command shapes:
 ```bash
 opencode run [--model provider/model] --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
 kilo run [--model provider/model] --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
-cat "$PROMPT_FILE" | cursor-agent -p --output-format text [--model model]
+cursor-agent -p --output-format text [--model model] "Review the context file at $PROMPT_FILE only. Do not modify files."
 ```
 
 For Antigravity, run `agy --help` first. Only use it if the local help text documents a non-interactive prompt, file, or stdin form. Otherwise report:

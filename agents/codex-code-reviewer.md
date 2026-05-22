@@ -48,21 +48,37 @@ git diff --quiet 2>/dev/null; echo "unstaged=$?"
 Run the chosen command with the active harness shell tool and a 5 minute timeout:
 
 ```bash
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
 CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
   codex review -c "model=$CODEX_MODEL" --uncommitted
 else
   codex review --uncommitted
 fi
+EXIT_CODE=$?
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "Codex review stopped - worktree changed during review."
+  exit 3
+fi
+exit $EXIT_CODE
 ```
 or
 ```bash
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
 CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
   codex review -c "model=$CODEX_MODEL" --commit HEAD
 else
   codex review --commit HEAD
 fi
+EXIT_CODE=$?
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "Codex review stopped - worktree changed during review."
+  exit 3
+fi
+exit $EXIT_CODE
 ```
 
 ### Step 4 — Return Output

@@ -158,12 +158,20 @@ The single-quoted heredoc writes only the static prompt. The `printf` append wri
 ```bash
 PROMPT_FILE="<PROMPT_FILE>"
 trap 'rm -f "$PROMPT_FILE"' EXIT
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
 CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
   cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
 else
   cat "$PROMPT_FILE" | codex exec -
 fi
+EXIT_CODE=$?
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "Codex adversarial review stopped - worktree changed during review."
+  exit 3
+fi
+exit $EXIT_CODE
 ```
 
 Replace `<PROMPT_FILE>` with the temp path from Call 1. The `trap` ensures the temp file is cleaned up even if `codex exec` is killed by the timeout.

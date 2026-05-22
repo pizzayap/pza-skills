@@ -37,11 +37,11 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches structural completeness, code quality, optional Ollama code review, optional Codex code review, and optional adversarial security reviewers, then synthesizes findings and runs proof commands.
+Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled and available), and optional adversarial security reviewers, then synthesizes findings and runs proof commands.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
-**Optional:** [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex) (toggleable via `/pza-settings`)
+**Optional:** [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex), OpenCode, Kilo Code, Cursor Agent, Antigravity (toggleable via `/pza-settings`)
 
 ### `/pza-settings`
 
@@ -61,7 +61,7 @@ Supported reviewer backends:
 | Cursor Agent | `cursor-agent` | `cursor-agent -p --output-format text --model <model>` |
 | Antigravity | `agy` | Only when local `agy --help` shows a safe non-interactive prompt or stdin mode |
 
-`/ollama-review` and `/ollama-setup` remain compatibility aliases for existing installs, but new setup and review flows should go through `/pza-settings`, `/areyousure`, and `/arewedone`.
+Legacy Ollama-only skill files remain in the repo for migration/reference, but new installs expose `/pza-settings`, `/areyousure`, and `/arewedone` as the setup and review flow.
 
 ### `/hook-worthy`
 
@@ -69,9 +69,9 @@ Audits the current session for recurring mistakes, convention violations, or dan
 
 ### `/areyousure`
 
-Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, optional Ollama CLI, optional Codex CLI, and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs.
+Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, enabled CLI-backed verifiers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where available), and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs.
 
-**Flags:** `--native-only`, `--ollama-only`, `--codex-only`, `--cli-only`, `--no-cli`, `--custom-only`; `--claude-only` remains a deprecated alias for `--native-only`.
+**Flags:** `--native-only`, `--ollama-only`, `--codex-only`, `--opencode-only`, `--kilo-only`, `--cursor-only`, `--antigravity-only`, `--cli-only`, `--no-cli`, `--custom-only`; `--claude-only` remains a deprecated alias for `--native-only`.
 
 **Custom plan reviewers:** add local-only reviewers to `~/.pza-skills/plan-reviewers.json`:
 

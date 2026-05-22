@@ -28,8 +28,8 @@ Arguments:
 ## Workflow
 
 `/pza-settings` is the setup surface for `/areyousure` and `/arewedone`. Treat
-Ollama like every other reviewer backend here. `/ollama-review` and
-`/ollama-setup` are only backward-compatible aliases for older installs.
+Ollama like every other reviewer backend here. Legacy Ollama-only skill files
+remain for migration/reference, but new installs should use this setup flow.
 
 ### Step 1 - Parse Arguments
 

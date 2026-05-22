@@ -50,20 +50,34 @@ HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer native model codex:gpt-5
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled on >/tmp/pza-reviewer-opencode-on.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode model openai/gpt-5.3-codex >/tmp/pza-reviewer-opencode-model.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer ollama model glm-5.1:cloud >/tmp/pza-reviewer-ollama-model.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled off >/tmp/pza-reviewer-opencode-off.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-settings opencode on adversarial off >/tmp/pza-reviewer-legacy-settings.json
 HOME="$tmp_home" node ./lib/pza-runtime.js get-model | grep -qx 'glm-5.1:cloud'
+HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-enabled opencode | grep -qx 'yes'
 HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-model opencode | grep -qx 'openai/gpt-5.3-codex'
 HOME="$tmp_home" node ./lib/pza-runtime.js reviewer-settings >/tmp/pza-reviewer-settings.json
 node -e "
   const fs = require('fs');
-  const data = JSON.parse(fs.readFileSync('/tmp/pza-reviewer-settings.json', 'utf8'));
-  const byName = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.name, reviewer]));
+  const status = JSON.parse(fs.readFileSync('/tmp/pza-reviewer-settings.json', 'utf8'));
+  const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+  const byName = Object.fromEntries(status.reviewers.map((reviewer) => [reviewer.name, reviewer]));
   if (byName.native.model !== 'codex:gpt-5.5') process.exit(1);
   if (byName.opencode.enabled !== true) process.exit(1);
   if (byName.opencode.model !== 'openai/gpt-5.3-codex') process.exit(1);
   if (byName.ollama.model !== 'glm-5.1:cloud') process.exit(1);
-"
+  if (data.adversarial !== false) process.exit(1);
+" "$tmp_home/.pza-skills/settings.json"
 rm -rf "$tmp_home"
-rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-settings.json
+rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json
+
+echo "== Diff hash untracked content =="
+tmp_untracked="pza-diff-hash-untracked-$$.txt"
+printf '%s\n' 'one' > "$tmp_untracked"
+hash_one=$(node ./lib/pza-runtime.js diff-hash)
+printf '%s\n' 'two' > "$tmp_untracked"
+hash_two=$(node ./lib/pza-runtime.js diff-hash)
+rm -f "$tmp_untracked"
+test "$hash_one" != "$hash_two"
 
 echo "== Plan reviewer runtime =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-plan-reviewers.XXXXXX")
@@ -131,6 +145,19 @@ for file in \
   docs/portability.md
 do
   test -f "$file"
+done
+
+echo "== User-invocable discovery parity =="
+for skill_file in skills/*/SKILL.md; do
+  name=$(awk -F': ' '/^name:/{print $2; exit}' "$skill_file")
+  invocable=$(awk -F': ' '/^user-invocable:/{print $2; exit}' "$skill_file")
+  if [ "$invocable" = "true" ]; then
+    grep -q -- "--skill $name" README.md
+    grep -q -- "/$name" README.md
+    grep -q "\"./skills/$name\"" .claude-plugin/plugin.json
+    test -f ".opencode/commands/$name.md"
+    test -f ".pi/prompts/$name.md"
+  fi
 done
 
 echo "== Portability scan =="

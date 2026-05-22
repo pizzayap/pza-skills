@@ -162,12 +162,20 @@ The runtime reads the configured Ollama reviewer model from `/pza-settings`.
 PROMPT_FILE=$(mktemp -t pza-plan-codex.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
 node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
 CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
   cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
 else
   cat "$PROMPT_FILE" | codex exec -
 fi
+EXIT_CODE=$?
+AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
+  echo "Codex plan review stopped - worktree changed during review."
+  exit 3
+fi
+exit $EXIT_CODE
 ```
 
 Use `codex exec`, not `codex review`, because plan verification uses a custom prompt and does not review only a git diff.
@@ -220,10 +228,11 @@ trap 'rm -f "$PROMPT_FILE"' EXIT
 node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
 BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
 CURSOR_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model cursor 2>/dev/null || true)
+CURSOR_PROMPT="Review the context file at $PROMPT_FILE only. Do not modify files."
 if [ -n "$CURSOR_MODEL" ]; then
-  cat "$PROMPT_FILE" | cursor-agent -p --output-format text --model "$CURSOR_MODEL"
+  cursor-agent -p --output-format text --model "$CURSOR_MODEL" "$CURSOR_PROMPT"
 else
-  cat "$PROMPT_FILE" | cursor-agent -p --output-format text
+  cursor-agent -p --output-format text "$CURSOR_PROMPT"
 fi
 AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
