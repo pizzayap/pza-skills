@@ -153,10 +153,12 @@ for file in \
   .opencode/commands/areyousure.md \
   .opencode/commands/pza-settings.md \
   .opencode/commands/hook-worthy.md \
+  .opencode/commands/work-issue.md \
   .pi/prompts/arewedone.md \
   .pi/prompts/areyousure.md \
   .pi/prompts/pza-settings.md \
   .pi/prompts/hook-worthy.md \
+  .pi/prompts/work-issue.md \
   docs/harnesses.md \
   docs/portability.md
 do

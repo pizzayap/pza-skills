@@ -21,6 +21,7 @@ npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --skill areyousure
 npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
+npx skills add pizzayap/pza-skills --skill work-issue
 ```
 
 Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, and choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed.
@@ -77,6 +78,14 @@ Ollama is configured as a reviewer backend through `/pza-settings`; there are no
 ### `/hook-worthy`
 
 Audits the current session for recurring mistakes, convention violations, or dangerous patterns worth enforcing as harness hooks. Claude Code hooks are the implemented compatibility target; other harness hooks are documented only after stable payloads are verified.
+
+### `/work-issue`
+
+Works a GitHub issue from `#123`, `owner/repo#123`, or an issue URL. It resolves the repository, fetches issue context and blockers, pauses when the issue is not ready for AFK implementation, implements only the accepted scope, runs relevant checks, commits, pushes, and opens a draft PR with correct issue-closing semantics.
+
+**Usage:** `/work-issue #123`, `/work-issue owner/repo#123`, `/work-issue https://github.com/owner/repo/issues/123`
+
+**Requires:** Git, [GitHub CLI](https://cli.github.com) authenticated for the target repository
 
 ### `/areyousure`
 
@@ -142,6 +151,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/arewedone` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/pza-settings` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/hook-worthy` | — | — |
+| `/work-issue` | Git, GitHub CLI (`gh`) | — |
 | `/areyousure` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, custom CLI reviewers, Exa MCP |
 
 Skills gracefully degrade when optional dependencies are missing.

@@ -12,6 +12,7 @@
     "./skills/arewedone",
     "./skills/areyousure",
     "./skills/hook-worthy",
-    "./skills/pza-settings"
+    "./skills/pza-settings",
+    "./skills/work-issue"
   ]
 }
