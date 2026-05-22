@@ -105,7 +105,7 @@ ${SKIPPED}"
 [ -n "$UNTRACKED_SKIPPED" ] && TRUNC_NOTE="${TRUNC_NOTE}(Note: some untracked files were omitted due to budget limits.)
 ${UNTRACKED_SKIPPED}"
 
-DIFF_FILE=$(mktemp -t adversarial-ollama-review.XXXXXX)
+DIFF_FILE=$(mktemp -t adversarial-ollama-backend.XXXXXX)
 printf '%s\n\n%s' "$TRUNC_NOTE" "$DIFF" > "$DIFF_FILE"
 echo "$DIFF_FILE"
 ```

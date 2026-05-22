@@ -29,8 +29,8 @@ Arguments:
 ## Workflow
 
 `/pza-settings` is the setup surface for `/areyousure` and `/arewedone`. Treat
-Ollama like every other reviewer backend here. Legacy Ollama-only skill files
-remain for migration/reference, but new installs should use this setup flow.
+Ollama like every other reviewer backend here; there are no separate
+Ollama-only setup or review skills.
 
 ### Step 1 - Choose Interface
 

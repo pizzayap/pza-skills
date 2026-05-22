@@ -75,7 +75,7 @@ if (hasFiles && !reviewCurrent) {
     JSON.stringify({
       continue: true,
       systemMessage:
-        "This session modified files but no code review was run (or the diff has changed since the last review). Consider running /arewedone or /ollama-review before finishing.",
+        "This session modified files but no code review was run (or the diff has changed since the last review). Consider running /arewedone before finishing.",
     })
   );
 } else {

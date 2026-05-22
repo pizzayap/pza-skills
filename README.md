@@ -72,7 +72,7 @@ Supported reviewer backends:
 | Cursor Agent | `cursor-agent` | `cursor-agent -p --output-format text --model <model>` |
 | Antigravity | `agy` | Only when local `agy --help` shows a safe non-interactive prompt or stdin mode |
 
-Legacy Ollama-only skill files remain in the repo for migration/reference, but new installs expose `/pza-settings`, `/areyousure`, and `/arewedone` as the setup and review flow.
+Ollama is configured as a reviewer backend through `/pza-settings`; there are no separate Ollama-only setup or review skills.
 
 ### `/hook-worthy`
 

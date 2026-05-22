@@ -169,7 +169,7 @@ ${UNTRACKED_SKIPPED}"
 
    **Run the review** — use the active harness shell tool with a 5 minute timeout for the ollama command with the enhanced structured prompt:
    ```bash
-   PROMPT_FILE=$(mktemp -t pza-ollama-review.XXXXXX)
+   PROMPT_FILE=$(mktemp -t pza-arewedone-ollama.XXXXXX)
    cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
 You are a senior code reviewer. Review the following uncommitted changes.
 
@@ -284,7 +284,7 @@ After **all** launched agents return, synthesize their results into a single uni
 
 ### 2a. Parse Agent C's output (dual-format handling) — skip if Agent C was not launched
 
-Agent C's Ollama review may return structured JSON or unstructured prose. Attempt to parse it using the same extraction logic as `/ollama-review`:
+Agent C's Ollama review may return structured JSON or unstructured prose. Attempt to parse it using the same JSON extraction logic:
 
 ```bash
 # Extract: find first valid JSON object from Agent C's output

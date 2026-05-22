@@ -45,9 +45,8 @@ hooks/scripts/*.js           — Hook implementation scripts
 - Plugin agents (`agents/*.md`) are dispatched by the skill runtime, not via the `Agent` tool's `subagent_type`. To simulate a plugin agent's work outside a skill, use `general-purpose` agent type with equivalent instructions.
 - In detection scripts using `[ -f "A" ] || [ -f "B" ] && echo "found"`, POSIX left-associative precedence makes this correct, but for clarity prefer `{ [ -f "A" ] || [ -f "B" ]; } && echo "found"`.
 - Hook scripts validate `session_id` to prevent path traversal before writing to `/tmp/`.
-- `/ollama-review` is a compatibility-only Ollama backend wrapper. New review flows should use `/arewedone`, with Ollama configured through `/pza-settings`.
 - Ollama review requests structured JSON output (verdict + findings array). Structured output is best-effort — if the model returns non-JSON, the raw text is returned verbatim. Use `node -e` (not `jq`) for JSON extraction and validation, since `jq` is not a project dependency.
-- Review marker files: `/arewedone` writes `/tmp/pza-skills-session-<id>-reviewed.json` on completion. Compatibility `/ollama-review` may also write the marker for older installs. The `review-reminder` Stop hook also reads legacy Claude/Codex marker paths during migration.
+- Review marker files: `/arewedone` writes `/tmp/pza-skills-session-<id>-reviewed.json` on completion. The `review-reminder` Stop hook also reads legacy Claude/Codex marker paths during migration.
 - Diff assembly uses budget-aware per-file processing (80KB budget) with generated/binary file exclusion (`*.lock`, `*.min.js`, `*.min.css`, `*.map`, `*.svg`). Files exceeding the remaining budget get a `--stat` summary instead of full diff.
 - When generating `--stat` fallbacks for over-budget files, include both `git diff --stat -- "$file"` and `git diff --cached --stat -- "$file"` — staged-only changes have empty `git diff --stat`.
 - Shell loop variable scoping: `cmd | while read` runs in a subshell — variable mutations are lost. Use heredoc-fed loops (`while read; do ... done <<EOF`) to keep mutations in the parent shell.
