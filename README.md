@@ -81,9 +81,9 @@ Audits the current session for recurring mistakes, convention violations, or dan
 
 ### `/work-issue`
 
-Works a GitHub issue from `#123`, `owner/repo#123`, or an issue URL. It resolves the repository, fetches issue context and blockers, pauses when the issue is not ready for AFK implementation, implements only the accepted scope, runs relevant checks, commits, pushes, and opens a draft PR with correct issue-closing semantics.
+Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next best open issue in the resolved repository. With no issue argument, it lists open issues, ranks AFK-ready candidates, chooses the clear top issue, and pauses for user choice when nothing is clearly ready. It resolves the repository, fetches issue context and blockers, implements only the accepted scope, runs relevant checks, commits, pushes, and opens a draft PR with correct issue-closing semantics.
 
-**Usage:** `/work-issue #123`, `/work-issue owner/repo#123`, `/work-issue https://github.com/owner/repo/issues/123`
+**Usage:** `/work-issue`, `/work-issue --repo owner/repo`, `/work-issue #123`, `/work-issue owner/repo#123`, `/work-issue https://github.com/owner/repo/issues/123`
 
 **Requires:** Git, [GitHub CLI](https://cli.github.com) authenticated for the target repository
 

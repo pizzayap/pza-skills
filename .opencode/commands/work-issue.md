@@ -1,5 +1,5 @@
 ---
-description: Work a GitHub issue through scoped implementation, verification, and PR publication
+description: Work a GitHub issue, or choose the next ready issue, through scoped implementation, verification, and PR publication
 agent: build
 ---
 
