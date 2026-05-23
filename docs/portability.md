@@ -7,6 +7,9 @@
 - `lib/pza-runtime.js` owns shared runtime behavior: config, reviewer backend
   model selection, session files, diff hashes, review markers, plan-review
   prompt assembly, custom plan reviewer invocation, and Ollama invocation.
+- Installed skills invoke the runtime through
+  `~/.pza-skills/lib/pza-runtime.js`, not `./lib/pza-runtime.js`, so target
+  project repositories do not need to vendor package helper files.
 
 ## Harness Adapters
 
@@ -24,14 +27,18 @@ frontmatter, or tool names, but they should not fork workflow logic.
 
 New writes use:
 
+- `~/.pza-skills/lib/pza-runtime.js`
 - `~/.pza-skills/settings.json`
 - `~/.pza-skills/ollama-model`
 - `~/.pza-skills/plan-reviewers.json`
 - `/tmp/pza-skills-session-<id>-files.json`
 - `/tmp/pza-skills-session-<id>-reviewed.json`
 
-`~/.pza-skills/` is local user state, not package data. Do not commit personal
-settings or model choices to the repository.
+`~/.pza-skills/` contains local user state plus the installed helper runtime.
+Do not commit personal settings or model choices to the repository.
+
+Runtime installation commands assume a POSIX shell environment such as macOS,
+Linux, or WSL2.
 
 Legacy Claude/Codex locations are read only as migration fallbacks.
 
@@ -70,7 +77,7 @@ adversarial lanes. Adversarial lanes are independent from normal reviewer
 enablement, so a user can keep normal Cursor review disabled while enabling a
 Cursor adversarial lane.
 
-`/pza-settings` may launch `node ./lib/pza-runtime.js settings-ui` as a visual
+`/pza-settings` may launch `node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui` as a visual
 companion. The server binds only to localhost, requires a random URL token, and
 writes the same `~/.pza-skills/` files as the terminal commands. If a harness
 cannot run or expose a local server, use `/pza-settings --status` and direct

@@ -42,8 +42,8 @@ PLAN_FILE="<PLAN_FILE>"
 PLAN_SOURCE="<PLAN_SOURCE>"
 PROMPT_FILE=$(mktemp -t plan-ollama-prompt.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <model-from-prompt>
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <model-from-prompt>
 ```
 
 Replace `<PLAN_FILE>` with the temp plan file path, `<PLAN_SOURCE>` with `conversation-backed`, `file-backed`, or the source label from your prompt, and `<model-from-prompt>` with the Ollama model name from your prompt.

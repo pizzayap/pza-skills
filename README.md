@@ -14,6 +14,22 @@ Install all skills from skills.sh:
 npx skills add pizzayap/pza-skills
 ```
 
+Run the same command again to refresh an existing install after package updates.
+
+Install the shared runtime helper once per machine:
+
+```bash
+git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
+~/.pza-skills/package/scripts/install-runtime.sh
+```
+
+Update the installed runtime after package changes:
+
+```bash
+git -C ~/.pza-skills/package pull --ff-only
+~/.pza-skills/package/scripts/install-runtime.sh
+```
+
 Install a single skill:
 
 ```bash
@@ -55,10 +71,10 @@ Configures reviewer backends for `/areyousure` and `/arewedone`. With no argumen
 
 **Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
 
-The visual companion can also be run directly from this repository:
+The visual companion can also be run directly after installing the runtime:
 
 ```bash
-node ./lib/pza-runtime.js settings-ui
+node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui
 ```
 
 Supported reviewer backends:
@@ -66,7 +82,7 @@ Supported reviewer backends:
 | Reviewer | CLI | Model setting |
 |---|---|---|
 | Native | active harness | Manual label, because most harnesses do not expose it |
-| Ollama | `ollama` | `node ./lib/pza-runtime.js ollama-run <model>` |
+| Ollama | `ollama` | `node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <model>` |
 | Codex | `codex` | `codex exec --model <model>` and `codex review -c model=<model>` where supported |
 | OpenCode | `opencode` | `opencode run --model provider/model` |
 | Kilo Code | `kilo` | `kilo run --model provider/model` |
@@ -133,6 +149,7 @@ The runtime keeps command arrays private; skill context only shows reviewer name
 
 New writes use harness-neutral paths:
 
+- `~/.pza-skills/lib/pza-runtime.js`
 - `~/.pza-skills/settings.json`
 - `~/.pza-skills/ollama-model`
 - `~/.pza-skills/plan-reviewers.json`

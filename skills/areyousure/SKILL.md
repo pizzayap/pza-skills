@@ -20,25 +20,25 @@ Project instructions:
 !`{ test -f ./AGENTS.md && echo "AGENTS.md - $(wc -l < ./AGENTS.md) lines"; test -f ./CLAUDE.md && echo "CLAUDE.md compatibility - $(wc -l < ./CLAUDE.md) lines"; } || true`
 
 Reviewer backend settings:
-!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 Ollama enabled:
-!`node ./lib/pza-runtime.js get-reviewer-enabled ollama 2>/dev/null || node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-enabled ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting ollama 2>/dev/null || echo "yes"`
 
 Ollama available:
 !`command -v ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Codex enabled:
-!`node ./lib/pza-runtime.js get-reviewer-enabled codex 2>/dev/null || node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-enabled codex 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting codex 2>/dev/null || echo "yes"`
 
 Codex CLI available:
 !`command -v codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Custom plan reviewers:
-!`node ./lib/pza-runtime.js plan-reviewers 2>/dev/null || echo '{"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" plan-reviewers 2>/dev/null || echo '{"reviewers":[]}'`
 
 Working directory:
 !`pwd`
@@ -119,7 +119,7 @@ CLI verifiers receive the same plan-review prompt. For file-backed plans, use `p
 Rules for temporary plan files:
 - Never write conversation-backed plans into the repo.
 - Prefer a harness file-write primitive for `/tmp` when available.
-- If the harness can pass `planContent` directly to a process on stdin without shell interpolation, the runtime also accepts `-` as the plan file: `node ./lib/pza-runtime.js plan-review-prompt - "$PLAN_SOURCE"`.
+- If the harness can pass `planContent` directly to a process on stdin without shell interpolation, the runtime also accepts `-` as the plan file: `node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt - "$PLAN_SOURCE"`.
 - If the plan cannot be materialized safely, skip CLI verifiers with `skipped - unable to materialize conversation plan safely`.
 - Clean up all temporary plan and prompt files.
 
@@ -130,7 +130,7 @@ Build the CLI prompt with the runtime helper instead of hand-assembling prompt t
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-review-prompt.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
 ```
 
 Use `PLAN_SOURCE` as `conversation-backed`, `file-backed`, or a more specific label such as `conversation-backed:codex`.
@@ -142,16 +142,16 @@ Run all eligible CLI verifiers in parallel when the active harness supports para
 For every external CLI verifier, enforce review-only behavior:
 - The prompt must say to review the attached context only and not modify files.
 - Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent.
-- Compare `node ./lib/pza-runtime.js diff-hash` before and after each CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
+- Compare `node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash` before and after each CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
 
 **Ollama CLI:**
 
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-ollama.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-OLLAMA_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model)
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run "$OLLAMA_MODEL"
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+OLLAMA_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model)
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run "$OLLAMA_MODEL"
 ```
 
 The runtime reads the configured Ollama reviewer model from `/pza-settings`.
@@ -161,16 +161,16 @@ The runtime reads the configured Ollama reviewer model from `/pza-settings`.
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-codex.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
-CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+CODEX_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
   cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
 else
   cat "$PROMPT_FILE" | codex exec -
 fi
 EXIT_CODE=$?
-AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
   echo "Codex plan review stopped - worktree changed during review."
   exit 3
@@ -185,15 +185,15 @@ Use `codex exec`, not `codex review`, because plan verification uses a custom pr
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-opencode.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
-OPENCODE_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model opencode 2>/dev/null || true)
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+OPENCODE_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model opencode 2>/dev/null || true)
 if [ -n "$OPENCODE_MODEL" ]; then
   opencode run --model "$OPENCODE_MODEL" --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
 else
   opencode run --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
 fi
-AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
   echo "OpenCode review stopped - worktree changed during review."
   exit 3
@@ -205,15 +205,15 @@ fi
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-kilo.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
-KILO_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model kilo 2>/dev/null || true)
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+KILO_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model kilo 2>/dev/null || true)
 if [ -n "$KILO_MODEL" ]; then
   kilo run --model "$KILO_MODEL" --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
 else
   kilo run --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
 fi
-AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
   echo "Kilo review stopped - worktree changed during review."
   exit 3
@@ -225,16 +225,16 @@ fi
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-cursor.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
-CURSOR_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model cursor 2>/dev/null || true)
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+CURSOR_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model cursor 2>/dev/null || true)
 CURSOR_PROMPT="Review the context file at $PROMPT_FILE only. Do not modify files."
 if [ -n "$CURSOR_MODEL" ]; then
   cursor-agent -p --output-format text --model "$CURSOR_MODEL" "$CURSOR_PROMPT"
 else
   cursor-agent -p --output-format text "$CURSOR_PROMPT"
 fi
-AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
   echo "Cursor review stopped - worktree changed during review."
   exit 3
@@ -252,7 +252,7 @@ Run `agy --help` first. Only use Antigravity if the local help text documents a 
 List configured reviewers with:
 
 ```bash
-node ./lib/pza-runtime.js plan-reviewers
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-reviewers
 ```
 
 For each enabled reviewer:
@@ -260,8 +260,8 @@ For each enabled reviewer:
 ```bash
 PROMPT_FILE=$(mktemp -t pza-plan-custom.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js run-plan-reviewer "<reviewer-name>"
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-plan-reviewer "<reviewer-name>"
 ```
 
 The runtime executes custom commands as argv arrays from `~/.pza-skills/plan-reviewers.json`; do not convert custom commands to shell strings.

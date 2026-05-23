@@ -42,16 +42,16 @@ PLAN_FILE="<PLAN_FILE>"
 PLAN_SOURCE="<PLAN_SOURCE>"
 PROMPT_FILE=$(mktemp -t plan-codex-verify.XXXXXX)
 trap 'rm -f "$PROMPT_FILE"' EXIT
-node ./lib/pza-runtime.js plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
-BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
-CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+node "$HOME/.pza-skills/lib/pza-runtime.js" plan-review-prompt "$PLAN_FILE" "$PLAN_SOURCE" > "$PROMPT_FILE"
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+CODEX_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
   cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
 else
   cat "$PROMPT_FILE" | codex exec -
 fi
 EXIT_CODE=$?
-AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
   echo "Codex plan verification stopped - worktree changed during review."
   exit 3

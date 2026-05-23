@@ -178,7 +178,7 @@ If no security issues found, return: {"verdict":"approve","summary":"No security
 PZA_OLLAMA_PROMPT
 
 cat "$DIFF_FILE" >> "$PROMPT_FILE"
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <lane-model>
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <lane-model>
 rm -f "$PROMPT_FILE"
 ```
 

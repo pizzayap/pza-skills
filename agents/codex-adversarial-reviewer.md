@@ -175,7 +175,7 @@ For each enabled lane:
 ```bash
 PROMPT_FILE="<PROMPT_FILE>"
 trap 'rm -f "$PROMPT_FILE"' EXIT
-BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 CODEX_MODEL="<lane-model>"
 if [ -n "$CODEX_MODEL" ]; then
   cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
@@ -183,7 +183,7 @@ else
   cat "$PROMPT_FILE" | codex exec -
 fi
 EXIT_CODE=$?
-AFTER_HASH=$(node ./lib/pza-runtime.js diff-hash)
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
   echo "Codex adversarial review stopped - worktree changed during review."
   exit 3

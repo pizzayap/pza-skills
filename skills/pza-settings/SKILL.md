@@ -12,13 +12,13 @@ argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigr
 # PZA Settings
 
 Current settings:
-!`node ./lib/pza-runtime.js settings 2>/dev/null || echo '{"settings":{"codex":true,"ollama":true,"adversarial":true},"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" settings 2>/dev/null || echo '{"settings":{"codex":true,"ollama":true,"adversarial":true},"reviewers":[]}'`
 
 Reviewer backends:
-!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 Adversarial reviewer lanes:
-!`node ./lib/pza-runtime.js adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 CLI availability:
 !`for cmd in ollama codex opencode kilo cursor-agent agy; do if command -v "$cmd" >/dev/null 2>&1; then echo "$cmd: yes"; else echo "$cmd: no"; fi; done`
@@ -41,7 +41,7 @@ If no arguments were provided, or the user passed `--ui`, launch the local
 visual settings companion:
 
 ```bash
-node ./lib/pza-runtime.js settings-ui
+node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui
 ```
 
 Report the printed `PZA Settings UI: http://127.0.0.1:.../?token=...` URL and
@@ -83,33 +83,33 @@ Valid reviewers:
 Apply each argument through the shared runtime:
 
 ```bash
-node ./lib/pza-runtime.js set-reviewer REVIEWER enabled on
-node ./lib/pza-runtime.js set-reviewer REVIEWER enabled off
-node ./lib/pza-runtime.js set-reviewer REVIEWER model MODEL
-node ./lib/pza-runtime.js set-settings adversarial on
-node ./lib/pza-runtime.js set-settings adversarial off
-node ./lib/pza-runtime.js add-adversarial-reviewer PROVIDER MODEL [ID]
-node ./lib/pza-runtime.js set-adversarial-reviewer ID enabled on
-node ./lib/pza-runtime.js set-adversarial-reviewer ID enabled off
-node ./lib/pza-runtime.js set-adversarial-reviewer ID model MODEL
-node ./lib/pza-runtime.js remove-adversarial-reviewer ID
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER enabled on
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER enabled off
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER model MODEL
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-settings adversarial on
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-settings adversarial off
+node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer PROVIDER MODEL [ID]
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer ID enabled on
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer ID enabled off
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer ID model MODEL
+node "$HOME/.pza-skills/lib/pza-runtime.js" remove-adversarial-reviewer ID
 ```
 
 Examples:
 
 ```bash
-node ./lib/pza-runtime.js set-reviewer native model codex:gpt-5.5
-node ./lib/pza-runtime.js set-reviewer ollama model kimi-k2.6:cloud
-node ./lib/pza-runtime.js set-reviewer opencode enabled on
-node ./lib/pza-runtime.js set-reviewer opencode model openai/gpt-5.3-codex
-node ./lib/pza-runtime.js set-reviewer cursor enabled off
-node ./lib/pza-runtime.js add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 cursor-sonnet
-node ./lib/pza-runtime.js add-adversarial-reviewer codex gpt-5.5 codex-gpt55
-node ./lib/pza-runtime.js set-adversarial-reviewer cursor-sonnet enabled off
-node ./lib/pza-runtime.js remove-adversarial-reviewer codex-gpt55
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer native model codex:gpt-5.5
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer ollama model kimi-k2.6:cloud
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode enabled on
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode model openai/gpt-5.3-codex
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer cursor enabled off
+node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 cursor-sonnet
+node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer codex gpt-5.5 codex-gpt55
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer cursor-sonnet enabled off
+node "$HOME/.pza-skills/lib/pza-runtime.js" remove-adversarial-reviewer codex-gpt55
 ```
 
-After updating, display both `node ./lib/pza-runtime.js reviewer-settings` and `node ./lib/pza-runtime.js adversarial-reviewer-settings`, then stop.
+After updating, display both `node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings` and `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings`, then stop.
 
 ### Step 3 - Display Setup Status
 
@@ -127,7 +127,7 @@ from the session context:
 | Antigravity | yes/no | yes/no | configured model or CLI default | Use only if `agy --help` shows a safe non-interactive prompt/stdin mode |
 | Adversarial master | yes/no | - | - | Global security-focused review mode |
 
-Also show an adversarial lane table from `node ./lib/pza-runtime.js adversarial-reviewer-settings`:
+Also show an adversarial lane table from `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings`:
 
 | Lane ID | Provider | Enabled | Effective | Installed | Model | Notes |
 |---------|----------|---------|-----------|-----------|-------|-------|
@@ -171,11 +171,11 @@ When asking for model names, use concrete examples:
 
 ### Step 5 - Apply Changes
 
-Apply selected changes with `node ./lib/pza-runtime.js set-reviewer`,
-`node ./lib/pza-runtime.js set-settings adversarial ...`,
-`node ./lib/pza-runtime.js add-adversarial-reviewer`,
-`node ./lib/pza-runtime.js set-adversarial-reviewer`, and
-`node ./lib/pza-runtime.js remove-adversarial-reviewer`.
+Apply selected changes with `node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer`,
+`node "$HOME/.pza-skills/lib/pza-runtime.js" set-settings adversarial ...`,
+`node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer`,
+`node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer`, and
+`node "$HOME/.pza-skills/lib/pza-runtime.js" remove-adversarial-reviewer`.
 
 After updates, show the reviewer table and confirm:
 

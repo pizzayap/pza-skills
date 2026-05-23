@@ -9,6 +9,26 @@ After installing skills in any harness, run `/pza-settings` to record the native
 model label, toggle optional reviewer CLIs, choose backend-specific model names,
 and configure `/arewedone` adversarial provider/model lanes.
 
+Install the shared helper runtime once per machine before using the skills from
+other project directories:
+
+```sh
+npx skills add pizzayap/pza-skills
+git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
+~/.pza-skills/package/scripts/install-runtime.sh
+```
+
+Re-run the `npx skills add` command whenever the package updates so installed
+skill copies pick up new runtime invocation paths and workflow text. Also
+refresh the runtime package before reinstalling the helper:
+
+```sh
+git -C ~/.pza-skills/package pull --ff-only
+~/.pza-skills/package/scripts/install-runtime.sh
+```
+
+These commands assume a POSIX shell environment such as macOS, Linux, or WSL2.
+
 By default `/pza-settings` starts a localhost-only visual settings companion
 when the harness can run a local server. Open the printed tokenized URL, make
 changes, then click **Save and Stop Server**. Terminal-only harnesses can use

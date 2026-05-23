@@ -14,34 +14,34 @@ argument-hint: '[--adversarial] [--no-adversarial]'
 # Session Changes Context
 
 Session-tracked files (this session only):
-!`node ./lib/pza-runtime.js session-files 2>/dev/null || { echo "(no session tracking - showing git status)"; git status --short; }`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" session-files 2>/dev/null || { echo "(no session tracking - showing git status)"; git status --short; }`
 
 Changed files summary (session-scoped):
-!`node ./lib/pza-runtime.js session-stat 2>/dev/null || git diff --stat`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" session-stat 2>/dev/null || git diff --stat`
 
 Reviewer backend settings:
-!`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 Ollama enabled:
-!`node ./lib/pza-runtime.js get-reviewer-enabled ollama 2>/dev/null || node ./lib/pza-runtime.js get-setting ollama 2>/dev/null || echo "yes"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-enabled ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting ollama 2>/dev/null || echo "yes"`
 
 Ollama available:
 !`command -v ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Ollama model:
-!`node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
 
 Codex enabled:
-!`node ./lib/pza-runtime.js get-reviewer-enabled codex 2>/dev/null || node ./lib/pza-runtime.js get-setting codex 2>/dev/null || echo "yes"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-enabled codex 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting codex 2>/dev/null || echo "yes"`
 
 Codex CLI available:
 !`command -v codex >/dev/null 2>&1 && echo "yes" || echo "no"`
 
 Adversarial enabled:
-!`node ./lib/pza-runtime.js get-setting adversarial 2>/dev/null || echo "yes"`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting adversarial 2>/dev/null || echo "yes"`
 
 Adversarial reviewer lanes:
-!`node ./lib/pza-runtime.js adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+!`node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 Arguments:
 `$ARGUMENTS`
@@ -64,9 +64,9 @@ Launch review agents simultaneously in a single message with parallel Agent tool
 - Agent C (Ollama) launches only if Ollama is enabled and installed.
 - Agent D (Codex) launches only if Codex is enabled and installed.
 - Additional external CLI review lanes launch only when enabled and installed: OpenCode (`opencode`), Kilo Code (`kilo`), Cursor Agent (`cursor-agent`), and Antigravity (`agy`) when `agy --help` confirms a safe non-interactive prompt/stdin mode.
-- Adversarial review lane groups launch from `node ./lib/pza-runtime.js adversarial-reviewer-settings`; with `--adversarial`, use `node ./lib/pza-runtime.js adversarial-reviewer-settings --force`; with `--no-adversarial`, launch no adversarial lanes.
+- Adversarial review lane groups launch from `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings`; with `--adversarial`, use `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings --force`; with `--no-adversarial`, launch no adversarial lanes.
 
-Every CLI-backed review is review-only. Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent. Compare `node ./lib/pza-runtime.js diff-hash` before and after each external CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
+Every CLI-backed review is review-only. Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent. Compare `node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash` before and after each external CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
 
 ### Agent A: Structural Completeness Review (`structural-completeness-reviewer`)
 
@@ -198,8 +198,8 @@ JSON FORMAT:
 If no issues found, return: {"verdict":"approve","summary":"No issues found.","findings":[]}
 PZA_OLLAMA_PROMPT
    printf '\n%s\n\n%s\n' "$TRUNC_NOTE" "$DIFF" >> "$PROMPT_FILE"
-   OLLAMA_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model ollama 2>/dev/null || node ./lib/pza-runtime.js get-model)
-   cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run "$OLLAMA_MODEL"
+   OLLAMA_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model)
+   cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run "$OLLAMA_MODEL"
    EXIT_CODE=$?
    rm -f "$PROMPT_FILE"
    exit $EXIT_CODE
@@ -247,7 +247,7 @@ For Antigravity, run `agy --help` first. Only use it if the local help text docu
 
 > Antigravity review skipped — installed but unsupported for automated review.
 
-The prompt file should contain the same review-only instructions and gathered diff context used by the Ollama review. Use the model configured in `node ./lib/pza-runtime.js get-reviewer-model <reviewer>` when non-empty. If a reviewer is enabled but missing, report `<Tool> review skipped — not installed`. If it returns an auth/login error, report `<Tool> review skipped — not authenticated`.
+The prompt file should contain the same review-only instructions and gathered diff context used by the Ollama review. Use the model configured in `node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model <reviewer>` when non-empty. If a reviewer is enabled but missing, report `<Tool> review skipped — not installed`. If it returns an auth/login error, report `<Tool> review skipped — not authenticated`.
 
 ### Adversarial Review Lane Groups
 
@@ -259,9 +259,9 @@ Resolve adversarial lanes after parsing Step 0:
 if arguments include --no-adversarial:
   use no adversarial lanes
 elif arguments include --adversarial:
-  node ./lib/pza-runtime.js adversarial-reviewer-settings --force
+  node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings --force
 else:
-  node ./lib/pza-runtime.js adversarial-reviewer-settings
+  node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings
 ```
 
 Launch only lanes where `effectiveEnabled=true`. If a lane's CLI is missing, unauthenticated, or unsupported, keep that lane as a skipped row in the synthesis rather than failing the whole review.
@@ -281,7 +281,7 @@ status: running|approve|needs-attention|skipped|error
 === PZA ADVERSARIAL LANE END ===
 ```
 
-**Ollama lane group:** launch `ollama-adversarial-reviewer` with the list of Ollama lanes as JSON. The agent gathers the diff once, then runs `node ./lib/pza-runtime.js ollama-run <model>` once per enabled Ollama lane, sequentially, using each lane's configured `model`.
+**Ollama lane group:** launch `ollama-adversarial-reviewer` with the list of Ollama lanes as JSON. The agent gathers the diff once, then runs `node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <model>` once per enabled Ollama lane, sequentially, using each lane's configured `model`.
 
 **Codex lane group:** launch `codex-adversarial-reviewer` with the list of Codex lanes as JSON. The agent gathers the diff once, then runs `codex exec --model <model> -` once per enabled Codex lane, sequentially. If a lane model is blank, omit `--model` and use the Codex CLI default.
 
@@ -568,5 +568,5 @@ The workflow is complete (with caveats noted).
 After the workflow completes (regardless of outcome), write a marker file so other tools can detect that a review was run this session:
 
 ```bash
-node ./lib/pza-runtime.js mark-reviewed arewedone
+node "$HOME/.pza-skills/lib/pza-runtime.js" mark-reviewed arewedone
 ```
