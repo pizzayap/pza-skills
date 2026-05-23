@@ -6,8 +6,8 @@ PZA-skills is a portable Agent Skills package. The canonical workflows live in
 Runtime settings are stored in `~/.pza-skills/` on each user's machine. That
 directory is local-only and should never be committed into a shared skill repo.
 After installing skills in any harness, run `/pza-settings` to record the native
-model label, toggle optional reviewer CLIs, and choose backend-specific model
-names.
+model label, toggle optional reviewer CLIs, choose backend-specific model names,
+and configure `/arewedone` adversarial provider/model lanes.
 
 By default `/pza-settings` starts a localhost-only visual settings companion
 when the harness can run a local server. Open the printed tokenized URL, make

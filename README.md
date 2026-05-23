@@ -24,7 +24,7 @@ npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
 ```
 
-Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, and choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed.
+Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, and configure adversarial provider/model lanes.
 
 Recommended first run after installation:
 
@@ -43,7 +43,7 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled and available), and optional adversarial security reviewers, then synthesizes findings and runs proof commands.
+Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled and available), and optional adversarial security lanes, then synthesizes findings and runs proof commands.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
@@ -51,9 +51,9 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 ### `/pza-settings`
 
-Configures reviewer backends for `/areyousure` and `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and enable or disable adversarial review. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
+Configures reviewer backends for `/areyousure` and `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and add multiple adversarial review lanes with independent providers and models. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
-**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`
+**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
 
 The visual companion can also be run directly from this repository:
 
@@ -72,6 +72,14 @@ Supported reviewer backends:
 | Kilo Code | `kilo` | `kilo run --model provider/model` |
 | Cursor Agent | `cursor-agent` | `cursor-agent -p --output-format text --model <model>` |
 | Antigravity | `agy` | Only when local `agy --help` shows a safe non-interactive prompt or stdin mode |
+
+Adversarial lanes are configured separately from normal reviewer toggles. For example, Cursor normal review can be off while a Cursor adversarial lane is on:
+
+```text
+/pza-settings cursor off
+/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet
+/pza-settings adversarial add codex gpt-5.5 codex-gpt55
+```
 
 Ollama is configured as a reviewer backend through `/pza-settings`; there are no separate Ollama-only setup or review skills.
 
@@ -118,8 +126,8 @@ The runtime keeps command arrays private; skill context only shows reviewer name
 - `ollama-plan-verifier` — forwards plans to Ollama for independent technical review.
 - `codex-plan-verifier` — forwards plans to Codex CLI for independent technical review.
 - `codex-code-reviewer` — forwards current git state to Codex CLI for code review.
-- `ollama-adversarial-reviewer` — runs security-focused adversarial review via Ollama.
-- `codex-adversarial-reviewer` — runs security-focused adversarial review via Codex CLI.
+- `ollama-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Ollama.
+- `codex-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Codex CLI.
 
 ## Runtime State
 
@@ -133,7 +141,7 @@ New writes use harness-neutral paths:
 
 `~/.pza-skills/` is machine-local user state. Never commit personal settings or model choices into this repository. Legacy Claude/Codex paths are read only as migration fallbacks where needed.
 
-`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility.
+`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility. It may also store `adversarialReviewers`, an array of `{id, provider, model, enabled}` lanes used by `/arewedone`. If `adversarialReviewers` is absent, `/arewedone` preserves legacy Ollama/Codex adversarial behavior; if it is an explicit empty array, no adversarial lanes run.
 
 ## Harness Adapters
 

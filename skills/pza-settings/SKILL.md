@@ -3,10 +3,10 @@ name: pza-settings
 description: >-
   Configure PZA-skills reviewer backends. Set the native reviewer model label,
   toggle Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, and
-  adversarial review, choose exact models for CLI reviewers, and launch the
-  local visual settings companion.
+  adversarial review lanes, choose exact models for CLI reviewers, and launch
+  the local visual settings companion.
 user-invocable: true
-argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [adversarial on|off]'
+argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [adversarial on|off|add <provider> <model> [id]|set <id> enabled|model <value>|remove <id>]'
 ---
 
 # PZA Settings
@@ -16,6 +16,9 @@ Current settings:
 
 Reviewer backends:
 !`node ./lib/pza-runtime.js reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+
+Adversarial reviewer lanes:
+!`node ./lib/pza-runtime.js adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
 
 CLI availability:
 !`for cmd in ollama codex opencode kilo cursor-agent agy; do if command -v "$cmd" >/dev/null 2>&1; then echo "$cmd: yes"; else echo "$cmd: no"; fi; done`
@@ -60,6 +63,10 @@ If arguments are provided, parse them in one of these forms:
 - `<reviewer> model <model>`
 - `adversarial on`
 - `adversarial off`
+- `adversarial add <provider> <model> [id]`
+- `adversarial set <id> enabled <on|off>`
+- `adversarial set <id> model <model>`
+- `adversarial remove <id>`
 - `--status`
 - `--ui`
 
@@ -81,6 +88,11 @@ node ./lib/pza-runtime.js set-reviewer REVIEWER enabled off
 node ./lib/pza-runtime.js set-reviewer REVIEWER model MODEL
 node ./lib/pza-runtime.js set-settings adversarial on
 node ./lib/pza-runtime.js set-settings adversarial off
+node ./lib/pza-runtime.js add-adversarial-reviewer PROVIDER MODEL [ID]
+node ./lib/pza-runtime.js set-adversarial-reviewer ID enabled on
+node ./lib/pza-runtime.js set-adversarial-reviewer ID enabled off
+node ./lib/pza-runtime.js set-adversarial-reviewer ID model MODEL
+node ./lib/pza-runtime.js remove-adversarial-reviewer ID
 ```
 
 Examples:
@@ -91,9 +103,13 @@ node ./lib/pza-runtime.js set-reviewer ollama model kimi-k2.6:cloud
 node ./lib/pza-runtime.js set-reviewer opencode enabled on
 node ./lib/pza-runtime.js set-reviewer opencode model openai/gpt-5.3-codex
 node ./lib/pza-runtime.js set-reviewer cursor enabled off
+node ./lib/pza-runtime.js add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 cursor-sonnet
+node ./lib/pza-runtime.js add-adversarial-reviewer codex gpt-5.5 codex-gpt55
+node ./lib/pza-runtime.js set-adversarial-reviewer cursor-sonnet enabled off
+node ./lib/pza-runtime.js remove-adversarial-reviewer codex-gpt55
 ```
 
-After updating, display `node ./lib/pza-runtime.js reviewer-settings` and stop.
+After updating, display both `node ./lib/pza-runtime.js reviewer-settings` and `node ./lib/pza-runtime.js adversarial-reviewer-settings`, then stop.
 
 ### Step 3 - Display Setup Status
 
@@ -109,7 +125,13 @@ from the session context:
 | Kilo Code | yes/no | yes/no | configured model or CLI default | `kilo run --model provider/model` |
 | Cursor Agent | yes/no | yes/no | configured model or CLI default | `cursor-agent -p --output-format text --model <model>` |
 | Antigravity | yes/no | yes/no | configured model or CLI default | Use only if `agy --help` shows a safe non-interactive prompt/stdin mode |
-| Adversarial | yes/no | - | - | Security-focused review mode for supported backends |
+| Adversarial master | yes/no | - | - | Global security-focused review mode |
+
+Also show an adversarial lane table from `node ./lib/pza-runtime.js adversarial-reviewer-settings`:
+
+| Lane ID | Provider | Enabled | Effective | Installed | Model | Notes |
+|---------|----------|---------|-----------|-----------|-------|-------|
+| cursor-sonnet | cursor | yes/no | yes/no | yes/no | configured model | explicit lane |
 
 If a reviewer is enabled but not installed, report it clearly and keep going.
 Missing CLIs should never make setup fail.
@@ -131,7 +153,9 @@ options:
   - label: "Set reviewer models"
     description: "Choose exact models for enabled CLI reviewers"
   - label: "Toggle adversarial review"
-    description: "Enable or disable security-focused adversarial review"
+    description: "Enable or disable security-focused adversarial review globally"
+  - label: "Configure adversarial lanes"
+    description: "Add, remove, toggle, or change provider/model security review lanes"
   - label: "No changes"
     description: "Keep current settings"
 ```
@@ -147,9 +171,12 @@ When asking for model names, use concrete examples:
 
 ### Step 5 - Apply Changes
 
-Apply selected changes with `node ./lib/pza-runtime.js set-reviewer` and
-`node ./lib/pza-runtime.js set-settings adversarial ...`.
+Apply selected changes with `node ./lib/pza-runtime.js set-reviewer`,
+`node ./lib/pza-runtime.js set-settings adversarial ...`,
+`node ./lib/pza-runtime.js add-adversarial-reviewer`,
+`node ./lib/pza-runtime.js set-adversarial-reviewer`, and
+`node ./lib/pza-runtime.js remove-adversarial-reviewer`.
 
 After updates, show the reviewer table and confirm:
 
-> Settings saved to `~/.pza-skills/settings.json`. Ollama model compatibility is also kept at `~/.pza-skills/ollama-model`. Changes take effect on the next `/areyousure` or `/arewedone` run.
+> Settings saved to `~/.pza-skills/settings.json`. Ollama model compatibility is also kept at `~/.pza-skills/ollama-model`. Adversarial lanes take effect on the next `/arewedone` run.

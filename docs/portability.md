@@ -51,13 +51,24 @@ Legacy Claude/Codex locations are read only as migration fallbacks.
     "kilo": { "enabled": false, "model": "" },
     "cursor": { "enabled": false, "model": "" },
     "antigravity": { "enabled": false, "model": "" }
-  }
+  },
+  "adversarialReviewers": [
+    { "id": "cursor-sonnet", "provider": "cursor", "model": "anthropic/claude-sonnet-4.5", "enabled": true },
+    { "id": "codex-gpt55", "provider": "codex", "model": "gpt-5.5", "enabled": true }
+  ]
 }
 ```
 
 The top-level `codex` and `ollama` booleans remain for backward compatibility.
 `~/.pza-skills/ollama-model` is mirrored when the Ollama reviewer model is set
 through `/pza-settings`.
+
+`adversarialReviewers` is optional. When absent, `/arewedone` preserves legacy
+Ollama/Codex adversarial behavior from the normal reviewer settings. When it is
+present, even as an empty array, it is the explicit source of truth for
+adversarial lanes. Adversarial lanes are independent from normal reviewer
+enablement, so a user can keep normal Cursor review disabled while enabling a
+Cursor adversarial lane.
 
 `/pza-settings` may launch `node ./lib/pza-runtime.js settings-ui` as a visual
 companion. The server binds only to localhost, requires a random URL token, and

@@ -14,7 +14,7 @@ You are a forwarding wrapper that runs an Ollama-powered adversarial security re
 
 ## Your Job
 
-Gather the diff, write it to a temp file, send it to Ollama with a security-focused adversarial prompt, and return the output verbatim. The Ollama model name is provided in your prompt by the parent skill.
+Gather the diff once, write it to a temp file, send it to Ollama with a security-focused adversarial prompt once per requested lane, and return each lane output verbatim. The parent skill provides one or more Ollama lanes as JSON, each with `id`, `provider`, `model`, and `enabled`.
 
 ### Step 1 — Check Ollama Availability
 
@@ -126,9 +126,26 @@ git rev-parse HEAD~1 2>/dev/null && echo "has_prev=yes" || echo "has_prev=no"
   - If `diff_exit=0` (empty diff): report "Ollama adversarial review skipped — last commit has no diff." and stop.
 - If `has_prev=no`: report "Ollama adversarial review skipped — clean working tree with no parent commit to review against." and stop.
 
-### Step 4 — Run Ollama Review
+### Step 4 — Run Ollama Review Lanes
 
-Use the active harness shell tool with a 5 minute timeout. Read the diff from the temp file and pass to Ollama:
+Use the active harness shell tool with a 5 minute timeout per lane. Read the diff from the temp file and pass to Ollama. Run multiple Ollama lanes sequentially, not in parallel.
+
+For each enabled lane, capture the reviewer output and exit code, then print stable metadata with the final lane status:
+
+```text
+=== PZA ADVERSARIAL LANE START ===
+id: <lane-id>
+provider: ollama
+model: <lane-model>
+status: approve|needs-attention|skipped|error
+=== PZA ADVERSARIAL LANE OUTPUT ===
+<verbatim reviewer output or skip/error reason>
+=== PZA ADVERSARIAL LANE END ===
+```
+
+If a lane fails, put `status: error` in the metadata and include the error output. If a lane is disabled or has no model, put `status: skipped` and include the reason. If the output contains an explicit non-empty findings list or otherwise calls out concrete security issues, use `needs-attention`; otherwise use `approve`.
+
+For each enabled lane:
 
 ```bash
 DIFF_FILE="<DIFF_FILE>"
@@ -161,15 +178,15 @@ If no security issues found, return: {"verdict":"approve","summary":"No security
 PZA_OLLAMA_PROMPT
 
 cat "$DIFF_FILE" >> "$PROMPT_FILE"
-cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <ollama-model>
+cat "$PROMPT_FILE" | node ./lib/pza-runtime.js ollama-run <lane-model>
 rm -f "$PROMPT_FILE"
 ```
 
-Replace `<DIFF_FILE>` with the temp path from Step 3, and `<ollama-model>` with the model name from your prompt. The `trap` ensures the temp file is cleaned up even if Ollama times out.
+Replace `<DIFF_FILE>` with the temp path from Step 3, and `<lane-model>` with the current lane's model. The `trap` ensures the temp file is cleaned up even if Ollama times out.
 
 ### Step 5 — Return Output
 
-Return the full review output verbatim — verdict, findings, summary, and all details.
+Return the full lane metadata and review output verbatim — verdict, findings, summary, and all details.
 
 If Ollama fails or times out, report that the adversarial review was skipped and include the error message.
 

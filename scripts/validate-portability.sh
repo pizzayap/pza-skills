@@ -24,6 +24,9 @@ node -e "
   for (const name of ['opencode', 'kilo', 'cursor', 'antigravity']) {
     if (byName[name]?.enabled !== false) process.exit(1);
   }
+  const advById = Object.fromEntries(data.adversarialReviewers.map((reviewer) => [reviewer.id, reviewer]));
+  if (!advById['ollama-default']?.legacy || !advById['ollama-default']?.effectiveEnabled) process.exit(1);
+  if (!advById['codex-default']?.legacy || !advById['codex-default']?.effectiveEnabled) process.exit(1);
 "
 rm -rf "$tmp_home" /tmp/pza-runtime-defaults.json
 
@@ -41,6 +44,9 @@ node -e "
   if (data.settings.adversarial !== false) process.exit(1);
   if (data.settings.reviewers.ollama.enabled !== true) process.exit(1);
   if (data.settings.reviewers.codex.enabled !== false) process.exit(1);
+  const advById = Object.fromEntries(data.adversarialReviewers.map((reviewer) => [reviewer.id, reviewer]));
+  if (advById['ollama-default'].effectiveEnabled !== false) process.exit(1);
+  if (advById['codex-default'].enabled !== false) process.exit(1);
 "
 rm -rf "$tmp_home" /tmp/pza-runtime-merged.json
 
@@ -70,21 +76,121 @@ node -e "
 rm -rf "$tmp_home"
 rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json
 
+echo "== Adversarial reviewer runtime =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-adversarial-settings.XXXXXX")
+HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings >/tmp/pza-adversarial-default.json
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync('/tmp/pza-adversarial-default.json', 'utf8'));
+  if (data.explicit !== false) process.exit(1);
+  const byId = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.id, reviewer]));
+  if (!byId['ollama-default']?.legacy || !byId['codex-default']?.legacy) process.exit(1);
+"
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 >/tmp/pza-adversarial-add-one.json
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 >/tmp/pza-adversarial-add-two.json
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer codex gpt-5.5 codex-gpt55 >/tmp/pza-adversarial-add-codex.json
+if HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer ollama kimi-k2.6:cloud codex-gpt55 >/tmp/pza-adversarial-dup.out 2>/tmp/pza-adversarial-dup.err; then
+  echo "duplicate adversarial lane id was accepted" >&2
+  exit 1
+fi
+grep -q 'already exists' /tmp/pza-adversarial-dup.err
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer cursor enabled off >/tmp/pza-adversarial-cursor-off.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-adversarial-reviewer cursor-anthropic-claude-sonnet-4-5-2 enabled off >/tmp/pza-adversarial-disable-second.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-settings adversarial off >/tmp/pza-adversarial-master-off.json
+HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings >/tmp/pza-adversarial-explicit.json
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync('/tmp/pza-adversarial-explicit.json', 'utf8'));
+  if (data.explicit !== true || data.adversarial !== false) process.exit(1);
+  const byId = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.id, reviewer]));
+  if (!byId['cursor-anthropic-claude-sonnet-4-5']) process.exit(1);
+  if (!byId['cursor-anthropic-claude-sonnet-4-5-2']) process.exit(1);
+  if (byId['cursor-anthropic-claude-sonnet-4-5'].enabled !== true) process.exit(1);
+  if (byId['cursor-anthropic-claude-sonnet-4-5'].effectiveEnabled !== false) process.exit(1);
+  if (byId['cursor-anthropic-claude-sonnet-4-5-2'].enabled !== false) process.exit(1);
+  if (byId['codex-gpt55'].model !== 'gpt-5.5') process.exit(1);
+"
+HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings --force >/tmp/pza-adversarial-force.json
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync('/tmp/pza-adversarial-force.json', 'utf8'));
+  const byId = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.id, reviewer]));
+  if (byId['cursor-anthropic-claude-sonnet-4-5'].effectiveEnabled !== true) process.exit(1);
+  if (byId['cursor-anthropic-claude-sonnet-4-5-2'].effectiveEnabled !== false) process.exit(1);
+"
+HOME="$tmp_home" node ./lib/pza-runtime.js remove-adversarial-reviewer codex-gpt55 >/tmp/pza-adversarial-remove.json
+mkdir -p "$tmp_home/.pza-skills"
+printf '%s\n' '{"adversarialReviewers":[]}' > "$tmp_home/.pza-skills/settings.json"
+HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings >/tmp/pza-adversarial-empty.json
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync('/tmp/pza-adversarial-empty.json', 'utf8'));
+  if (data.explicit !== true || data.reviewers.length !== 0) process.exit(1);
+"
+rm -rf "$tmp_home"
+rm -f /tmp/pza-adversarial-default.json /tmp/pza-adversarial-add-one.json /tmp/pza-adversarial-add-two.json /tmp/pza-adversarial-add-codex.json /tmp/pza-adversarial-dup.out /tmp/pza-adversarial-dup.err /tmp/pza-adversarial-cursor-off.json /tmp/pza-adversarial-disable-second.json /tmp/pza-adversarial-master-off.json /tmp/pza-adversarial-explicit.json /tmp/pza-adversarial-force.json /tmp/pza-adversarial-remove.json /tmp/pza-adversarial-empty.json
+
 echo "== Settings UI runtime =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-settings-ui.XXXXXX")
 HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --help | grep -q 'localhost-only visual settings companion'
 HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --token fixed-token --print-html >/tmp/pza-settings-ui.html
 grep -q 'PZA Settings' /tmp/pza-settings-ui.html
+grep -q 'Adversarial lanes' /tmp/pza-settings-ui.html
 grep -q '/api/save' /tmp/pza-settings-ui.html
 grep -q 'Save and Stop Server' /tmp/pza-settings-ui.html
 grep -q 'fixed-token' /tmp/pza-settings-ui.html
+HOME="$tmp_home" node -e "
+  const fs = require('fs');
+  const vm = require('vm');
+  let source = fs.readFileSync('lib/pza-runtime.js', 'utf8').replace(/^#!.*\\n/, '');
+  const mainIndex = source.indexOf('\\nconst cmd = process.argv[2];');
+  if (mainIndex < 0) process.exit(1);
+  source = source.slice(0, mainIndex) + \`
+    let duplicateRejected = false;
+    try {
+      saveReviewerUiState({
+        adversarialReviewers: [
+          { id: 'duplicate', provider: 'cursor', model: 'one', enabled: true },
+          { id: 'duplicate', provider: 'codex', model: 'two', enabled: true },
+        ],
+      });
+    } catch (error) {
+      duplicateRejected = /Duplicate adversarial lane id: duplicate/.test(error.message);
+    }
+    if (!duplicateRejected) throw new Error('duplicate lane id was not rejected');
+
+    let invalidRejected = false;
+    try {
+      saveReviewerUiState({
+        adversarialReviewers: [
+          { id: '!!!', provider: 'cursor', model: 'one', enabled: true },
+        ],
+      });
+    } catch (error) {
+      invalidRejected = /at least one letter or number/.test(error.message);
+    }
+    if (!invalidRejected) throw new Error('invalid explicit lane id was not rejected');
+
+    const saved = saveReviewerUiState({
+      adversarialReviewers: [
+        { provider: 'cursor', model: 'same', enabled: true },
+        { provider: 'cursor', model: 'same', enabled: true },
+      ],
+    });
+    const ids = saved.adversarialReviewers.map((lane) => lane.id);
+    if (ids[0] !== 'cursor-same' || ids[1] !== 'cursor-same-2') {
+      throw new Error('generated lane id suffixing failed: ' + ids.join(','));
+    }
+  \`;
+  vm.runInNewContext(source, { require, console, process, Buffer, URL, setTimeout, clearTimeout });
+"
 if HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --host 0.0.0.0 --print-html >/tmp/pza-settings-ui-invalid.out 2>/tmp/pza-settings-ui-invalid.err; then
   echo "settings-ui accepted a non-localhost bind address" >&2
   exit 1
 fi
 grep -q 'only binds to localhost' /tmp/pza-settings-ui-invalid.err
 rm -rf "$tmp_home"
-rm -f /tmp/pza-settings-ui.html /tmp/pza-settings-ui-invalid.out /tmp/pza-settings-ui-invalid.err
+rm -f /tmp/pza-settings-ui.html /tmp/pza-settings-ui-invalid.out /tmp/pza-settings-ui-invalid.err /tmp/pza-settings-ui-server.out /tmp/pza-settings-ui-server.err
 
 echo "== Diff hash untracked content =="
 tmp_untracked="pza-diff-hash-untracked-$$.txt"

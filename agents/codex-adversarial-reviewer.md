@@ -13,7 +13,7 @@ You are a forwarding wrapper that runs a Codex-powered adversarial security revi
 
 ## Your Job
 
-Gather the diff, write it with an adversarial prompt to a temp file, pipe to `codex exec -`, and return the output verbatim.
+Gather the diff once, write it with an adversarial prompt to a temp file, pipe it to `codex exec -` once per requested lane, and return each lane output verbatim. The parent skill provides one or more Codex lanes as JSON, each with `id`, `provider`, `model`, and `enabled`.
 
 ### Step 1 — Check Codex Availability
 
@@ -119,7 +119,7 @@ git rev-parse HEAD~1 2>/dev/null && echo "has_prev=yes" || echo "has_prev=no"
   - If `diff_exit=0` (empty diff): report "Codex adversarial review skipped — last commit has no diff." and stop.
 - If `has_prev=no`: report "Codex adversarial review skipped — clean working tree with no parent commit to review against." and stop.
 
-### Step 4 — Write Prompt to Temp File and Run Codex
+### Step 4 — Write Prompt to Temp File and Run Codex Lanes
 
 Write the static adversarial prompt to a temp file using a single-quoted heredoc, then append the diff content separately using `printf`. Never embed diff content inside a heredoc — untracked file content containing the delimiter would close the heredoc early and expose subsequent lines to shell interpretation.
 
@@ -153,13 +153,30 @@ echo "$PROMPT_FILE"
 
 The single-quoted heredoc writes only the static prompt. The `printf` append writes the truncation note and diff content as data — shell metacharacters in the diff are never interpreted because they pass through a variable, not through shell source.
 
-**Call 2 — invoke Codex:** Use the active harness shell tool with a 5 minute timeout.
+**Call 2 — invoke Codex lanes:** Use the active harness shell tool with a 5 minute timeout per lane. Run multiple Codex lanes sequentially, not in parallel.
+
+For each enabled lane, capture the reviewer output and exit code, then print stable metadata with the final lane status:
+
+```text
+=== PZA ADVERSARIAL LANE START ===
+id: <lane-id>
+provider: codex
+model: <lane-model-or-cli-default>
+status: approve|needs-attention|skipped|error
+=== PZA ADVERSARIAL LANE OUTPUT ===
+<verbatim reviewer output or skip/error reason>
+=== PZA ADVERSARIAL LANE END ===
+```
+
+If a lane fails, put `status: error` in the metadata and include the error output. If a lane is disabled, put `status: skipped` and include the reason. If the output contains concrete security findings, use `needs-attention`; otherwise use `approve`.
+
+For each enabled lane:
 
 ```bash
 PROMPT_FILE="<PROMPT_FILE>"
 trap 'rm -f "$PROMPT_FILE"' EXIT
 BEFORE_HASH=$(node ./lib/pza-runtime.js diff-hash)
-CODEX_MODEL=$(node ./lib/pza-runtime.js get-reviewer-model codex 2>/dev/null || true)
+CODEX_MODEL="<lane-model>"
 if [ -n "$CODEX_MODEL" ]; then
   cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
 else
@@ -174,7 +191,7 @@ fi
 exit $EXIT_CODE
 ```
 
-Replace `<PROMPT_FILE>` with the temp path from Call 1. The `trap` ensures the temp file is cleaned up even if `codex exec` is killed by the timeout.
+Replace `<PROMPT_FILE>` with the temp path from Call 1 and `<lane-model>` with the current lane's configured model. If the lane model is blank, omit `--model` and use the Codex CLI default. The `trap` ensures the temp file is cleaned up even if `codex exec` is killed by the timeout.
 
 ### Step 5 — Return Output
 

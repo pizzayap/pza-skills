@@ -40,6 +40,9 @@ Codex CLI available:
 Adversarial enabled:
 !`node ./lib/pza-runtime.js get-setting adversarial 2>/dev/null || echo "yes"`
 
+Adversarial reviewer lanes:
+!`node ./lib/pza-runtime.js adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+
 Arguments:
 `$ARGUMENTS`
 
@@ -49,8 +52,8 @@ Arguments:
 
 Check the Arguments from session context above. If arguments are present:
 
-- `--adversarial` → force adversarial agents ON for this run (overrides the adversarial toggle only; per-tool ollama/codex toggles still apply)
-- `--no-adversarial` → force adversarial agents OFF for this run
+- `--adversarial` → force the global adversarial master toggle ON for this run only; explicit lane enablement still applies
+- `--no-adversarial` → force all adversarial lanes OFF for this run
 
 These flags affect only adversarial reviewers. Structural, quality, and standard CLI reviewers are unaffected.
 
@@ -61,7 +64,7 @@ Launch review agents simultaneously in a single message with parallel Agent tool
 - Agent C (Ollama) launches only if Ollama is enabled and installed.
 - Agent D (Codex) launches only if Codex is enabled and installed.
 - Additional external CLI review lanes launch only when enabled and installed: OpenCode (`opencode`), Kilo Code (`kilo`), Cursor Agent (`cursor-agent`), and Antigravity (`agy`) when `agy --help` confirms a safe non-interactive prompt/stdin mode.
-- Agents E and F (adversarial) launch based on adversarial flag/settings logic from Step 0.
+- Adversarial review lane groups launch from `node ./lib/pza-runtime.js adversarial-reviewer-settings`; with `--adversarial`, use `node ./lib/pza-runtime.js adversarial-reviewer-settings --force`; with `--no-adversarial`, launch no adversarial lanes.
 
 Every CLI-backed review is review-only. Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent. Compare `node ./lib/pza-runtime.js diff-hash` before and after each external CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
 
@@ -246,35 +249,63 @@ For Antigravity, run `agy --help` first. Only use it if the local help text docu
 
 The prompt file should contain the same review-only instructions and gathered diff context used by the Ollama review. Use the model configured in `node ./lib/pza-runtime.js get-reviewer-model <reviewer>` when non-empty. If a reviewer is enabled but missing, report `<Tool> review skipped — not installed`. If it returns an auth/login error, report `<Tool> review skipped — not authenticated`.
 
-### Agent E: Ollama Adversarial Review (`ollama-adversarial-reviewer`)
+### Adversarial Review Lane Groups
 
-**Condition:** Evaluate in order:
-1. If `--no-adversarial` flag was passed in Step 0 → skip this agent entirely
-2. If `--adversarial` flag was passed in Step 0 → launch if BOTH "Ollama available: yes" AND "Ollama enabled: yes" (overrides only the adversarial toggle, not the per-tool toggle)
-3. Otherwise → launch ONLY if ALL three: "Ollama available: yes" AND "Ollama enabled: yes" AND "Adversarial enabled: yes"
+Adversarial review is configured as lanes in `/pza-settings`. Each lane has an `id`, `provider`, `model`, and `enabled` state. A user may enable multiple providers and multiple models for the same provider.
 
-If none of the launch conditions are met, skip this agent entirely.
+Resolve adversarial lanes after parsing Step 0:
 
-Launch the `ollama-adversarial-reviewer` agent. Its prompt should include:
+```bash
+if arguments include --no-adversarial:
+  use no adversarial lanes
+elif arguments include --adversarial:
+  node ./lib/pza-runtime.js adversarial-reviewer-settings --force
+else:
+  node ./lib/pza-runtime.js adversarial-reviewer-settings
+```
 
-> "Run an adversarial security review against the current git state using Ollama model `<model>`. Return the full output."
+Launch only lanes where `effectiveEnabled=true`. If a lane's CLI is missing, unauthenticated, or unsupported, keep that lane as a skipped row in the synthesis rather than failing the whole review.
 
-Replace `<model>` with the Ollama model name from the session context above. This agent handles Ollama detection, diff assembly, adversarial prompt invocation, and error reporting internally. It may return structured JSON or prose.
+Group enabled lanes by provider. Launch one agent per provider group in the same parallel Agent-tool message as the other review agents. Inside a provider group, run that provider's lanes sequentially so multiple models for the same CLI do not race each other.
 
-### Agent F: Codex Adversarial Review (`codex-adversarial-reviewer`)
+Every provider group must prefix each lane result with stable metadata so synthesis never depends on model-generated wording for attribution:
 
-**Condition:** Evaluate in order:
-1. If `--no-adversarial` flag was passed in Step 0 → skip this agent entirely
-2. If `--adversarial` flag was passed in Step 0 → launch if BOTH "Codex CLI available: yes" AND "Codex enabled: yes" (overrides only the adversarial toggle, not the per-tool toggle)
-3. Otherwise → launch ONLY if ALL three: "Codex CLI available: yes" AND "Codex enabled: yes" AND "Adversarial enabled: yes"
+```text
+=== PZA ADVERSARIAL LANE START ===
+id: <lane-id>
+provider: <provider>
+model: <model>
+status: running|approve|needs-attention|skipped|error
+=== PZA ADVERSARIAL LANE OUTPUT ===
+<verbatim reviewer output or skip/error reason>
+=== PZA ADVERSARIAL LANE END ===
+```
 
-If none of the launch conditions are met, skip this agent entirely.
+**Ollama lane group:** launch `ollama-adversarial-reviewer` with the list of Ollama lanes as JSON. The agent gathers the diff once, then runs `node ./lib/pza-runtime.js ollama-run <model>` once per enabled Ollama lane, sequentially, using each lane's configured `model`.
 
-Launch the `codex-adversarial-reviewer` agent. Its prompt should simply be:
+**Codex lane group:** launch `codex-adversarial-reviewer` with the list of Codex lanes as JSON. The agent gathers the diff once, then runs `codex exec --model <model> -` once per enabled Codex lane, sequentially. If a lane model is blank, omit `--model` and use the Codex CLI default.
 
-> "Run an adversarial security review against the current git state. Return the full output."
+**OpenCode lane group:** launch a general-purpose review-only agent. It gathers the same diff context used by the Ollama review, writes the adversarial prompt plus diff to a temp file, then runs each lane sequentially:
 
-This agent handles Codex detection, diff assembly, adversarial prompt invocation, and error reporting internally. It returns prose/markdown output (not structured JSON).
+```bash
+opencode run [--model <lane-model>] --file "$PROMPT_FILE" "Run an adversarial security review of the attached context only. Do not modify files."
+```
+
+**Kilo Code lane group:** same as OpenCode, using:
+
+```bash
+kilo run [--model <lane-model>] --file "$PROMPT_FILE" "Run an adversarial security review of the attached context only. Do not modify files."
+```
+
+**Cursor Agent lane group:** same as OpenCode, using:
+
+```bash
+cursor-agent -p --output-format text [--model <lane-model>] "Run an adversarial security review of the context file at $PROMPT_FILE only. Do not modify files."
+```
+
+**Antigravity lane group:** run `agy --help` first. Only use Antigravity if local help documents a safe non-interactive prompt, file, or stdin form. If no safe form exists, mark each Antigravity lane as:
+
+> Antigravity adversarial review skipped — installed but unsupported for automated review.
 
 **IMPORTANT**: All launched agents MUST be in the same message (parallel Agent tool calls). Do NOT run them sequentially. Wait for all agents to complete before proceeding.
 
@@ -310,15 +341,15 @@ VALID=$(echo "$EXTRACTED" | node -e "
 1. **If `VALID=yes` (structured):** extract findings directly — each has `severity`, `title`, `file`, `description`
 2. **If `VALID=no` (unstructured):** treat Agent C's output as prose and interpret it the same way you interpret Agent A and Agent B's reports
 
-Agents A and B always return prose. Agents C and E (Ollama) may return JSON. Agents D and F (Codex) always return prose.
+Agents A and B always return prose. Agent C and Ollama adversarial lanes may return JSON. Agent D, non-Ollama external reviewers, and non-Ollama adversarial lanes return prose.
 
-### 2a-2. Parse Agent E's output (dual-format handling) — skip if Agent E was not launched
+### 2a-2. Parse adversarial lane group outputs — skip if no adversarial lanes were launched
 
-Agent E's adversarial Ollama review uses the same JSON output format as Agent C. Apply the identical extraction and validation logic shown above for Agent C. If valid JSON, extract findings directly. If prose, interpret semantically.
+For every adversarial lane group output, split by the `=== PZA ADVERSARIAL LANE ... ===` metadata wrapper. Each parsed lane result must retain `id`, `provider`, `model`, and `status`.
 
-### 2a-3. Parse Agent F's output — skip if Agent F was not launched
+Ollama adversarial lane output may be structured JSON or prose. Apply the same JSON extraction and validation logic shown for Agent C to each Ollama lane's output. If valid JSON, extract findings directly. If prose, interpret semantically.
 
-Agent F (Codex adversarial) always returns prose. No JSON extraction needed — interpret it the same way as Agent D's output.
+Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity adversarial lanes return prose/markdown. Interpret them the same way as Agent D's output, with the lane metadata used for attribution.
 
 ### 2b. Build unified report
 
@@ -333,16 +364,15 @@ Agent F (Codex adversarial) always returns prose. No JSON extraction needed — 
    | Kilo Code review | External CLI | approve/needs-attention/skipped |
    | Cursor Agent review | External CLI | approve/needs-attention/skipped |
    | Antigravity review | External CLI | approve/needs-attention/skipped |
-   | Ollama adversarial | Agent E | approve/needs-attention/skipped |
-   | Codex adversarial | Agent F | approve/needs-attention/skipped |
+   | Adversarial `<lane-id>` | `<provider>` / `<model>` | approve/needs-attention/skipped |
 
    Only include rows for agents that were launched. If an optional agent was not launched (disabled or unavailable), omit its row entirely.
 
-2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agents C or E returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, F, external CLI reviewers, or C/E fallback), match by semantic similarity (same file + similar description). If Agent B's security dimension and Agent E or F flag the same issue, this is especially high confidence (independent security-focused corroboration). Note: cross-format dedup (JSON vs prose, or different review framings) is inherently fuzzy — err on the side of reporting both if uncertain whether two findings are the same issue.
+2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agent C or an Ollama adversarial lane returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, external CLI reviewers, adversarial lane prose, or JSON fallback), match by semantic similarity (same file + similar description). If Agent B's security dimension and any adversarial lane flags the same issue, this is especially high confidence (independent security-focused corroboration). If multiple adversarial lanes report the same issue, deduplicate and tag all lane sources. Note: cross-format dedup (JSON vs prose, or different review framings) is inherently fuzzy — err on the side of reporting both if uncertain whether two findings are the same issue.
 
 3. **Issues list** — deduplicate overlapping findings across all launched reviews, categorize by severity (critical > warning > suggestion)
 
-4. **Source label** — tag each issue as [structural], [quality], [ollama], [codex], [opencode], [kilo], [cursor], [antigravity], [ollama-security], or [codex-security] so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
+4. **Source label** — tag each issue as [structural], [quality], [ollama], [codex], [opencode], [kilo], [cursor], [antigravity], or `[<provider>-security:<lane-id>]` so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
 
 If no issues are found from any review, report a clean bill of health and proceed to Step 4 (Proof).
 
@@ -386,7 +416,7 @@ _Generated by /arewedone on YYYY-MM-DD_
 
 | # | Issue | Source | File | Notes |
 |---|-------|--------|------|-------|
-| 1 | [description] | [structural\|quality\|ollama\|codex\|ollama-security\|codex-security] | `path/to/file` | [any extra context] |
+| 1 | [description] | [structural\|quality\|ollama\|codex\|provider-security:lane-id] | `path/to/file` | [any extra context] |
 ```
 
 If `REVIEW-BACKLOG.md` already exists, **append** a new dated section rather than overwriting.

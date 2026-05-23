@@ -1,5 +1,5 @@
 ---
-description: Runs Codex CLI adversarial security review against current git state
+description: Runs one or more Codex CLI adversarial security review lanes against current git state
 mode: subagent
 permission:
   edit: deny
