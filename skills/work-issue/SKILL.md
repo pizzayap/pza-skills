@@ -60,11 +60,13 @@ Before implementation, normalize the current checkout's GitHub remotes. At least
 Pre-checks:
 
 ```bash
-gh auth status
+command -v gh >/dev/null 2>&1
 git status --short --branch
 ```
 
-If `gh` is missing or unauthenticated, stop with the exact setup blocker.
+If `gh` is missing, stop with the exact setup blocker.
+
+Do not require `gh auth status` before read-only issue discovery, issue viewing, dependency checks, or issue status checks. Run the read-only `gh` command first. If it fails because authentication is required for a private repository, the API is rate-limited, or the token lacks access, report that specific blocker and ask the user to authenticate or provide access.
 
 If no issue reference was provided, discover and rank candidate issues before implementation:
 
@@ -219,7 +221,15 @@ git push "$PUBLISH_REMOTE" "$DEFAULT_BRANCH"
 
 Default PR workflow:
 
-1. Create a PR body temp file and a noninteractive title before invoking `gh`:
+1. Verify `gh` authentication before creating GitHub resources:
+
+```bash
+gh auth status
+```
+
+If unauthenticated, keep the branch pushed if the push already succeeded, then stop with the exact setup blocker.
+
+2. Create a PR body temp file and a noninteractive title before invoking `gh`:
 
 ```bash
 PR_BODY_FILE=$(mktemp -t work-issue-pr.XXXXXX)
@@ -233,21 +243,21 @@ PR_BODY_FILE=$(mktemp -t work-issue-pr.XXXXXX)
 PR_TITLE="Issue #$NUMBER: $SHORT_TITLE"
 ```
 
-2. Create the draft PR noninteractively in the resolved repository:
+3. Create the draft PR noninteractively in the resolved repository:
 
 ```bash
 PR_URL=$(gh pr create -R "$REPO" --draft --title "$PR_TITLE" --body-file "$PR_BODY_FILE")
 rm -f "$PR_BODY_FILE"
 ```
 
-3. Include the scope summary, checks run, and `Closes #123` only if complete.
-4. After creation, verify the PR body contains the intended issue reference:
+4. Include the scope summary, checks run, and `Closes #123` only if complete.
+5. After creation, verify the PR body contains the intended issue reference:
 
 ```bash
 gh pr view "$PR_URL" -R "$REPO" --json body --jq '.body' | grep -Fq "Closes #$NUMBER"
 ```
 
-5. Report that the issue will close only when the PR is merged into the default branch.
+6. Report that the issue will close only when the PR is merged into the default branch.
 
 Direct-to-main workflow:
 
@@ -259,7 +269,15 @@ Direct-to-main workflow:
 gh issue view "$NUMBER" -R "$REPO" --json state,stateReason,url
 ```
 
-4. If the issue did not auto-close and the pushed default-branch commit fully satisfies it, close it manually:
+4. If the issue did not auto-close and the pushed default-branch commit fully satisfies it, verify `gh` authentication before closing manually:
+
+```bash
+gh auth status
+```
+
+If unauthenticated, report that the issue remains open because manual close requires authentication.
+
+5. Close the issue manually only after authentication succeeds:
 
 ```bash
 gh issue close "$NUMBER" -R "$REPO" --reason completed --comment "Completed by <commit-or-summary>."

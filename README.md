@@ -85,7 +85,7 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 **Usage:** `/work-issue`, `/work-issue --repo owner/repo`, `/work-issue #123`, `/work-issue owner/repo#123`, `/work-issue https://github.com/owner/repo/issues/123`
 
-**Requires:** Git, [GitHub CLI](https://cli.github.com) authenticated for the target repository
+**Requires:** Git, [GitHub CLI](https://cli.github.com). Authentication is only required for private repositories and write actions such as creating PRs or closing issues.
 
 ### `/areyousure`
 
