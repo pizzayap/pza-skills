@@ -257,11 +257,15 @@ echo "== Adapter files =="
 for file in \
   .opencode/commands/arewedone.md \
   .opencode/commands/areyousure.md \
+  .opencode/commands/agent-docs-audit.md \
+  .opencode/commands/agent-docs-revise.md \
   .opencode/commands/pza-settings.md \
   .opencode/commands/hook-worthy.md \
   .opencode/commands/work-issue.md \
   .pi/prompts/arewedone.md \
   .pi/prompts/areyousure.md \
+  .pi/prompts/agent-docs-audit.md \
+  .pi/prompts/agent-docs-revise.md \
   .pi/prompts/pza-settings.md \
   .pi/prompts/hook-worthy.md \
   .pi/prompts/work-issue.md \

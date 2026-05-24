@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/pizzayap/pza-skills)](https://skills.sh/pizzayap/pza-skills)
 
-Portable Agent Skills for code review, plan verification, hook auditing, and session tracking across Codex, OpenCode, Pi, and Claude Code compatibility installs.
+Portable Agent Skills for code review, plan verification, hook auditing, agent-guidance maintenance, and session tracking across Codex, OpenCode, Pi, and Claude Code compatibility installs.
 
 The canonical workflows live in `skills/*/SKILL.md` and `agents/*.md`. Harness-specific files are thin adapters; they should not fork the core workflow logic. Shared runtime behavior lives in `lib/pza-runtime.js`.
 
@@ -35,6 +35,8 @@ Install a single skill:
 ```bash
 npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --skill areyousure
+npx skills add pizzayap/pza-skills --skill agent-docs-audit
+npx skills add pizzayap/pza-skills --skill agent-docs-revise
 npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
@@ -102,6 +104,18 @@ Ollama is configured as a reviewer backend through `/pza-settings`; there are no
 ### `/hook-worthy`
 
 Audits the current session for recurring mistakes, convention violations, or dangerous patterns worth enforcing as harness hooks. Claude Code hooks are the implemented compatibility target; other harness hooks are documented only after stable payloads are verified.
+
+### `/agent-docs-audit`
+
+Read-only quality audit for `AGENTS.md`, `CLAUDE.md`, and nested agent guidance files. It checks commands, architecture, project-specific gotchas, conciseness, current paths, actionability, and AGENTS/CLAUDE mirror drift against the live repository.
+
+**Usage:** `/agent-docs-audit`, `/agent-docs-audit --root-only`, `/agent-docs-audit --all`, `/agent-docs-audit path/to/docs`
+
+### `/agent-docs-revise`
+
+Captures durable session learnings and current repo evidence, then proposes a full rewrite or focused diff for `AGENTS.md` before editing. When `CLAUDE.md` exists as a compatibility mirror, it updates that file after `AGENTS.md` with intentional Claude-specific differences.
+
+**Usage:** `/agent-docs-revise`, `/agent-docs-revise --root-only`, `/agent-docs-revise --all`, `/agent-docs-revise path/to/docs`
 
 ### `/work-issue`
 
@@ -176,6 +190,8 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/arewedone` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/pza-settings` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/hook-worthy` | — | — |
+| `/agent-docs-audit` | — | — |
+| `/agent-docs-revise` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
 | `/areyousure` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, custom CLI reviewers, Exa MCP |
 

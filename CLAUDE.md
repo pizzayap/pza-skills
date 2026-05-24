@@ -4,7 +4,7 @@ This file provides Claude Code compatibility guidance when working with this rep
 
 ## Overview
 
-This is a portable Agent Skills package (`PZA-skills`) with Claude Code compatibility packaging. It provides personal skills for code review, plan verification, hook auditing, and session tracking.
+This is a portable Agent Skills package (`PZA-skills`) with Claude Code compatibility packaging. It provides personal skills for code review, plan verification, hook auditing, agent-guidance maintenance, and session tracking.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ hooks/hooks.json             — Hook event bindings
 hooks/scripts/*.js           — Hook implementation scripts
 ```
 
-**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches structural, quality, configured CLI-backed AI reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity when enabled and available), and configured adversarial provider/model lanes, synthesizes findings, then runs proof commands (tests, build, lint) before declaring done; `/areyousure` verifies file-backed or conversation-backed plans with native and configured CLI-backed verifiers, then merges by confidence scoring. Reviewer backend toggles, model choices, and adversarial lanes are configured via `/pza-settings`.
+**Skills** orchestrate work by spawning **agents** in parallel and merging their results. The `/arewedone` skill launches structural, quality, configured CLI-backed AI reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity when enabled and available), and configured adversarial provider/model lanes, synthesizes findings, then runs proof commands (tests, build, lint) before declaring done; `/areyousure` verifies file-backed or conversation-backed plans with native and configured CLI-backed verifiers, then merges by confidence scoring. `/agent-docs-audit` and `/agent-docs-revise` maintain `AGENTS.md`/`CLAUDE.md` guidance with AGENTS-first semantics and approval-gated edits. Reviewer backend toggles, model choices, and adversarial lanes are configured via `/pza-settings`.
 
 `/arewedone` review agents have strictly non-overlapping scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness) vs `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring). The Ollama agent provides an independent third opinion. Adversarial lanes provide security-focused review with attacker mindset across configured providers/models — their security scope intentionally overlaps with `code-quality-reviewer`'s security dimension, with overlap handled by dedup (corroborated findings get HIGH confidence). The dedicated `ollama-adversarial-reviewer` and `codex-adversarial-reviewer` agents run one or more lanes sequentially for their providers.
 

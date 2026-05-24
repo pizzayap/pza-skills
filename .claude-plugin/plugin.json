@@ -1,14 +1,16 @@
 {
   "name": "PZA-skills",
   "version": "1.3.0",
-  "description": "Portable Agent Skills compatibility package: multi-reviewer completeness checks, configurable AI reviewer backends, hook auditing, plan verification, and integration settings.",
+  "description": "Portable Agent Skills compatibility package: multi-reviewer completeness checks, configurable AI reviewer backends, hook auditing, plan verification, agent-guidance maintenance, and integration settings.",
   "author": {
     "name": "pizzayap"
   },
   "repository": "https://github.com/pizzayap/pza-skills",
   "license": "MIT",
-  "keywords": ["code-review", "hooks", "plan-verification", "ollama", "codex"],
+  "keywords": ["code-review", "hooks", "plan-verification", "agent-docs", "ollama", "codex"],
   "skills": [
+    "./skills/agent-docs-audit",
+    "./skills/agent-docs-revise",
     "./skills/arewedone",
     "./skills/areyousure",
     "./skills/hook-worthy",
