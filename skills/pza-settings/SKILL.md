@@ -11,52 +11,44 @@ argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigr
 
 # PZA Settings
 
-Current settings:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" settings 2>/dev/null || echo '{"settings":{"codex":true,"ollama":true,"adversarial":true},"reviewers":[]}'`
+Setup surface for `/areyousure` and `/arewedone`. Read current settings only
+when the skill is invoked. Do not use load-time markdown command injection.
 
-Reviewer backends:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
-
-Adversarial reviewer lanes:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
-
-CLI availability:
-!`for cmd in ollama codex opencode kilo cursor-agent agy; do if command -v "$cmd" >/dev/null 2>&1; then echo "$cmd: yes"; else echo "$cmd: no"; fi; done`
-
-Antigravity CLI help probe:
-!`if command -v agy >/dev/null 2>&1; then agy --help 2>&1 | head -40; else echo "agy: not installed"; fi`
-
-Arguments:
-`$ARGUMENTS`
+Arguments: `$ARGUMENTS`
 
 ## Workflow
 
-`/pza-settings` is the setup surface for `/areyousure` and `/arewedone`. Treat
-Ollama like every other reviewer backend here; there are no separate
-Ollama-only setup or review skills.
+### 1. Collect Status
 
-### Step 1 - Choose Interface
+If a shell runner is available, gather current status with:
 
-If no arguments were provided, or the user passed `--ui`, launch the local
-visual settings companion:
+```bash
+node "$HOME/.pza-skills/lib/pza-runtime.js" skill-status pza-settings
+```
+
+This reports reviewer settings, adversarial lanes, and CLI availability without
+exposing custom reviewer command arrays. If shell execution is unavailable,
+explain that settings cannot be inspected from this harness and ask the user to
+run the runtime command locally.
+
+### 2. Choose Interface
+
+If no arguments were provided, or the user passed `--ui`, launch the local visual
+settings companion:
 
 ```bash
 node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui
 ```
 
-Report the printed `PZA Settings UI: http://127.0.0.1:.../?token=...` URL and
-tell the user to keep that command running until they click **Save and Stop
-Server** or press Ctrl-C. The companion binds only to localhost, uses a random
-URL token, writes the same local config files as the CLI flow, and detects CLI
-availability with `command -v`.
+Report the printed localhost URL. The companion binds only to localhost, uses a
+random URL token, and writes the same local config files as the CLI flow.
 
-If the UI cannot start because the harness cannot run a localhost server, fall
-back to the status table and direct CLI commands below. If the user passed
-`--status`, do not start the UI; only display current status.
+If the UI cannot start, or the user passed `--status`, display a status table
+from `skill-status pza-settings` instead.
 
-### Step 2 - Parse Direct Arguments
+### 3. Parse Direct Arguments
 
-If arguments are provided, parse them in one of these forms:
+Supported direct forms:
 
 - `<reviewer> on`
 - `<reviewer> off`
@@ -72,15 +64,15 @@ If arguments are provided, parse them in one of these forms:
 
 Valid reviewers:
 
-- `native` - the active harness/model label; set manually because most harnesses do not expose it
-- `ollama` - Ollama CLI reviewer; model also writes legacy `~/.pza-skills/ollama-model`
-- `codex` - Codex CLI reviewer
-- `opencode` - OpenCode CLI reviewer
-- `kilo` - Kilo Code CLI reviewer
-- `cursor` - Cursor Agent CLI reviewer
-- `antigravity` - Google Antigravity CLI reviewer
+- `native`
+- `ollama`
+- `codex`
+- `opencode`
+- `kilo`
+- `cursor`
+- `antigravity`
 
-Apply each argument through the shared runtime:
+Apply changes through the shared runtime:
 
 ```bash
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER enabled on
@@ -101,64 +93,49 @@ Examples:
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer native model codex:gpt-5.5
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer ollama model kimi-k2.6:cloud
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode enabled on
-node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode model openai/gpt-5.3-codex
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer cursor enabled off
 node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 cursor-sonnet
-node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer codex gpt-5.5 codex-gpt55
-node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer cursor-sonnet enabled off
-node "$HOME/.pza-skills/lib/pza-runtime.js" remove-adversarial-reviewer codex-gpt55
 ```
 
-After updating, display both `node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings` and `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings`, then stop.
+After any update, display:
 
-### Step 3 - Display Setup Status
+```bash
+node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings
+node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings
+```
 
-For `--status`, or when the visual companion cannot be used, show a status table
-from the session context:
+### 4. Display Status
+
+Show one reviewer table:
 
 | Reviewer | Enabled | Installed | Model | Notes |
 |----------|---------|-----------|-------|-------|
-| Native | yes/no | yes | configured label or default | The current harness model cannot usually be detected automatically |
-| Ollama | yes/no | yes/no | configured model | Used by `/areyousure` and `/arewedone` |
-| Codex | yes/no | yes/no | configured model or CLI default | `codex exec --model` and `codex review -c model=...` where supported |
-| OpenCode | yes/no | yes/no | configured model or CLI default | `opencode run --model provider/model` |
-| Kilo Code | yes/no | yes/no | configured model or CLI default | `kilo run --model provider/model` |
-| Cursor Agent | yes/no | yes/no | configured model or CLI default | `cursor-agent -p --output-format text --model <model>` |
-| Antigravity | yes/no | yes/no | configured model or CLI default | Use only if `agy --help` shows a safe non-interactive prompt/stdin mode |
-| Adversarial master | yes/no | - | - | Global security-focused review mode |
+| Native | yes/no | yes | configured label | active harness model label |
+| Ollama | yes/no | yes/no | configured model | `/areyousure` and `/arewedone` |
+| Codex | yes/no | yes/no | configured model or default | Codex CLI reviewer |
+| OpenCode | yes/no | yes/no | configured model or default | OpenCode CLI reviewer |
+| Kilo Code | yes/no | yes/no | configured model or default | Kilo CLI reviewer |
+| Cursor Agent | yes/no | yes/no | configured model or default | Cursor CLI reviewer |
+| Antigravity | yes/no | yes/no | configured model or default | only when safe non-interactive mode exists |
 
-Also show an adversarial lane table from `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings`:
+Show one adversarial lane table:
 
 | Lane ID | Provider | Enabled | Effective | Installed | Model | Notes |
 |---------|----------|---------|-----------|-----------|-------|-------|
-| cursor-sonnet | cursor | yes/no | yes/no | yes/no | configured model | explicit lane |
 
-If a reviewer is enabled but not installed, report it clearly and keep going.
-Missing CLIs should never make setup fail.
+If a reviewer is enabled but not installed, report it clearly and continue.
 
-### Step 4 - Terminal Interactive Fallback
+### 5. Terminal Interactive Fallback
 
-Prefer the visual companion for no-argument setup. If the visual companion is
-not usable and the active harness exposes a user-input tool, ask the user what
-to configure:
+If the visual companion is not usable and the active harness exposes a
+user-input tool, ask what to configure:
 
-```yaml
-question: "What should PZA-skills configure?"
-multiSelect: true
-options:
-  - label: "Set native model label"
-    description: "Record the model/harness used by the primary assistant"
-  - label: "Toggle reviewer CLIs"
-    description: "Turn Ollama, Codex, OpenCode, Kilo, Cursor, or Antigravity on/off"
-  - label: "Set reviewer models"
-    description: "Choose exact models for enabled CLI reviewers"
-  - label: "Toggle adversarial review"
-    description: "Enable or disable security-focused adversarial review globally"
-  - label: "Configure adversarial lanes"
-    description: "Add, remove, toggle, or change provider/model security review lanes"
-  - label: "No changes"
-    description: "Keep current settings"
-```
+- Set native model label.
+- Toggle reviewer CLIs.
+- Set reviewer models.
+- Toggle adversarial review.
+- Configure adversarial lanes.
+- No changes.
 
 When asking for model names, use concrete examples:
 
@@ -167,16 +144,7 @@ When asking for model names, use concrete examples:
 - Codex: `gpt-5.3-codex`, `gpt-5.5`
 - OpenCode/Kilo: `openai/gpt-5.3-codex`, `anthropic/claude-sonnet-4.5`
 - Cursor: any model accepted by local `cursor-agent --model`
-- Antigravity: only set a model if local `agy --help` documents model selection
 
-### Step 5 - Apply Changes
-
-Apply selected changes with `node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer`,
-`node "$HOME/.pza-skills/lib/pza-runtime.js" set-settings adversarial ...`,
-`node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer`,
-`node "$HOME/.pza-skills/lib/pza-runtime.js" set-adversarial-reviewer`, and
-`node "$HOME/.pza-skills/lib/pza-runtime.js" remove-adversarial-reviewer`.
-
-After updates, show the reviewer table and confirm:
-
-> Settings saved to `~/.pza-skills/settings.json`. Ollama model compatibility is also kept at `~/.pza-skills/ollama-model`. Adversarial lanes take effect on the next `/arewedone` run.
+After updates, confirm that settings were saved to `~/.pza-skills/settings.json`
+and that the Ollama compatibility model is kept at
+`~/.pza-skills/ollama-model`.

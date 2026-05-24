@@ -13,15 +13,6 @@ argument-hint: '[path] [--root-only|--all]'
 
 Read-only audit for project guidance files. Do not edit files.
 
-Working directory:
-!`pwd`
-
-Git status:
-!`git status --short --branch 2>/dev/null || true`
-
-Guidance files:
-!`{ find . \( -type d \( -name .git -o -name node_modules -o -name .next -o -name .turbo \) -prune \) -o \( -name AGENTS.md -o -name CLAUDE.md \) -print 2>/dev/null; test -f "$HOME/.claude/CLAUDE.md" && echo "$HOME/.claude/CLAUDE.md"; } | head -50`
-
 Arguments:
 `$ARGUMENTS`
 
@@ -35,6 +26,15 @@ Resolve the audit target from `$ARGUMENTS`:
 - Path argument: audit that file or directory only.
 - `--root-only`: audit only root `AGENTS.md` and root `CLAUDE.md`.
 - `--all`: include nested repo guidance files. Only mention global `~/.claude/CLAUDE.md` as a separate personal-default file when it exists; do not score it as project guidance unless the user explicitly asks.
+
+At invocation time, use read-only discovery commands when a shell runner is
+available:
+
+```bash
+pwd
+git status --short --branch
+find . \( -type d \( -name .git -o -name node_modules -o -name .next -o -name .turbo \) -prune \) -o \( -name AGENTS.md -o -name CLAUDE.md \) -print
+```
 
 Prefer `AGENTS.md` as the canonical cross-harness file. Treat `CLAUDE.md` as a Claude Code compatibility mirror when both root files exist.
 

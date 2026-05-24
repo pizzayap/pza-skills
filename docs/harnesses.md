@@ -9,6 +9,10 @@ After installing skills in any harness, run `/pza-settings` to record the native
 model label, toggle optional reviewer CLIs, choose backend-specific model names,
 and configure `/arewedone` adversarial provider/model lanes.
 
+Installed skills collect settings and review context only at invocation time
+through `~/.pza-skills/lib/pza-runtime.js`. Harness adapters should not add
+load-time command injection for status, plans, diffs, or local config files.
+
 Install the shared helper runtime once per machine before using the skills from
 other project directories:
 

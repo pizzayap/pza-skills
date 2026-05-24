@@ -121,7 +121,7 @@ Look for things the plan does NOT mention but should, given the APIs it uses:
 
 ### Step 5 — Return Structured Report
 
-Return the following markdown report verbatim as your response. Do not write it to any file.
+Return the following markdown report as your response. Do not write it to any file.
 
 ```
 ## PLAN VERIFICATION REPORT

@@ -13,15 +13,6 @@ argument-hint: '[path] [--root-only|--all]'
 
 Capture durable guidance and propose edits before writing. Do not edit until the user approves the proposed rewrite or diff.
 
-Working directory:
-!`pwd`
-
-Git status:
-!`git status --short --branch 2>/dev/null || true`
-
-Guidance files:
-!`find . \( -type d \( -name .git -o -name node_modules -o -name .next -o -name .turbo \) -prune \) -o \( -name AGENTS.md -o -name CLAUDE.md \) -print 2>/dev/null | head -50`
-
 Arguments:
 `$ARGUMENTS`
 
@@ -46,6 +37,15 @@ Resolve the target from `$ARGUMENTS`:
 - `--all`: include nested `*/AGENTS.md` and `*/CLAUDE.md` files when the durable learning is scope-specific.
 
 If neither root `AGENTS.md` nor root `CLAUDE.md` exists, ask whether to create `AGENTS.md`. Do not create `CLAUDE.md` as the primary file in a Codex-first repo.
+
+At invocation time, use read-only discovery commands when a shell runner is
+available:
+
+```bash
+pwd
+git status --short --branch
+find . \( -type d \( -name .git -o -name node_modules -o -name .next -o -name .turbo \) -prune \) -o \( -name AGENTS.md -o -name CLAUDE.md \) -print
+```
 
 ### 2. Gather Durable Learnings
 

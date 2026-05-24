@@ -239,12 +239,52 @@ node -e "
 " "$reviewers_json"
 HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt "$plan_file" file-backed > "$prompt_file"
 grep -q 'Plan source: file-backed' "$prompt_file"
+grep -q 'Context handling: PZA plan context is redacted' "$prompt_file"
 printf '%s\n' '# Plan from stdin' | HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt - conversation-backed > "$prompt_file"
 grep -q 'Plan source: conversation-backed' "$prompt_file"
+printf '%s\n' 'api_token=abcdefghijklmnopqrstuvwxyz1234567890' \
+  | HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt - conversation-backed > "$prompt_file"
+grep -q '\[REDACTED_SECRET\]' "$prompt_file"
 HOME="$tmp_home" node ./lib/pza-runtime.js run-plan-reviewer fake < "$prompt_file" > "$review_out"
 grep -q 'fake reviewer ran' "$review_out"
 rm -rf "$tmp_home"
 rm -f "$plan_file" "$prompt_file" "$review_out" "$reviewers_json"
+
+echo "== Redacted context helpers =="
+redacted_out="/tmp/pza-redacted-$$.out"
+review_context_json="/tmp/pza-review-context-$$.json"
+hook_validation_json="/tmp/pza-hook-validation-$$.json"
+printf '%s\n' \
+  'OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz1234567890' \
+  'normal_hash=0123456789abcdef0123456789abcdef01234567' \
+  'Authorization: Bearer abcdefghijklmnopqrstuvwxyzABCDEFGHIJ1234567890' \
+  | node ./lib/pza-runtime.js redact-context > "$redacted_out"
+grep -q '\[REDACTED_SECRET\]' "$redacted_out"
+grep -q 'normal_hash=0123456789abcdef0123456789abcdef01234567' "$redacted_out"
+grep -q '\[REDACTED_AUTH\]' "$redacted_out"
+node ./lib/pza-runtime.js collect-review-context --summary --json > "$review_context_json"
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+  if (!data.content.includes('PZA review context')) process.exit(1);
+  if (data.mode !== 'summary') process.exit(1);
+" "$review_context_json"
+printf '%s\n' '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"echo ok"}]}]}}' \
+  | node ./lib/pza-runtime.js validate-hook-proposal > "$hook_validation_json"
+grep -q 'command hooks require explicit user approval' "$hook_validation_json"
+hidden_context_file=".pza-hidden-context-$$"
+printf '%s\n' 'token=abcdefghijklmnopqrstuvwxyz1234567890' > "$hidden_context_file"
+node ./lib/pza-runtime.js collect-review-context --summary --json > "$review_context_json"
+node -e "
+  const fs = require('fs');
+  const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+  const hidden = process.argv[2];
+  if (data.files.includes(hidden)) process.exit(1);
+  if (data.content.includes(hidden)) process.exit(1);
+  if (!data.hiddenUntrackedCount || data.hiddenUntrackedCount < 1) process.exit(1);
+" "$review_context_json" "$hidden_context_file"
+rm -f "$hidden_context_file"
+rm -f "$redacted_out" "$review_context_json" "$hook_validation_json"
 
 echo "== Hook session tracking =="
 session_id="pza-validate-$$"
@@ -289,6 +329,14 @@ for skill_file in skills/*/SKILL.md; do
 done
 
 echo "== Portability scan =="
+if rg -n '![`]' skills agents .opencode .pi; then
+  echo "Unexpected load-time markdown command injection found" >&2
+  exit 1
+fi
+if rg -n 'verbatim|full diff|cat ~/.|grep -oP|hand-assemble|hand-roll|full plan-review prompt' skills agents README.md docs .opencode .pi .claude-plugin; then
+  echo "Unexpected scanner-risky forwarding text found" >&2
+  exit 1
+fi
 if rg -n "ollama launch claude|AskUserQuestion|Bash\\(" skills agents hooks lib .opencode .pi .claude-plugin; then
   echo "Unexpected non-portable invocation text found" >&2
   exit 1

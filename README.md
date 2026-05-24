@@ -4,7 +4,7 @@
 
 Portable Agent Skills for code review, plan verification, hook auditing, agent-guidance maintenance, and session tracking across Codex, OpenCode, Pi, and Claude Code compatibility installs.
 
-The canonical workflows live in `skills/*/SKILL.md` and `agents/*.md`. Harness-specific files are thin adapters; they should not fork the core workflow logic. Shared runtime behavior lives in `lib/pza-runtime.js`.
+The canonical workflows live in `skills/*/SKILL.md` and `agents/*.md`. Harness-specific files are thin adapters; they should not fork the core workflow logic. Shared runtime behavior lives in `lib/pza-runtime.js`, including settings, reviewer dispatch helpers, and bounded/redacted context collection.
 
 ## Installation
 
@@ -61,7 +61,7 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled and available), and optional adversarial security lanes, then synthesizes findings and runs proof commands.
+Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled and available), and optional adversarial security lanes, then synthesizes findings and runs proof commands. External reviewers receive context through `collect-review-context`, which redacts likely secrets and caps total/per-file bytes.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
@@ -85,7 +85,7 @@ Supported reviewer backends:
 |---|---|---|
 | Native | active harness | Manual label, because most harnesses do not expose it |
 | Ollama | `ollama` | `node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <model>` |
-| Codex | `codex` | `codex exec --model <model>` and `codex review -c model=<model>` where supported |
+| Codex | `codex` | `codex exec --model <model>` |
 | OpenCode | `opencode` | `opencode run --model provider/model` |
 | Kilo Code | `kilo` | `kilo run --model provider/model` |
 | Cursor Agent | `cursor-agent` | `cursor-agent -p --output-format text --model <model>` |
@@ -103,7 +103,7 @@ Ollama is configured as a reviewer backend through `/pza-settings`; there are no
 
 ### `/hook-worthy`
 
-Audits the current session for recurring mistakes, convention violations, or dangerous patterns worth enforcing as harness hooks. Claude Code hooks are the implemented compatibility target; other harness hooks are documented only after stable payloads are verified.
+Audits the current session for recurring mistakes, convention violations, or dangerous patterns worth enforcing as harness hooks. Claude Code hooks are the implemented compatibility target; other harness hooks are documented only after stable payloads are verified. Command hooks require explicit user approval of the exact command, and hook JSON can be checked with `validate-hook-proposal`.
 
 ### `/agent-docs-audit`
 
@@ -127,7 +127,7 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 ### `/areyousure`
 
-Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, enabled CLI-backed verifiers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where available), and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs.
+Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, enabled CLI-backed verifiers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where available), and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs. CLI plan prompts are produced by `plan-review-prompt`, which redacts likely secrets and caps forwarded plan content.
 
 **Flags:** `--native-only`, `--ollama-only`, `--codex-only`, `--opencode-only`, `--kilo-only`, `--cursor-only`, `--antigravity-only`, `--cli-only`, `--no-cli`, `--custom-only`; `--claude-only` remains a deprecated alias for `--native-only`.
 
@@ -145,7 +145,7 @@ Multi-engine plan verification. Verifies either a plan file or the latest conver
 }
 ```
 
-Custom reviewer commands receive the full plan-review prompt on stdin and should return markdown/prose with Critical, Warning, Info, and Verified Correct sections.
+Custom reviewer commands receive the generated plan-review prompt on stdin and should return markdown/prose with Critical, Warning, Info, and Verified Correct sections.
 The runtime keeps command arrays private; skill context only shows reviewer names and enabled status.
 
 ## Agents
@@ -153,11 +153,23 @@ The runtime keeps command arrays private; skill context only shows reviewer name
 - `structural-completeness-reviewer` — codebase hygiene, dead code, integration completeness, dependency/config completeness.
 - `code-quality-reviewer` — correctness, security, architecture, and performance with confidence scoring.
 - `plan-verifier` — native plan verifier using local code and available documentation/search tools.
-- `ollama-plan-verifier` — forwards plans to Ollama for independent technical review.
-- `codex-plan-verifier` — forwards plans to Codex CLI for independent technical review.
-- `codex-code-reviewer` — forwards current git state to Codex CLI for code review.
-- `ollama-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Ollama.
-- `codex-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Codex CLI.
+- `ollama-plan-verifier` — forwards redacted, capped plan context to Ollama for independent technical review.
+- `codex-plan-verifier` — forwards redacted, capped plan context to Codex CLI for independent technical review.
+- `codex-code-reviewer` — forwards redacted, capped current git context to Codex CLI for code review.
+- `ollama-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Ollama with redacted, capped review context.
+- `codex-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Codex CLI with redacted, capped review context.
+
+## Runtime Helpers
+
+Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
+
+- `skill-status <skill>` — invocation-time reviewer/config/CLI status without exposing custom command arrays.
+- `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
+- `collect-plan-context <plan-file|-> <source>` — bounded plan context for `/areyousure`.
+- `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
+- `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.
+
+Skill markdown does not use load-time command injection for context collection.
 
 ## Runtime State
 

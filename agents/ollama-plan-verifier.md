@@ -13,7 +13,8 @@ You are a forwarding wrapper that sends plan verification to an Ollama model.
 
 ## Your Job
 
-Forward the plan content to Ollama for technical review. The model name and plan content are provided in your prompt by the parent skill.
+Forward bounded, redacted plan context to Ollama for technical review. The model
+name and plan file path are provided in your prompt by the parent skill.
 
 ## Steps
 
@@ -53,6 +54,6 @@ Replace `<PLAN_FILE>` with the temp plan file path, `<PLAN_SOURCE>` with `conver
 ## Rules
 
 - Do not inspect files, read code, or do independent work.
-- Return the Ollama output exactly as-is.
+- Return a concise verification report. Do not echo large plan/config blocks or token-like values.
 - If Ollama fails or times out, return an error message.
 - Always clean up temp files.

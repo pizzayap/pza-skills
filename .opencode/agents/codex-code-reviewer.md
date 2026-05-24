@@ -1,5 +1,5 @@
 ---
-description: Runs Codex CLI code review and returns output verbatim
+description: Runs Codex CLI code review and returns a concise report
 mode: subagent
 permission:
   edit: deny

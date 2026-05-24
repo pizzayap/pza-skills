@@ -6,7 +6,8 @@
 - `agents/*.md` defines reusable reviewer/verifier roles.
 - `lib/pza-runtime.js` owns shared runtime behavior: config, reviewer backend
   model selection, session files, diff hashes, review markers, plan-review
-  prompt assembly, custom plan reviewer invocation, and Ollama invocation.
+  prompt assembly, redacted context collection, custom plan reviewer
+  invocation, hook proposal validation, and Ollama invocation.
 - Installed skills invoke the runtime through
   `~/.pza-skills/lib/pza-runtime.js`, not `./lib/pza-runtime.js`, so target
   project repositories do not need to vendor package helper files.
@@ -108,3 +109,20 @@ Runtime helpers execute custom reviewer commands as argv arrays and pass the
 review prompt on stdin. Adapters must not turn these commands into shell strings.
 The `plan-reviewers` status command redacts command arrays and exposes only
 non-sensitive metadata for skill context.
+
+## Context Handling
+
+Public skill markdown should not use load-time command injection for context
+collection. Skills gather runtime state only when invoked:
+
+- `skill-status <skill>` returns reviewer/config/CLI status.
+- `collect-review-context --summary|--redacted-diff` returns bounded review
+  context for `/arewedone`.
+- `collect-plan-context <plan-file|-> <source>` returns bounded plan context for
+  `/areyousure`.
+- `plan-review-prompt` uses the same redaction and plan-size cap before
+  forwarding content to CLI verifiers.
+- `redact-context` is the shared stdin/stdout redaction helper.
+
+Adapters should call these helpers rather than duplicating diff assembly,
+settings reads, or secret redaction logic.

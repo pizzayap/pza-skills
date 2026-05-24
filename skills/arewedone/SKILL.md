@@ -4,569 +4,162 @@ description: >-
   Run when the user says "are we done", "review my changes", or "check
   completeness", or after implementing features, refactoring code, or making
   significant modifications. Launches structural completeness review, code
-  quality review, and configured CLI-backed AI reviews in parallel, synthesizes
-  findings, then runs proof commands (tests, build, lint, type checks) before
-  declaring done.
+  quality review, and configured CLI-backed AI reviews, synthesizes findings,
+  then runs proof commands before declaring done.
 user-invocable: true
 argument-hint: '[--adversarial] [--no-adversarial]'
 ---
 
-# Session Changes Context
+# Are We Done
 
-Session-tracked files (this session only):
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" session-files 2>/dev/null || { echo "(no session tracking - showing git status)"; git status --short; }`
+Completion gate for changed work. Collect context only at invocation time and
+only through bounded runtime helpers. Do not use load-time markdown command
+injection.
 
-Changed files summary (session-scoped):
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" session-stat 2>/dev/null || git diff --stat`
+Arguments: `$ARGUMENTS`
 
-Reviewer backend settings:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
+## Workflow
 
-Ollama enabled:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-enabled ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting ollama 2>/dev/null || echo "yes"`
+### 0. Parse Arguments
 
-Ollama available:
-!`command -v ollama >/dev/null 2>&1 && echo "yes" || echo "no"`
+- `--adversarial`: force the global adversarial master toggle on for this run only; explicit lane enablement still applies.
+- `--no-adversarial`: skip all adversarial lanes for this run.
 
-Ollama model:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model 2>/dev/null || echo "kimi-k2.6:cloud"`
+### 1. Collect Runtime Status
 
-Codex enabled:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-enabled codex 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting codex 2>/dev/null || echo "yes"`
-
-Codex CLI available:
-!`command -v codex >/dev/null 2>&1 && echo "yes" || echo "no"`
-
-Adversarial enabled:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" get-setting adversarial 2>/dev/null || echo "yes"`
-
-Adversarial reviewer lanes:
-!`node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings 2>/dev/null || echo '{"reviewers":[]}'`
-
-Arguments:
-`$ARGUMENTS`
-
-# Workflow
-
-## 0. Parse Arguments
-
-Check the Arguments from session context above. If arguments are present:
-
-- `--adversarial` → force the global adversarial master toggle ON for this run only; explicit lane enablement still applies
-- `--no-adversarial` → force all adversarial lanes OFF for this run
-
-These flags affect only adversarial reviewers. Structural, quality, and standard CLI reviewers are unaffected.
-
-## 1. Launch Reviews in Parallel
-
-Launch review agents simultaneously in a single message with parallel Agent tool calls where the active harness supports it. Agents A and B always launch. Optional CLI-backed reviewers launch from `/pza-settings` reviewer backend settings:
-
-- Agent C (Ollama) launches only if Ollama is enabled and installed.
-- Agent D (Codex) launches only if Codex is enabled and installed.
-- Additional external CLI review lanes launch only when enabled and installed: OpenCode (`opencode`), Kilo Code (`kilo`), Cursor Agent (`cursor-agent`), and Antigravity (`agy`) when `agy --help` confirms a safe non-interactive prompt/stdin mode.
-- Adversarial review lane groups launch from `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings`; with `--adversarial`, use `node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings --force`; with `--no-adversarial`, launch no adversarial lanes.
-
-Every CLI-backed review is review-only. Do not pass approval-skipping flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or equivalent. Compare `node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash` before and after each external CLI run. If the hash changes, report that the reviewer modified the worktree and stop for user direction; do not auto-revert.
-
-### Agent A: Structural Completeness Review (`structural-completeness-reviewer`)
-
-Provide context about what files changed (shown above). This agent verifies:
-- Changes are fully integrated across all layers
-- Old code is properly removed (no orphaned functions/imports)
-- No technical debt introduced
-- Structural integrity maintained
-
-### Agent B: Code Quality Review (`code-quality-reviewer`)
-
-Provide context about what files changed (shown above). This agent reviews code quality across four dimensions:
-- Correctness — bugs, logic errors, edge cases, error paths
-- Security — injection, XSS, auth issues, secrets exposure
-- Architecture — pattern consistency, coupling, module boundaries
-- Performance — N+1 queries, unbounded loops, async misuse, re-renders
-
-This agent applies confidence scoring (0-100) and only reports findings with confidence >= 80 to minimize false positives.
-
-### Agent C: Ollama Code Review (general-purpose agent)
-
-Launch a **general-purpose** agent that runs an Ollama-powered code review against the current git state. Include the Ollama model name from the session context above in the agent prompt.
-
-The agent's prompt should instruct it to:
-
-1. **Check Ollama availability**:
-   ```bash
-   command -v ollama >/dev/null 2>&1 && echo "available" || echo "not_available"
-   ```
-   If not available, report "Ollama review skipped — Ollama is not installed." and stop.
-
-2. **Determine review scope** by checking for uncommitted changes:
-   ```bash
-   git diff --cached --quiet 2>/dev/null; echo "staged=$?"
-   git diff --quiet 2>/dev/null; echo "unstaged=$?"
-   [ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ] && echo "untracked=yes" || echo "untracked=no"
-   ```
-
-3. **If uncommitted changes exist** (staged or unstaged non-zero exit, or untracked=yes), gather the diff with budget-aware assembly:
-
-   ```bash
-   BUDGET=80000
-   USED=0
-   DIFF=""
-   SKIPPED=""
-
-   FILES=$(git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null)
-   FILES=$(echo "$FILES" | sort -u | grep -Ev '\.(lock|min\.js|min\.css|map|svg|generated\.)' || true)
-
-   while IFS= read -r file; do
-     [ -z "$file" ] && continue
-     FILE_DIFF=$(git diff -- "$file" 2>/dev/null; git diff --cached -- "$file" 2>/dev/null)
-     FILE_BYTES=$(printf '%s' "$FILE_DIFF" | wc -c | tr -d ' ')
-     if [ "$FILE_BYTES" -eq 0 ]; then
-       continue
-     elif [ $((USED + FILE_BYTES)) -le $BUDGET ]; then
-       DIFF="${DIFF}${FILE_DIFF}"
-       USED=$((USED + FILE_BYTES))
-     else
-       STAT=$(git diff --stat -- "$file" 2>/dev/null; git diff --cached --stat -- "$file" 2>/dev/null)
-       SKIPPED="${SKIPPED}  (summarized) ${STAT}
-"
-     fi
-   done <<EOF
-$FILES
-EOF
-
-   UNTRACKED_BUDGET=20000
-   UNTRACKED_USED=0
-   UNTRACKED_SKIPPED=""
-   while IFS= read -r f; do
-     [ -z "$f" ] && continue
-     case "$f" in *.lock|*.min.js|*.min.css|*.map|*.svg) continue ;; esac
-     if file "$f" 2>/dev/null | grep -q 'text'; then
-       FILE_SIZE=$(wc -c < "$f" 2>/dev/null | tr -d ' ')
-       REMAINING=$((UNTRACKED_BUDGET - UNTRACKED_USED))
-       if [ "$REMAINING" -le 0 ]; then
-         UNTRACKED_SKIPPED="${UNTRACKED_SKIPPED}  (omitted) $f (${FILE_SIZE} bytes)
-"
-         continue
-       fi
-       CONTENT=$(head -c "$REMAINING" "$f" 2>/dev/null)
-       CONTENT_BYTES=$(printf '%s' "$CONTENT" | wc -c | tr -d ' ')
-       if [ "$CONTENT_BYTES" -gt 0 ]; then
-         TRUNCATED=""
-         [ "$CONTENT_BYTES" -lt "$FILE_SIZE" ] && TRUNCATED=" (truncated: ${CONTENT_BYTES}/${FILE_SIZE} bytes)"
-         DIFF="${DIFF}
-=== NEW FILE: $f ===${TRUNCATED}
-${CONTENT}"
-         UNTRACKED_USED=$((UNTRACKED_USED + CONTENT_BYTES))
-       fi
-     fi
-   done <<EOF
-$(git ls-files --others --exclude-standard 2>/dev/null)
-EOF
-
-   TRUNC_NOTE=""
-   [ -n "$SKIPPED" ] && TRUNC_NOTE="(Note: some tracked files exceeded the context budget and were summarized.)
-${SKIPPED}"
-   [ -n "$UNTRACKED_SKIPPED" ] && TRUNC_NOTE="${TRUNC_NOTE}(Note: some untracked files were omitted due to budget limits.)
-${UNTRACKED_SKIPPED}"
-   ```
-
-   **Run the review** — use the active harness shell tool with a 5 minute timeout for the ollama command with the enhanced structured prompt:
-   ```bash
-   PROMPT_FILE=$(mktemp -t pza-arewedone-ollama.XXXXXX)
-   cat > "$PROMPT_FILE" <<'PZA_OLLAMA_PROMPT'
-You are a senior code reviewer. Review the following uncommitted changes.
-
-REVIEW DIMENSIONS:
-- Correctness: logic errors, off-by-one, null/undefined paths, unhandled error cases, state management bugs
-- Security: injection (SQL/command/XSS), auth bypass, secrets in code, missing input validation
-- Architecture: pattern inconsistency, tight coupling, module boundary violations
-- Performance: N+1 queries, unbounded operations, async misuse, missing pagination
-
-SEVERITY LEVELS:
-- critical: will cause bugs or security holes in production
-- warning: likely problems or significant maintainability issues
-- suggestion: improvement opportunities, not blocking
-
-RULES:
-- Do NOT flag style or formatting issues
-- Do NOT report more than 10 findings
-- Respond with ONLY a JSON object, no markdown fences, no text before or after
-
-JSON FORMAT:
-{"verdict":"approve or needs-attention","summary":"1-2 sentence summary","findings":[{"severity":"critical or warning or suggestion","title":"short title","file":"path/to/file","description":"what is wrong and why","context":"relevant code snippet if helpful","recommendation":"how to fix it"}]}
-
-If no issues found, return: {"verdict":"approve","summary":"No issues found.","findings":[]}
-PZA_OLLAMA_PROMPT
-   printf '\n%s\n\n%s\n' "$TRUNC_NOTE" "$DIFF" >> "$PROMPT_FILE"
-   OLLAMA_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model)
-   cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run "$OLLAMA_MODEL"
-   EXIT_CODE=$?
-   rm -f "$PROMPT_FILE"
-   exit $EXIT_CODE
-   ```
-
-4. **If no uncommitted changes** (clean working tree), check for a previous commit:
-   ```bash
-   git rev-parse HEAD~1 2>/dev/null && echo "has_prev=yes" || echo "has_prev=no"
-   ```
-   - If `has_prev=yes`: also verify the diff is non-empty:
-     ```bash
-     git diff --quiet HEAD~1 HEAD 2>/dev/null; echo "diff_exit=$?"
-     ```
-     - If `diff_exit=1` (has changes): gather with the same budget-aware assembly as step 3 but using `git diff HEAD~1 HEAD` variants. Run the review with the same enhanced structured prompt, changing "uncommitted changes" to "committed changes (HEAD~1..HEAD)".
-     - If `diff_exit=0` (empty diff — e.g. merge commit with no changes): report "Ollama review skipped — last commit has no diff."
-   - If `has_prev=no` (single-commit repo, orphan branch, or shallow clone): report "Ollama review skipped — clean working tree with no parent commit to review against."
-
-5. Return the full review output verbatim — verdict, findings, summary, and all details.
-6. Do NOT fix any issues or apply patches — review only.
-7. If Ollama is not installed or the command fails, report that the Ollama review was skipped and include the error message.
-
-### Agent D: Codex Code Review (`codex-code-reviewer`)
-
-**Condition:** Launch this agent ONLY if the session context above shows BOTH "Codex enabled: yes" AND "Codex CLI available: yes". If either is "no", skip this agent entirely.
-
-Launch the `codex-code-reviewer` agent. Its prompt should simply be:
-
-> "Run a Codex code review against the current git state. Return the full output."
-
-This agent handles Codex detection, scope selection, invocation, and error reporting internally. It returns prose/markdown output (not structured JSON).
-
-### Additional External CLI Code Reviews
-
-For each enabled and installed reviewer backend from `/pza-settings`, launch a general-purpose review-only agent unless a dedicated plugin agent exists. These reviewers should all inspect the same current git state and return prose/markdown output.
-
-Supported command shapes:
+If a shell runner is available, gather status with:
 
 ```bash
-opencode run [--model provider/model] --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
-kilo run [--model provider/model] --file "$PROMPT_FILE" "Review the attached context only. Do not modify files."
-cursor-agent -p --output-format text [--model model] "Review the context file at $PROMPT_FILE only. Do not modify files."
+node "$HOME/.pza-skills/lib/pza-runtime.js" skill-status arewedone
+node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --summary
 ```
 
-For Antigravity, run `agy --help` first. Only use it if the local help text documents a non-interactive prompt, file, or stdin form. Otherwise report:
+Use this output to decide which reviewer lanes are enabled and installed. If the
+shell runner is unavailable, continue with native review only and state that CLI
+reviewers were skipped because runtime status could not be collected.
 
-> Antigravity review skipped — installed but unsupported for automated review.
+### 2. Launch Reviews
 
-The prompt file should contain the same review-only instructions and gathered diff context used by the Ollama review. Use the model configured in `node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model <reviewer>` when non-empty. If a reviewer is enabled but missing, report `<Tool> review skipped — not installed`. If it returns an auth/login error, report `<Tool> review skipped — not authenticated`.
+Launch independent reviewers in parallel when the active harness supports it;
+otherwise run them sequentially.
 
-### Adversarial Review Lane Groups
+- Structural completeness: use `structural-completeness-reviewer`.
+- Code quality: use `code-quality-reviewer`.
+- Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity: launch only when enabled and installed in `skill-status`.
+- Adversarial lanes: launch only lanes marked `effectiveEnabled=true`, unless `--no-adversarial` was passed.
 
-Adversarial review is configured as lanes in `/pza-settings`. Each lane has an `id`, `provider`, `model`, and `enabled` state. A user may enable multiple providers and multiple models for the same provider.
+Give native agents the summary context from `collect-review-context --summary`.
+They may inspect changed files directly, but must not broaden into unrelated
+areas unless the change requires it.
 
-Resolve adversarial lanes after parsing Step 0:
+Every external CLI-backed review is review-only. Do not pass approval-skipping
+flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or
+equivalent. Compare `diff-hash` before and after each external CLI run. If the
+hash changes, report that the reviewer modified the worktree and stop for user
+direction.
+
+### 3. External Reviewer Context
+
+When a CLI reviewer needs file context, build it with the runtime helper:
 
 ```bash
-if arguments include --no-adversarial:
-  use no adversarial lanes
-elif arguments include --adversarial:
-  node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings --force
-else:
-  node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings
+CONTEXT_FILE=$(mktemp -t pza-review-context.XXXXXX)
+trap 'rm -f "$CONTEXT_FILE"' EXIT
+node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --redacted-diff --max-bytes 40000 --per-file-bytes 8192 > "$CONTEXT_FILE"
 ```
 
-Launch only lanes where `effectiveEnabled=true`. If a lane's CLI is missing, unauthenticated, or unsupported, keep that lane as a skipped row in the synthesis rather than failing the whole review.
+The helper redacts likely secrets, skips generated/binary paths, and enforces
+total and per-file byte caps. Do not duplicate this context collection in the skill.
 
-Group enabled lanes by provider. Launch one agent per provider group in the same parallel Agent-tool message as the other review agents. Inside a provider group, run that provider's lanes sequentially so multiple models for the same CLI do not race each other.
+For Ollama:
 
-Every provider group must prefix each lane result with stable metadata so synthesis never depends on model-generated wording for attribution:
+```bash
+BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+OLLAMA_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model)
+cat "$CONTEXT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run "$OLLAMA_MODEL"
+AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
+test "$BEFORE_HASH" = "$AFTER_HASH"
+```
+
+For Codex code review, prefer the dedicated `codex-code-reviewer` agent. For
+other configured CLIs, pass `"$CONTEXT_FILE"` using their file/stdin review-only
+mode. If a CLI is missing, unauthenticated, or unsupported, report that lane as
+skipped rather than failing the whole review.
+
+### 4. Adversarial Review Lanes
+
+Group adversarial lanes by provider. Launch one provider group per agent where a
+dedicated agent exists:
+
+- `ollama-adversarial-reviewer`
+- `codex-adversarial-reviewer`
+
+For OpenCode, Kilo Code, Cursor Agent, and Antigravity, use a read-only
+general-purpose wrapper with the same `collect-review-context --redacted-diff`
+context file. Antigravity may run only if local help documents a safe
+non-interactive prompt, file, or stdin form.
+
+Each lane result must include stable metadata:
 
 ```text
 === PZA ADVERSARIAL LANE START ===
 id: <lane-id>
 provider: <provider>
 model: <model>
-status: running|approve|needs-attention|skipped|error
+status: approve|needs-attention|skipped|error
 === PZA ADVERSARIAL LANE OUTPUT ===
-<verbatim reviewer output or skip/error reason>
+<concise reviewer result or skip/error reason>
 === PZA ADVERSARIAL LANE END ===
 ```
 
-**Ollama lane group:** launch `ollama-adversarial-reviewer` with the list of Ollama lanes as JSON. The agent gathers the diff once, then runs `node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <model>` once per enabled Ollama lane, sequentially, using each lane's configured `model`.
+### 5. Synthesize Findings
 
-**Codex lane group:** launch `codex-adversarial-reviewer` with the list of Codex lanes as JSON. The agent gathers the diff once, then runs `codex exec --model <model> -` once per enabled Codex lane, sequentially. If a lane model is blank, omit `--model` and use the Codex CLI default.
+Merge all launched reviews into one report:
 
-**OpenCode lane group:** launch a general-purpose review-only agent. It gathers the same diff context used by the Ollama review, writes the adversarial prompt plus diff to a temp file, then runs each lane sequentially:
+- Deduplicate by file, claim, and recommended fix.
+- Findings reported by two or more independent reviewers are high confidence.
+- Findings reported by one reviewer are medium confidence.
+- Security findings corroborated by a quality reviewer and an adversarial lane
+  are highest priority.
+- Keep skipped lanes visible, but do not count skips as findings.
 
-```bash
-opencode run [--model <lane-model>] --file "$PROMPT_FILE" "Run an adversarial security review of the attached context only. Do not modify files."
-```
+Only include short snippets when necessary to identify the issue. Do not echo
+large code blocks, config files, tokens, or redacted values.
 
-**Kilo Code lane group:** same as OpenCode, using:
+### 6. Fix or Defer
 
-```bash
-kilo run [--model <lane-model>] --file "$PROMPT_FILE" "Run an adversarial security review of the attached context only. Do not modify files."
-```
+If reviewers found issues, ask the user how to proceed:
 
-**Cursor Agent lane group:** same as OpenCode, using:
+- Fix all.
+- Fix critical and warning findings only.
+- Skip fixes and record findings in `REVIEW-BACKLOG.md`.
 
-```bash
-cursor-agent -p --output-format text [--model <lane-model>] "Run an adversarial security review of the context file at $PROMPT_FILE only. Do not modify files."
-```
+For deferred findings, append a dated section to `REVIEW-BACKLOG.md` instead of
+overwriting it.
 
-**Antigravity lane group:** run `agy --help` first. Only use Antigravity if local help documents a safe non-interactive prompt, file, or stdin form. If no safe form exists, mark each Antigravity lane as:
+### 7. Proof
 
-> Antigravity adversarial review skipped — installed but unsupported for automated review.
+Run relevant proof commands before declaring completion. Detect scripts and
+ecosystem commands from manifests such as `package.json`, `Cargo.toml`,
+`go.mod`, `pyproject.toml`, `Makefile`, or `deno.json`.
 
-**IMPORTANT**: All launched agents MUST be in the same message (parallel Agent tool calls). Do NOT run them sequentially. Wait for all agents to complete before proceeding.
+Default command order:
 
-## 2. Converge: Synthesize All Reviews
+1. typecheck/check
+2. lint
+3. build
+4. test
 
-After **all** launched agents return, synthesize their results into a single unified report. The actual number of reviewers varies depending on which optional reviewer backends are enabled and available.
+If no proof commands are discoverable, ask the user for commands or explicitly
+report that the work is complete but unverified by automated checks.
 
-### 2a. Parse Agent C's output (dual-format handling) — skip if Agent C was not launched
+### 8. Review Marker
 
-Agent C's Ollama review may return structured JSON or unstructured prose. Attempt to parse it using the same JSON extraction logic:
-
-```bash
-# Extract: find first valid JSON object from Agent C's output
-EXTRACTED=$(echo "$AGENT_C_OUTPUT" | sed 's/^```json//;s/^```//' | node -e "
-  const input = require('fs').readFileSync('/dev/stdin','utf8');
-  const start = input.indexOf('{');
-  if (start === -1) process.exit(1);
-  for (let end = input.lastIndexOf('}'); end > start; end = input.lastIndexOf('}', end - 1)) {
-    try { JSON.parse(input.slice(start, end + 1)); process.stdout.write(input.slice(start, end + 1)); process.exit(0); } catch {}
-  }
-  process.exit(1);
-" 2>/dev/null)
-
-# Validate: check verdict and findings array
-VALID=$(echo "$EXTRACTED" | node -e "
-  const j = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-  const ok = (j.verdict === 'approve' || j.verdict === 'needs-attention')
-    && Array.isArray(j.findings);
-  process.exit(ok ? 0 : 1);
-" 2>/dev/null && echo "yes" || echo "no")
-```
-
-1. **If `VALID=yes` (structured):** extract findings directly — each has `severity`, `title`, `file`, `description`
-2. **If `VALID=no` (unstructured):** treat Agent C's output as prose and interpret it the same way you interpret Agent A and Agent B's reports
-
-Agents A and B always return prose. Agent C and Ollama adversarial lanes may return JSON. Agent D, non-Ollama external reviewers, and non-Ollama adversarial lanes return prose.
-
-### 2a-2. Parse adversarial lane group outputs — skip if no adversarial lanes were launched
-
-For every adversarial lane group output, split by the `=== PZA ADVERSARIAL LANE ... ===` metadata wrapper. Each parsed lane result must retain `id`, `provider`, `model`, and `status`.
-
-Ollama adversarial lane output may be structured JSON or prose. Apply the same JSON extraction and validation logic shown for Agent C to each Ollama lane's output. If valid JSON, extract findings directly. If prose, interpret semantically.
-
-Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity adversarial lanes return prose/markdown. Interpret them the same way as Agent D's output, with the lane metadata used for attribution.
-
-### 2b. Build unified report
-
-1. **Summary table** with pass/fail for each launched review:
-   | Review | Source | Verdict |
-   |--------|--------|---------|
-   | Structural completeness | Agent A | pass/fail |
-   | Code quality | Agent B | pass/fail |
-   | Ollama review | Agent C | approve/needs-attention/skipped |
-   | Codex review | Agent D | approve/needs-attention/skipped |
-   | OpenCode review | External CLI | approve/needs-attention/skipped |
-   | Kilo Code review | External CLI | approve/needs-attention/skipped |
-   | Cursor Agent review | External CLI | approve/needs-attention/skipped |
-   | Antigravity review | External CLI | approve/needs-attention/skipped |
-   | Adversarial `<lane-id>` | `<provider>` / `<model>` | approve/needs-attention/skipped |
-
-   Only include rows for agents that were launched. If an optional agent was not launched (disabled or unavailable), omit its row entirely.
-
-2. **Cross-review agreement** — highlight any issues flagged by **multiple** reviewers first (highest confidence). Findings flagged by >=2 reviewers = HIGH confidence; single-source findings = MEDIUM confidence. When Agent C or an Ollama adversarial lane returned structured JSON, match by `file + title + severity` for deduplication. When prose (Agents A, B, D, external CLI reviewers, adversarial lane prose, or JSON fallback), match by semantic similarity (same file + similar description). If Agent B's security dimension and any adversarial lane flags the same issue, this is especially high confidence (independent security-focused corroboration). If multiple adversarial lanes report the same issue, deduplicate and tag all lane sources. Note: cross-format dedup (JSON vs prose, or different review framings) is inherently fuzzy — err on the side of reporting both if uncertain whether two findings are the same issue.
-
-3. **Issues list** — deduplicate overlapping findings across all launched reviews, categorize by severity (critical > warning > suggestion)
-
-4. **Source label** — tag each issue as [structural], [quality], [ollama], [codex], [opencode], [kilo], [cursor], [antigravity], or `[<provider>-security:<lane-id>]` so the user knows which review caught it. Issues found by multiple reviewers get multiple tags.
-
-If no issues are found from any review, report a clean bill of health and proceed to Step 4 (Proof).
-
-**If an agent fails or returns an error:** Still synthesize results from the remaining agents. Mark the failed agent's verdict as "skipped" in the summary table and note the error. Any combination of 2+ successful reviews still provides useful signal. If all agents fail, report the errors and proceed to Step 4 (Proof) — proof commands are especially valuable when reviews couldn't complete.
-
-## 3. Conquer: Fix Issues
-
-When presenting the unified report in step 2, categorize every finding into one of these severity tiers:
-- **Critical** — bugs, security issues, broken integrations, missing wiring
-- **Warning** — code quality problems, convention violations, anti-patterns
-- **Suggestion** — style nits, minor improvements, optional enhancements
-
-"High risk" = critical + warning. "Low risk" = suggestion.
-
-If issues were found, use the active harness's user-input tool to let the user choose a fix strategy:
-
-```yaml
-question: "How should we handle the issues?"
-options:
-  - label: "Fix all"
-    description: "Fix every issue across all severity levels"
-  - label: "Fix high risk only"
-    description: "Fix critical + warning issues; defer suggestions to a backlog doc"
-  - label: "Skip"
-    description: "No fixes — record everything to a backlog doc for later"
-```
-
-### Fix all
-Execute fixes for every issue found, then proceed to Step 4 (Proof).
-
-### Fix high risk only
-1. Execute fixes for all **critical** and **warning** issues.
-2. Write all **suggestion**-level issues to `REVIEW-BACKLOG.md` in the project root. Format:
-
-```markdown
-# Review Backlog
-
-_Generated by /arewedone on YYYY-MM-DD_
-
-## Deferred Suggestions
-
-| # | Issue | Source | File | Notes |
-|---|-------|--------|------|-------|
-| 1 | [description] | [structural\|quality\|ollama\|codex\|provider-security:lane-id] | `path/to/file` | [any extra context] |
-```
-
-If `REVIEW-BACKLOG.md` already exists, **append** a new dated section rather than overwriting.
-
-Then proceed to Step 4 (Proof).
-
-### Skip
-Write **all** issues (critical, warning, and suggestion) to `REVIEW-BACKLOG.md` using the same format above, then proceed to Step 4 (Proof).
-
-## 4. Proof: Run Verification Commands
-
-Before declaring work complete, run the project's proof commands (tests, build, lint, type checker) and verify they pass. Never claim completion without evidence.
-
-### 4a. Detect Proof Commands
-
-Run this detection script in a single shell call:
-
-```bash
-# Detect package manager
-PM="npm"
-[ -f "yarn.lock" ] && PM="yarn"
-[ -f "pnpm-lock.yaml" ] && PM="pnpm"
-{ [ -f "bun.lockb" ] || [ -f "bun.lock" ]; } && PM="bun"
-
-# Tier 1: package.json scripts (broad matching for common aliases)
-if [ -f "package.json" ]; then
-  node -e "
-    const s = require('./package.json').scripts || {};
-    const w = require('./package.json').workspaces;
-    if (w) console.log('monorepo:true');
-    const patterns = [
-      { cat: 'typecheck', keys: ['typecheck','type-check','tsc','check:types','check-types'] },
-      { cat: 'lint', keys: ['lint','eslint','lint:check'] },
-      { cat: 'build', keys: ['build'] },
-      { cat: 'test', keys: ['test','test:unit','test:all'] }
-    ];
-    patterns.forEach(p => {
-      const found = p.keys.find(k => s[k]);
-      if (found) console.log('pkg:' + p.cat + ':' + found);
-    });
-  " 2>/dev/null
-fi
-
-# Tier 2: Config files for other ecosystems
-[ -f "Cargo.toml" ] && echo "rust:detected"
-[ -f "go.mod" ] && echo "go:detected"
-{ [ -f "pyproject.toml" ] || [ -f "setup.py" ] || [ -f "setup.cfg" ]; } && echo "python:detected"
-{ [ -f "Makefile" ] || [ -f "GNUmakefile" ]; } && echo "make:detected"
-{ [ -f "deno.json" ] || [ -f "deno.jsonc" ]; } && echo "deno:detected"
-
-echo "pm:$PM"
-```
-
-Build the proof command list from detection results:
-
-**Node.js** (package.json found): Use `<pm> run <script>` for each detected script. Order: typecheck > lint > build > test. If `build` script's value contains `tsc` and a separate typecheck script was already detected, skip the duplicate typecheck implicit in build.
-
-**Rust** (Cargo.toml): `cargo check`, `cargo clippy -- -D warnings` (if clippy installed), `cargo test`
-
-**Go** (go.mod): `go vet ./...`, `go test ./...`
-
-**Python** (pyproject.toml or setup.py/setup.cfg): Check configured tools via `grep -Eo 'tool\.(pytest|ruff|mypy)' pyproject.toml` and run only those: `python -m pytest`, `ruff check .`, `mypy .`. For legacy projects with `setup.py`/`setup.cfg` but no `pyproject.toml`, check if `pytest`/`ruff`/`mypy` are on PATH and run them if found.
-
-**Makefile**: Determine which file exists (`MF=Makefile; [ -f "$MF" ] || MF=GNUmakefile`), then `grep -Eo '^[a-zA-Z_-]+:' "$MF" | tr -d ':'` and run only targets matching check/test/lint if they exist
-
-**Deno**: `deno lint`, `deno test`. For `deno check`, pass explicit entry point files (e.g., `deno check main.ts`) — running without arguments may fail or check unexpected files. Detect entry points from `deno.json` `tasks` or `compilerOptions` fields, or skip `deno check` if no entry point is obvious.
-
-**Monorepo detected** (root package.json has `workspaces`): Tell the user "Monorepo detected — only root-level scripts are checked. Root scripts may delegate to workspace tooling (Turborepo, Nx, etc.) which is fine, but workspace-specific scripts are not auto-detected. Enter additional commands manually if needed." Still run any detected root-level scripts, then use the active harness's user-input tool to offer adding workspace-specific commands.
-
-**If nothing detected** — use the active harness's user-input tool:
-
-```yaml
-question: "No proof commands detected. What verification commands should I run?"
-options:
-  - label: "Enter commands"
-    description: "I'll provide the commands to run (one per line)"
-  - label: "Skip proof verification"
-    description: "No verification commands — declare done without proof (not recommended)"
-```
-
-If "Enter commands": ask the user for commands (one per line), parse by newlines, then **display the parsed command list back to the user for confirmation** before executing any of them. This prevents accidental execution of malformed or destructive commands. If "Skip proof verification": report "Work complete but unverified by automated checks." and stop.
-
-### 4b. Run Proof Commands
-
-Run each detected command sequentially in order using the active harness shell tool with a 5 minute timeout per command. Capture exit code and output for each. If output exceeds 80 lines, keep only the last 80 lines (`tail -80`).
-
-If a command times out (5 minutes), record the result as TIMEOUT (not FAIL or PASS).
-
-### 4c. Report Results
-
-Present results as a summary table:
-
-| # | Command | Exit Code | Result |
-|---|---------|-----------|--------|
-| 1 | `<command>` | 0 | PASS |
-| 2 | `<command>` | 1 | FAIL |
-| 3 | `<command>` | — | TIMEOUT |
-
-**If all commands pass:**
-
-> All N proof commands passed. Work is verified complete.
-
-The workflow is complete.
-
-**If any command failed or timed out**, show failure details — for each failed command, show the last 50 lines of output:
-
-#### `<command>` (exit code N)
-```
-[last 50 lines of output]
-```
-
-Then present options based on what Step 3 choice was made.
-
-If user previously chose **"Skip"** in Step 3 (they already declined code fixes):
-
-```yaml
-question: "Proof commands failed. How should we proceed?"
-options:
-  - label: "Fix proof failures only"
-    description: "Fix only the proof command failures (tests/build/lint), not the review findings you already skipped"
-  - label: "Declare done with caveats"
-    description: "Acknowledge failures and stop (not recommended)"
-```
-
-Otherwise (user chose "Fix all" or "Fix high risk only" in Step 3, or no issues were found):
-
-```yaml
-question: "Proof commands failed. How should we proceed?"
-options:
-  - label: "Fix failures"
-    description: "Analyze and fix the failures, then re-run all proof commands"
-  - label: "Declare done with caveats"
-    description: "Acknowledge failures and stop (not recommended)"
-```
-
-**Fix failures**: Analyze the failure output, apply fixes, then re-run ALL proof commands from 4b (not just the failed ones — fixes can introduce new failures). Track fix attempts in your response — after 3 fix-and-verify cycles, if commands still fail, report remaining failures and stop without declaring done:
-
-> After 3 fix attempts, N proof command(s) still failing. Human intervention needed.
-
-**Declare done with caveats**:
-
-> Work declared complete with N failing proof command(s):
-> - `<command>`: [one-line summary of failure]
-
-The workflow is complete (with caveats noted).
-
-## 5. Review Marker
-
-After the workflow completes (regardless of outcome), write a marker file so other tools can detect that a review was run this session:
+After the workflow completes, write the review marker:
 
 ```bash
 node "$HOME/.pza-skills/lib/pza-runtime.js" mark-reviewed arewedone
 ```
+
+Report changed files reviewed, findings fixed or deferred, proof commands run,
+and any skipped reviewer lanes.

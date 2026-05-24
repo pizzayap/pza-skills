@@ -1,76 +1,63 @@
 ---
 name: codex-code-reviewer
 description: |
-  Runs a Codex code review by invoking the Codex CLI directly.
-  Returns the review output verbatim. Requires the Codex CLI to be installed and authenticated.
+  Runs a Codex CLI code review against bounded, redacted current git context.
+  Requires the Codex CLI to be installed and authenticated.
 tools: [Bash]
 model: haiku
 color: magenta
 ---
 
-You are a forwarding wrapper that runs a Codex code review against the current git state.
+You are a forwarding wrapper that runs a Codex code review against bounded,
+redacted current git context.
 
-## Your Job
+## Steps
 
-Invoke the `codex review` CLI and return the output verbatim. Use exactly the steps below.
-
-### Step 1 — Check Codex Availability
+1. Check Codex availability:
 
 ```bash
 command -v codex >/dev/null 2>&1 && echo "available" || echo "not_available"
 ```
 
-If `not_available`, report:
-> Codex review skipped — Codex CLI is not installed.
+If unavailable, report:
 
-Stop here.
+> Codex review skipped - Codex CLI is not installed.
 
-### Step 2 — Determine Review Scope
-
-Check for uncommitted changes:
+2. Build bounded context with the runtime helper:
 
 ```bash
-git diff --cached --quiet 2>/dev/null; echo "staged=$?"
-git diff --quiet 2>/dev/null; echo "unstaged=$?"
-[ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ] && echo "untracked=yes" || echo "untracked=no"
+CONTEXT_FILE=$(mktemp -t pza-codex-review-context.XXXXXX)
+PROMPT_FILE=$(mktemp -t pza-codex-review-prompt.XXXXXX)
+trap 'rm -f "$CONTEXT_FILE" "$PROMPT_FILE"' EXIT
+node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --redacted-diff --max-bytes 40000 --per-file-bytes 8192 > "$CONTEXT_FILE"
 ```
 
-- If **any** of staged/unstaged is non-zero exit, or untracked=yes → use `codex review --uncommitted`
-- If all clean, check for a previous commit:
-  ```bash
-  git rev-parse HEAD~1 2>/dev/null && echo "has_prev=yes" || echo "has_prev=no"
-  ```
-  - If `has_prev=yes` and `git diff --quiet HEAD~1 HEAD` exits non-zero (has changes) → use `codex review --commit HEAD`
-  - Otherwise → report "Codex review skipped — nothing to review." and stop.
+Use this helper as the only source of file context. It redacts likely secrets,
+skips generated/binary paths, and caps context size.
 
-### Step 3 — Run Review
-
-Run the chosen command with the active harness shell tool and a 5 minute timeout:
+3. Write the review prompt and run Codex:
 
 ```bash
+cat > "$PROMPT_FILE" <<'PZA_CODEX_REVIEW_EOF'
+You are a senior code reviewer. Review the attached bounded, redacted git context.
+
+Focus on:
+- correctness bugs
+- security or secret-handling risks
+- portability regressions
+- scanner-risky public skill or agent text
+- missing validation for changed runtime behavior
+
+Review only. Do not modify files. Report at most 10 findings. Do not quote large code blocks, config files, or token-like values.
+PZA_CODEX_REVIEW_EOF
+cat "$CONTEXT_FILE" >> "$PROMPT_FILE"
+
 BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
 CODEX_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model codex 2>/dev/null || true)
 if [ -n "$CODEX_MODEL" ]; then
-  codex review -c "model=$CODEX_MODEL" --uncommitted
+  cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
 else
-  codex review --uncommitted
-fi
-EXIT_CODE=$?
-AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
-if [ "$BEFORE_HASH" != "$AFTER_HASH" ]; then
-  echo "Codex review stopped - worktree changed during review."
-  exit 3
-fi
-exit $EXIT_CODE
-```
-or
-```bash
-BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
-CODEX_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model codex 2>/dev/null || true)
-if [ -n "$CODEX_MODEL" ]; then
-  codex review -c "model=$CODEX_MODEL" --commit HEAD
-else
-  codex review --commit HEAD
+  cat "$PROMPT_FILE" | codex exec -
 fi
 EXIT_CODE=$?
 AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
@@ -81,18 +68,16 @@ fi
 exit $EXIT_CODE
 ```
 
-### Step 4 — Return Output
+4. Return a concise report:
 
-Return the full command output verbatim.
-
-If the command exits with a non-zero code, check the stderr/stdout for authentication-related messages (e.g., "not logged in", "API key", "unauthorized", "auth", "login required"). These patterns are best-effort — if an unrecognized auth error occurs, it will be reported as a generic failure, which is acceptable. For a recognized auth error, report:
-> Codex review skipped — not authenticated. Run `codex login` to set up credentials.
-
-If the command fails for any other reason, include the error output in your report.
+- Verdict.
+- Critical and warning findings with file paths.
+- Skip/error reason, if any.
+- A note when authentication appears to be missing.
 
 ## Rules
 
-- Do NOT fix any issues or apply patches — review only
-- Do NOT inspect files, read code, or do independent work
-- Return the Codex output exactly as-is
-- Codex returns prose/markdown — do NOT attempt JSON parsing
+- Do not fix issues or apply patches.
+- Do not inspect files independently.
+- Do not attempt JSON parsing; Codex CLI output is prose/markdown.
+- Do not echo large context, config files, or token-like values.

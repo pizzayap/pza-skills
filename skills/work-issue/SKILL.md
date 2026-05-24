@@ -12,15 +12,6 @@ argument-hint: '[issue-ref] [--repo owner/repo] [--direct-to-main]'
 
 # Work Issue
 
-Working directory:
-!`pwd`
-
-Git status:
-!`git status --short --branch 2>/dev/null || true`
-
-GitHub CLI available:
-!`command -v gh >/dev/null 2>&1 && echo "yes" || echo "no"`
-
 Arguments:
 `$ARGUMENTS`
 
@@ -46,6 +37,14 @@ Parse `$ARGUMENTS`:
 - `--repo owner/repo` overrides repository detection.
 - `--direct-to-main` allows the direct-to-main flow only when the user explicitly asked for it.
 - No issue reference means: resolve the repository, list open issues, analyze candidates, select the best AFK-ready issue, then set `NUMBER` to that issue.
+
+At invocation time, run these pre-checks with the shell runner when available:
+
+```bash
+pwd
+git status --short --branch
+command -v gh >/dev/null 2>&1
+```
 
 If no explicit repo is present, derive `owner/repo` from `git remote -v`. Prefer `origin` and normalize both HTTPS and SSH GitHub remotes. If no GitHub repo can be resolved, pause and ask for `--repo owner/repo`.
 
