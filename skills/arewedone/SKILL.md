@@ -44,60 +44,62 @@ Launch independent reviewers in parallel when the active harness supports it;
 otherwise run them sequentially.
 
 - Structural completeness: use `structural-completeness-reviewer`.
-- Code quality: use `code-quality-reviewer`.
-- Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity: launch only when enabled and installed in `skill-status`.
+- Native code quality: use `code-quality-reviewer` with `mode=native`.
+- Backend code quality: use `code-quality-reviewer` with `mode=backend` for each enabled and installed reviewer backend from `skill-status`.
 - Adversarial lanes: launch only lanes marked `effectiveEnabled=true`, unless `--no-adversarial` was passed.
 
 Give native agents the summary context from `collect-review-context --summary`.
 They may inspect changed files directly, but must not broaden into unrelated
 areas unless the change requires it.
 
-Every external CLI-backed review is review-only. Do not pass approval-skipping
+Every backend review is review-only. Do not pass approval-skipping
 flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or
-equivalent. Compare `diff-hash` before and after each external CLI run. If the
-hash changes, report that the reviewer modified the worktree and stop for user
-direction.
+equivalent. Backend review execution must go through `run-reviewer`, which
+compares `diff-hash` before and after each run. If the hash changes, report
+that the reviewer modified the worktree and stop for user direction.
 
-### 3. External Reviewer Context
+### 3. Backend Reviewer Context
 
-When a CLI reviewer needs file context, build it with the runtime helper:
+When a backend reviewer needs file context, build it with the runtime helper:
 
 ```bash
 CONTEXT_FILE=$(mktemp -t pza-review-context.XXXXXX)
-trap 'rm -f "$CONTEXT_FILE"' EXIT
+PROMPT_FILE=$(mktemp -t pza-review-prompt.XXXXXX)
+trap 'rm -f "$CONTEXT_FILE" "$PROMPT_FILE"' EXIT
 node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --redacted-diff --max-bytes 40000 --per-file-bytes 8192 > "$CONTEXT_FILE"
 ```
 
 The helper redacts likely secrets, skips generated/binary paths, and enforces
 total and per-file byte caps. Do not duplicate this context collection in the skill.
 
-For Ollama:
+Backend code review uses the provider/model selected from `skill-status`:
 
 ```bash
-BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
-OLLAMA_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model)
-cat "$CONTEXT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run "$OLLAMA_MODEL"
-AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
-test "$BEFORE_HASH" = "$AFTER_HASH"
+cat > "$PROMPT_FILE" <<'PZA_REVIEW_PROMPT'
+You are a senior code reviewer. Review the attached bounded, redacted git context.
+
+Focus on:
+- correctness bugs
+- security or secret-handling risks
+- portability regressions
+- scanner-risky public skill or agent text
+- missing validation for changed runtime behavior
+
+Review only. Do not modify files. Report at most 10 findings. Do not quote large code blocks, config files, or token-like values.
+PZA_REVIEW_PROMPT
+printf '\n' >> "$PROMPT_FILE"
+cat "$CONTEXT_FILE" >> "$PROMPT_FILE"
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-reviewer code "$PROVIDER" "$MODEL"
 ```
 
-For Codex code review, prefer the dedicated `codex-code-reviewer` agent. For
-other configured CLIs, pass `"$CONTEXT_FILE"` using their file/stdin review-only
-mode. If a CLI is missing, unauthenticated, or unsupported, report that lane as
+If a backend is missing, unauthenticated, or unsupported, report that lane as
 skipped rather than failing the whole review.
 
 ### 4. Adversarial Review Lanes
 
-Group adversarial lanes by provider. Launch one provider group per agent where a
-dedicated agent exists:
-
-- `ollama-adversarial-reviewer`
-- `codex-adversarial-reviewer`
-
-For OpenCode, Kilo Code, Cursor Agent, and Antigravity, use a read-only
-general-purpose wrapper with the same `collect-review-context --redacted-diff`
-context file. Antigravity may run only if local help documents a safe
-non-interactive prompt, file, or stdin form.
+Launch `adversarial-reviewer` for configured lanes. It receives lane metadata
+from `skill-status` and runs each enabled lane through `run-reviewer
+adversarial`.
 
 Each lane result must include stable metadata:
 

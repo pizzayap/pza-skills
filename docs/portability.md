@@ -3,7 +3,9 @@
 ## Canonical Core
 
 - `skills/*/SKILL.md` defines reusable workflows.
-- `agents/*.md` defines reusable reviewer/verifier roles.
+- `agents/*.md` defines reusable reviewer/verifier roles. Canonical agent names
+  are provider-agnostic: `structural-completeness-reviewer`,
+  `code-quality-reviewer`, `plan-verifier`, and `adversarial-reviewer`.
 - `lib/pza-runtime.js` owns shared runtime behavior: config, reviewer backend
   model selection, session files, diff hashes, review markers, plan-review
   prompt assembly, redacted context collection, custom plan reviewer
@@ -118,6 +120,8 @@ collection. Skills gather runtime state only when invoked:
 - `skill-status <skill>` returns reviewer/config/CLI status.
 - `collect-review-context --summary|--redacted-diff` returns bounded review
   context for `/arewedone`.
+- `run-reviewer <code|plan|adversarial> <provider> <model>` runs configured
+  reviewer backends through argv arrays and guards against worktree mutation.
 - `collect-plan-context <plan-file|-> <source>` returns bounded plan context for
   `/areyousure`.
 - `plan-review-prompt` uses the same redaction and plan-size cap before

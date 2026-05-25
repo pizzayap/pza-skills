@@ -14,7 +14,7 @@ argument-hint: '[--native-only|--claude-only|--ollama-only|--codex-only|--openco
 # Are You Sure
 
 Plan verification gate. Collect runtime status only when this skill is invoked,
-and forward only bounded, redacted plan context to external reviewers.
+and forward only bounded, redacted plan context to backend reviewers.
 
 Arguments: `$ARGUMENTS`
 
@@ -93,40 +93,33 @@ Do not use command substitution to embed plan content in shell arguments.
 
 ### 5. Run CLI Verifiers
 
-Run eligible CLI verifiers in parallel when supported; otherwise run them
-sequentially. All external CLI runs are review-only. Do not pass
-approval-skipping flags. Compare `diff-hash` before and after each run; if the
-hash changes, stop and ask the user how to proceed.
+Run eligible backend verifiers in parallel when supported; otherwise run them
+sequentially. All backend runs are review-only. Do not pass approval-skipping
+flags. Backend runs must go through `run-reviewer`, which compares `diff-hash`
+before and after each run; if the hash changes, stop and ask the user how to
+proceed.
 
-Ollama:
-
-```bash
-OLLAMA_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model ollama 2>/dev/null || node "$HOME/.pza-skills/lib/pza-runtime.js" get-model)
-cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run "$OLLAMA_MODEL"
-```
-
-Codex:
+Backend verifier:
 
 ```bash
-BEFORE_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
-CODEX_MODEL=$(node "$HOME/.pza-skills/lib/pza-runtime.js" get-reviewer-model codex 2>/dev/null || true)
-if [ -n "$CODEX_MODEL" ]; then
-  cat "$PROMPT_FILE" | codex exec --model "$CODEX_MODEL" -
-else
-  cat "$PROMPT_FILE" | codex exec -
-fi
-AFTER_HASH=$(node "$HOME/.pza-skills/lib/pza-runtime.js" diff-hash)
-test "$BEFORE_HASH" = "$AFTER_HASH"
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-reviewer plan "$PROVIDER" "$MODEL"
 ```
 
-OpenCode, Kilo Code, Cursor Agent, Antigravity, and custom reviewers follow the
-same pattern: use `PROMPT_FILE`, run in review-only mode, and keep custom
-reviewer commands inside `run-plan-reviewer` argv arrays.
+Custom plan reviewers stay on their local argv-array path:
+
+```bash
+cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-plan-reviewer "$CUSTOM_REVIEWER_NAME"
+```
+
+If a backend is missing, unauthenticated, or unsupported, report that verifier
+as skipped rather than failing the whole review.
 
 ### 6. Run Native Verifier
 
-If selected, run the native `plan-verifier` agent when available. Otherwise
-perform the verification inline.
+If selected, run `plan-verifier` with `mode=native` when available. For backend
+verification, run the same agent with `mode=backend`, or perform the forwarding
+inline with the `run-reviewer plan` helper when the harness cannot pass mode
+metadata to agents.
 
 Use the resolved plan plus a short project-conventions excerpt from `AGENTS.md`
 or `CLAUDE.md`. If the plan came from a file and may contain secrets, prefer the

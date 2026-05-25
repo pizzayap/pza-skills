@@ -315,6 +315,47 @@ do
   test -f "$file"
 done
 
+echo "== Agent inventory =="
+for file in \
+  agents/structural-completeness-reviewer.md \
+  agents/code-quality-reviewer.md \
+  agents/plan-verifier.md \
+  agents/adversarial-reviewer.md \
+  .opencode/agents/structural-completeness-reviewer.md \
+  .opencode/agents/code-quality-reviewer.md \
+  .opencode/agents/plan-verifier.md \
+  .opencode/agents/adversarial-reviewer.md
+do
+  test -f "$file"
+done
+for file in agents/*.md .opencode/agents/*.md; do
+  base=$(basename "$file")
+  case "$base" in
+    codex-*|ollama-*|cli-*|external-*)
+      echo "Provider/transport-prefixed agent filename found: $file" >&2
+      exit 1
+      ;;
+  esac
+done
+for file in agents/*.md; do
+  if awk '
+    NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+    in_frontmatter && $0 == "---" { exit }
+    in_frontmatter && /^model:/ { found = 1; exit }
+    END { exit found ? 0 : 1 }
+  ' "$file"; then
+    echo "Canonical agents must not declare model frontmatter: $file" >&2
+    exit 1
+  fi
+done
+for file in .opencode/agents/*.md; do
+  target=$(awk -F'`' '/canonical agent instructions/{print $2; exit}' "$file")
+  if [ -z "$target" ] || [ ! -f "$target" ]; then
+    echo "OpenCode agent wrapper points at missing canonical agent: $file -> $target" >&2
+    exit 1
+  fi
+done
+
 echo "== User-invocable discovery parity =="
 for skill_file in skills/*/SKILL.md; do
   name=$(awk -F': ' '/^name:/{print $2; exit}' "$skill_file")

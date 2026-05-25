@@ -36,7 +36,6 @@ description: |
     Feature removal requires careful review to ensure all related code, dependencies, and configurations are cleaned up.
     </commentary>
     </example>
-model: opus
 tools: [Glob, Grep, Read, Bash]
 color: red
 ---

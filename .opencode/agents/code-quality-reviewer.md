@@ -1,5 +1,5 @@
 ---
-description: Reviews correctness, security, architecture, and performance with confidence scoring
+description: Reviews code quality natively or through configured reviewer backends
 mode: subagent
 permission:
   edit: deny

@@ -1,5 +1,5 @@
 ---
-description: Verifies implementation plans against local code and current documentation
+description: Verifies plans natively or through configured reviewer backends
 mode: subagent
 permission:
   edit: deny

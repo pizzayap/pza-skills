@@ -151,13 +151,9 @@ The runtime keeps command arrays private; skill context only shows reviewer name
 ## Agents
 
 - `structural-completeness-reviewer` — codebase hygiene, dead code, integration completeness, dependency/config completeness.
-- `code-quality-reviewer` — correctness, security, architecture, and performance with confidence scoring.
-- `plan-verifier` — native plan verifier using local code and available documentation/search tools.
-- `ollama-plan-verifier` — forwards redacted, capped plan context to Ollama for independent technical review.
-- `codex-plan-verifier` — forwards redacted, capped plan context to Codex CLI for independent technical review.
-- `codex-code-reviewer` — forwards redacted, capped current git context to Codex CLI for code review.
-- `ollama-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Ollama with redacted, capped review context.
-- `codex-adversarial-reviewer` — runs one or more security-focused adversarial lanes via Codex CLI with redacted, capped review context.
+- `code-quality-reviewer` — correctness, security, architecture, and performance review; also forwards bounded context to configured reviewer backends in backend mode.
+- `plan-verifier` — verifies plans against local code/current docs; also forwards bounded plan context to configured reviewer backends in backend mode.
+- `adversarial-reviewer` — runs configured security-focused adversarial lanes with bounded, redacted review context.
 
 ## Runtime Helpers
 
@@ -167,6 +163,7 @@ Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 - `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
 - `collect-plan-context <plan-file|-> <source>` — bounded plan context for `/areyousure`.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
+- `run-reviewer <code|plan|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard.
 - `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.
 
 Skill markdown does not use load-time command injection for context collection.
