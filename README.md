@@ -61,7 +61,7 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled and available), and optional adversarial security lanes, then synthesizes findings and runs proof commands. External reviewers receive context through `collect-review-context`, which redacts likely secrets and caps total/per-file bytes.
+Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled), and optional adversarial security lanes, then synthesizes findings and runs proof commands. Enabled CLI reviewers are required; missing, blocked, or failed reviewer runs make the strict check incomplete. External reviewers receive context through `collect-review-context`, which redacts likely secrets and caps total/per-file bytes.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
@@ -81,15 +81,15 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui
 
 Supported reviewer backends:
 
-| Reviewer | CLI | Model setting |
+| Reviewer | CLI | State meaning |
 |---|---|---|
-| Native | active harness | Manual label, because most harnesses do not expose it |
-| Ollama | `ollama` | `node "$HOME/.pza-skills/lib/pza-runtime.js" ollama-run <model>` |
-| Codex | `codex` | `codex exec --model <model>` |
-| OpenCode | `opencode` | `opencode run --model provider/model` |
-| Kilo Code | `kilo` | `kilo run --model provider/model` |
-| Cursor Agent | `cursor-agent` | `cursor-agent -p --output-format text --model <model>` |
-| Antigravity | `agy` | Only when local `agy --help` shows a safe non-interactive prompt or stdin mode |
+| Native | active harness | `ready` when enabled |
+| Ollama | `ollama` | `ready`, `disabled`, `missing`, or `blocked` when model/setup is unavailable |
+| Codex | `codex` | `ready`, `disabled`, `missing`, or `blocked` if the run cannot execute/authenticate |
+| OpenCode | `opencode` | `ready`, `disabled`, `missing`, or `blocked` |
+| Kilo Code | `kilo` | `ready`, `disabled`, `missing`, or `blocked` |
+| Cursor Agent | `cursor-agent` | `ready`, `disabled`, `missing`, or `blocked` |
+| Antigravity | `agy` | `ready` only when local `agy --help` shows safe `--sandbox --print` support |
 
 Adversarial lanes are configured separately from normal reviewer toggles. For example, Cursor normal review can be off while a Cursor adversarial lane is on:
 
@@ -127,7 +127,7 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 ### `/areyousure`
 
-Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, enabled CLI-backed verifiers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where available), and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs. CLI plan prompts are produced by `plan-review-prompt`, which redacts likely secrets and caps forwarded plan content.
+Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, enabled CLI-backed verifiers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity), and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs. Enabled CLI verifiers are required; missing, blocked, or failed reviewer runs make the strict check incomplete. CLI plan prompts are produced by `plan-review-prompt`, which redacts likely secrets and caps forwarded plan content.
 
 **Flags:** `--native-only`, `--ollama-only`, `--codex-only`, `--opencode-only`, `--kilo-only`, `--cursor-only`, `--antigravity-only`, `--cli-only`, `--no-cli`, `--custom-only`; `--claude-only` remains a deprecated alias for `--native-only`.
 
@@ -163,7 +163,8 @@ Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 - `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
 - `collect-plan-context <plan-file|-> <source>` — bounded plan context for `/areyousure`.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
-- `run-reviewer <code|plan|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard.
+- `run-reviewer <code|plan|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard and `PZA reviewer result: passed|blocked|failed` status output.
+- `run-plan-reviewer <name>` — argv-array custom plan reviewer runner with the same `PZA reviewer result: passed|blocked|failed` status output.
 - `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.
 
 Skill markdown does not use load-time command injection for context collection.

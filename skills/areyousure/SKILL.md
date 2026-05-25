@@ -47,8 +47,9 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" skill-status areyousure
 ```
 
 Use the returned reviewer settings, CLI availability, and custom reviewer list
-to select verifiers. If shell execution is unavailable, run only native
-verification and report CLI verifiers as skipped.
+to select verifiers. If shell execution is unavailable, run native verification
+only, but mark the overall result incomplete unless the user explicitly selected
+`--native-only` or `--no-cli`.
 
 ### 3. Select Verifiers
 
@@ -60,7 +61,10 @@ Explicit flags override settings:
 - `--custom-only`: custom CLI verifiers only.
 - `--cli-only`: enabled CLI verifiers plus custom CLI verifiers, no native.
 - `--no-cli`: native verifier only.
-- Default: native verifier plus all enabled and installed CLI/custom verifiers.
+- Default: native verifier plus all enabled CLI/custom verifiers. Enabled CLI
+  verifiers are required: if `skill-status` reports `state=missing` or
+  `state=blocked`, report the verifier as blocked and the strict check as
+  incomplete.
 
 Do not silently fall back from an explicit `--*-only` request. Report why the
 requested verifier was unavailable.
@@ -111,8 +115,10 @@ Custom plan reviewers stay on their local argv-array path:
 cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-plan-reviewer "$CUSTOM_REVIEWER_NAME"
 ```
 
-If a backend is missing, unauthenticated, or unsupported, report that verifier
-as skipped rather than failing the whole review.
+`run-reviewer` and `run-plan-reviewer` emit `PZA reviewer result:
+passed|blocked|failed`. Treat `blocked` and `failed` from an enabled or
+explicitly requested verifier as an incomplete strict check. Use `skipped` only
+for disabled verifiers or verifiers excluded by an explicit flag.
 
 ### 6. Run Native Verifier
 
@@ -136,6 +142,9 @@ Merge verifier reports:
 - Disagreements are low confidence and should show both perspectives.
 
 Also list skipped verifiers with the skip reason.
+Also list blocked verifiers with the blocker or run-result reason. A blocked
+enabled verifier is not a finding against the plan, but it prevents declaring
+the strict verification complete.
 
 ### 8. Apply or Return Corrections
 

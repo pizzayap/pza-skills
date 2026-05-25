@@ -108,22 +108,24 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings
 
 Show one reviewer table:
 
-| Reviewer | Enabled | Installed | Model | Notes |
-|----------|---------|-----------|-------|-------|
-| Native | yes/no | yes | configured label | active harness model label |
-| Ollama | yes/no | yes/no | configured model | `/areyousure` and `/arewedone` |
-| Codex | yes/no | yes/no | configured model or default | Codex CLI reviewer |
-| OpenCode | yes/no | yes/no | configured model or default | OpenCode CLI reviewer |
-| Kilo Code | yes/no | yes/no | configured model or default | Kilo CLI reviewer |
-| Cursor Agent | yes/no | yes/no | configured model or default | Cursor CLI reviewer |
-| Antigravity | yes/no | yes/no | configured model or default | only when safe non-interactive mode exists |
+| Reviewer | Enabled | Installed | State | Model | Blocker/Notes |
+|----------|---------|-----------|-------|-------|---------------|
+| Native | yes/no | yes | ready/disabled | configured label | active harness model label |
+| Ollama | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/areyousure` and `/arewedone` |
+| Codex | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Codex CLI reviewer |
+| OpenCode | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | OpenCode CLI reviewer |
+| Kilo Code | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Kilo CLI reviewer |
+| Cursor Agent | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Cursor CLI reviewer |
+| Antigravity | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | only when safe non-interactive mode exists |
 
 Show one adversarial lane table:
 
-| Lane ID | Provider | Enabled | Effective | Installed | Model | Notes |
-|---------|----------|---------|-----------|-----------|-------|-------|
+| Lane ID | Provider | Enabled | Effective | Installed | State | Model | Blocker/Notes |
+|---------|----------|---------|-----------|-----------|-------|-------|---------------|
 
-If a reviewer is enabled but not installed, report it clearly and continue.
+If a reviewer is enabled with `state=missing` or `state=blocked`, report it as a
+strict-review blocker. It must be disabled, fixed, or explicitly excluded before
+`/areyousure` or `/arewedone` can declare strict verification complete.
 
 ### 5. Terminal Interactive Fallback
 

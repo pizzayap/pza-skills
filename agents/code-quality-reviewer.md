@@ -82,8 +82,10 @@ cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-reviewer co
 Replace `<provider>` and `<model>` with the values from the parent prompt. Use
 an empty model string when no model is configured.
 
-Return a concise backend report with verdict, findings, skip/error reason, and
-authentication note when relevant.
+Return a concise backend report with verdict, findings, and any
+`PZA reviewer result: passed|blocked|failed` status emitted by the runtime.
+Report blocked, failed, skipped, and authentication states distinctly. A blocked
+enabled backend means strict review is incomplete, not clean.
 
 ## Native Mode
 

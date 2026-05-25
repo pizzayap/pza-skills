@@ -34,9 +34,10 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" skill-status arewedone
 node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --summary
 ```
 
-Use this output to decide which reviewer lanes are enabled and installed. If the
-shell runner is unavailable, continue with native review only and state that CLI
-reviewers were skipped because runtime status could not be collected.
+Use this output to decide which reviewer lanes are enabled, installed, and ready.
+If the shell runner is unavailable, continue with native review only, but mark
+the overall result incomplete because strict CLI reviewer requirements could not
+be inspected.
 
 ### 2. Launch Reviews
 
@@ -45,8 +46,11 @@ otherwise run them sequentially.
 
 - Structural completeness: use `structural-completeness-reviewer`.
 - Native code quality: use `code-quality-reviewer` with `mode=native`.
-- Backend code quality: use `code-quality-reviewer` with `mode=backend` for each enabled and installed reviewer backend from `skill-status`.
+- Backend code quality: use `code-quality-reviewer` with `mode=backend` for each enabled reviewer backend with `state=ready` from `skill-status`.
 - Adversarial lanes: launch only lanes marked `effectiveEnabled=true`, unless `--no-adversarial` was passed.
+- Enabled reviewer backends with `state=missing` or `state=blocked` are required
+  but unavailable; report them as blocked and keep the overall completion result
+  incomplete.
 
 Give native agents the summary context from `collect-review-context --summary`.
 They may inspect changed files directly, but must not broaden into unrelated
@@ -92,8 +96,9 @@ cat "$CONTEXT_FILE" >> "$PROMPT_FILE"
 cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-reviewer code "$PROVIDER" "$MODEL"
 ```
 
-If a backend is missing, unauthenticated, or unsupported, report that lane as
-skipped rather than failing the whole review.
+`run-reviewer` emits `PZA reviewer result: passed|blocked|failed`. Treat
+`blocked` and `failed` from an enabled reviewer as incomplete. Use `skipped`
+only for disabled lanes or lanes excluded by explicit flags.
 
 ### 4. Adversarial Review Lanes
 
@@ -108,7 +113,7 @@ Each lane result must include stable metadata:
 id: <lane-id>
 provider: <provider>
 model: <model>
-status: approve|needs-attention|skipped|error
+status: approve|needs-attention|blocked|skipped|error
 === PZA ADVERSARIAL LANE OUTPUT ===
 <concise reviewer result or skip/error reason>
 === PZA ADVERSARIAL LANE END ===
@@ -123,7 +128,8 @@ Merge all launched reviews into one report:
 - Findings reported by one reviewer are medium confidence.
 - Security findings corroborated by a quality reviewer and an adversarial lane
   are highest priority.
-- Keep skipped lanes visible, but do not count skips as findings.
+- Keep skipped and blocked lanes visible, but do not count them as findings.
+- A blocked enabled reviewer prevents declaring the strict review complete.
 
 Only include short snippets when necessary to identify the issue. Do not echo
 large code blocks, config files, tokens, or redacted values.
@@ -157,11 +163,12 @@ report that the work is complete but unverified by automated checks.
 
 ### 8. Review Marker
 
-After the workflow completes, write the review marker:
+After the workflow completes successfully with no blocked required reviewers,
+write the review marker:
 
 ```bash
 node "$HOME/.pza-skills/lib/pza-runtime.js" mark-reviewed arewedone
 ```
 
 Report changed files reviewed, findings fixed or deferred, proof commands run,
-and any skipped reviewer lanes.
+and any skipped or blocked reviewer lanes.

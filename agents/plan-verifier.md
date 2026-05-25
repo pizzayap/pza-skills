@@ -58,8 +58,10 @@ Replace placeholders with values from the parent prompt. Use an empty model
 string when no model is configured.
 
 Return a concise backend verification report with critical, warning, info, and
-verified-correct sections when the backend provides them. Report skip/error and
-authentication states distinctly.
+verified-correct sections when the backend provides them. `run-reviewer` emits
+`PZA reviewer result: passed|blocked|failed`; report blocked, failed, skipped,
+and authentication states distinctly. A blocked enabled backend means strict
+plan verification is incomplete, not clean.
 
 ## Native Mode
 

@@ -121,7 +121,10 @@ collection. Skills gather runtime state only when invoked:
 - `collect-review-context --summary|--redacted-diff` returns bounded review
   context for `/arewedone`.
 - `run-reviewer <code|plan|adversarial> <provider> <model>` runs configured
-  reviewer backends through argv arrays and guards against worktree mutation.
+  reviewer backends through argv arrays, emits `PZA reviewer result:
+  passed|blocked|failed`, and guards against worktree mutation.
+- `run-plan-reviewer <name>` runs custom plan reviewers through configured argv
+  arrays and emits `PZA reviewer result: passed|blocked|failed`.
 - `collect-plan-context <plan-file|-> <source>` returns bounded plan context for
   `/areyousure`.
 - `plan-review-prompt` uses the same redaction and plan-size cap before

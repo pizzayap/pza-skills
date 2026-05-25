@@ -55,15 +55,18 @@ Use an empty model string only when the lane has no configured model.
 id: <lane-id>
 provider: <provider>
 model: <model>
-status: approve|needs-attention|skipped|error
+status: approve|needs-attention|blocked|skipped|error
 === PZA ADVERSARIAL LANE OUTPUT ===
 <concise reviewer result or skip/error reason>
 === PZA ADVERSARIAL LANE END ===
 ```
 
 Use `needs-attention` when the output contains concrete security findings.
-Use `approve` for clean results. Use `skipped` for disabled, missing,
-unauthenticated, or unsupported lanes. Use `error` for other failures.
+Use `approve` for clean results. Use `blocked` when an enabled lane cannot run
+because the runtime reports `PZA reviewer result: blocked`, including missing
+commands, authentication failures, sandbox/privacy denial, or unsupported safe
+non-interactive mode. Use `skipped` only for disabled or explicitly excluded
+lanes. Use `error` for other failures.
 
 ## Rules
 

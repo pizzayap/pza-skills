@@ -19,10 +19,14 @@ node -e "
   if (data.model !== 'kimi-k2.6:cloud') process.exit(1);
   const byName = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.name, reviewer]));
   if (!byName.native?.enabled) process.exit(1);
+  if (byName.native.state !== 'ready' || byName.native.requiredWhenEnabled !== false || byName.native.forwardsPrivateContext !== false) process.exit(1);
   if (!byName.ollama?.enabled || byName.ollama.model !== 'kimi-k2.6:cloud') process.exit(1);
+  if (!['ready', 'missing', 'blocked'].includes(byName.ollama.state) || byName.ollama.requiredWhenEnabled !== true) process.exit(1);
   if (!byName.codex?.enabled) process.exit(1);
+  if (!['ready', 'missing'].includes(byName.codex.state) || byName.codex.forwardsPrivateContext !== true) process.exit(1);
   for (const name of ['opencode', 'kilo', 'cursor', 'antigravity']) {
     if (byName[name]?.enabled !== false) process.exit(1);
+    if (byName[name]?.state !== 'disabled') process.exit(1);
   }
   const advById = Object.fromEntries(data.adversarialReviewers.map((reviewer) => [reviewer.id, reviewer]));
   if (!advById['ollama-default']?.legacy || !advById['ollama-default']?.effectiveEnabled) process.exit(1);
@@ -69,12 +73,54 @@ node -e "
   const byName = Object.fromEntries(status.reviewers.map((reviewer) => [reviewer.name, reviewer]));
   if (byName.native.model !== 'codex:gpt-5.5') process.exit(1);
   if (byName.opencode.enabled !== true) process.exit(1);
+  if (!['ready', 'missing'].includes(byName.opencode.state) || byName.opencode.requiredWhenEnabled !== true) process.exit(1);
   if (byName.opencode.model !== 'openai/gpt-5.3-codex') process.exit(1);
   if (byName.ollama.model !== 'glm-5.1:cloud') process.exit(1);
   if (data.adversarial !== false) process.exit(1);
 " "$tmp_home/.pza-skills/settings.json"
 rm -rf "$tmp_home"
 rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json
+
+echo "== Reviewer preflight states =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-preflight.XXXXXX")
+tmp_bin=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-bin.XXXXXX")
+node_bin=$(command -v node)
+mkdir -p "$tmp_home/.pza-skills"
+cat > "$tmp_home/.pza-skills/settings.json" <<'JSON'
+{"reviewers":{"antigravity":{"enabled":true,"model":""}}}
+JSON
+cat > "$tmp_bin/agy" <<'SH'
+#!/bin/sh
+echo "Usage: agy --print --sandbox"
+SH
+chmod 755 "$tmp_bin/agy"
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js reviewer-settings >/tmp/pza-reviewer-agy-ready.json
+node -e "
+  const fs = require('fs');
+  const byName = Object.fromEntries(JSON.parse(fs.readFileSync('/tmp/pza-reviewer-agy-ready.json', 'utf8')).reviewers.map((reviewer) => [reviewer.name, reviewer]));
+  if (byName.antigravity.state !== 'ready') process.exit(1);
+  if (byName.antigravity.blocker) process.exit(1);
+"
+cat > "$tmp_bin/agy" <<'SH'
+#!/bin/sh
+echo "Usage: agy --print"
+SH
+chmod 755 "$tmp_bin/agy"
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js reviewer-settings >/tmp/pza-reviewer-agy-blocked.json
+node -e "
+  const fs = require('fs');
+  const byName = Object.fromEntries(JSON.parse(fs.readFileSync('/tmp/pza-reviewer-agy-blocked.json', 'utf8')).reviewers.map((reviewer) => [reviewer.name, reviewer]));
+  if (byName.antigravity.state !== 'blocked') process.exit(1);
+  if (!/safe non-interactive/.test(byName.antigravity.blocker)) process.exit(1);
+"
+set +e
+printf '%s\n' 'review prompt' | PATH="/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-reviewer plan codex "" >/tmp/pza-reviewer-codex-missing.out 2>/tmp/pza-reviewer-codex-missing.err
+run_status=$?
+set -e
+test "$run_status" -eq 127
+grep -q 'PZA reviewer result: blocked' /tmp/pza-reviewer-codex-missing.err
+rm -rf "$tmp_home" "$tmp_bin"
+rm -f /tmp/pza-reviewer-agy-ready.json /tmp/pza-reviewer-agy-blocked.json /tmp/pza-reviewer-codex-missing.out /tmp/pza-reviewer-codex-missing.err
 
 echo "== Adversarial reviewer runtime =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-adversarial-settings.XXXXXX")
@@ -227,6 +273,7 @@ JSON
 plan_file="/tmp/pza-plan-validate-$$.md"
 prompt_file="/tmp/pza-plan-prompt-$$.md"
 review_out="/tmp/pza-plan-review-$$.out"
+review_err="/tmp/pza-plan-review-$$.err"
 reviewers_json="/tmp/pza-plan-reviewers-$$.json"
 printf '%s\n' '# Plan' '' '- Do the safe thing' > "$plan_file"
 HOME="$tmp_home" node ./lib/pza-runtime.js plan-reviewers > "$reviewers_json"
@@ -245,10 +292,11 @@ grep -q 'Plan source: conversation-backed' "$prompt_file"
 printf '%s\n' 'api_token=abcdefghijklmnopqrstuvwxyz1234567890' \
   | HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt - conversation-backed > "$prompt_file"
 grep -q '\[REDACTED_SECRET\]' "$prompt_file"
-HOME="$tmp_home" node ./lib/pza-runtime.js run-plan-reviewer fake < "$prompt_file" > "$review_out"
+HOME="$tmp_home" node ./lib/pza-runtime.js run-plan-reviewer fake < "$prompt_file" > "$review_out" 2>"$review_err"
 grep -q 'fake reviewer ran' "$review_out"
+grep -q 'PZA reviewer result: passed' "$review_err"
 rm -rf "$tmp_home"
-rm -f "$plan_file" "$prompt_file" "$review_out" "$reviewers_json"
+rm -f "$plan_file" "$prompt_file" "$review_out" "$review_err" "$reviewers_json"
 
 echo "== Redacted context helpers =="
 redacted_out="/tmp/pza-redacted-$$.out"
