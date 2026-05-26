@@ -21,6 +21,15 @@ git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
 ~/.pza-skills/package/scripts/install-runtime.sh
 ```
 
+For Codex subagent-first review, also install the PZA agent roles:
+
+```bash
+~/.pza-skills/package/scripts/install-codex-agents.sh
+```
+
+Restart Codex or start a fresh session after installing agents so the newly
+installed roles are available to the harness.
+
 ## Updating
 
 Refresh both the installed skill files and the machine-local runtime helper after
@@ -31,6 +40,7 @@ or runtime changes:
 npx skills add pizzayap/pza-skills
 git -C ~/.pza-skills/package pull --ff-only
 ~/.pza-skills/package/scripts/install-runtime.sh
+~/.pza-skills/package/scripts/install-codex-agents.sh
 ```
 
 If your skills CLI supports `update`, this is equivalent for the first step:
@@ -75,7 +85,17 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled), and optional adversarial security lanes, then synthesizes findings and runs proof commands. External AI reviewers are governed by the second-opinion mode: `ask` approval-gates them for Codex-style sandboxes, `native-only` skips them, and `strict` requires them. External reviewers receive context through `collect-review-context`, which redacts likely secrets and caps total/per-file bytes. Optional Snyk dependency scanning is separate from AI review and runs only when configured or explicitly requested.
+Subagent-first completeness check. Launches native structural completeness, code
+quality, and native adversarial lanes as local subagents when the harness
+supports them, runs configured CLI-backed reviewers (Ollama, Codex, OpenCode,
+Kilo Code, Cursor Agent, and Antigravity where enabled) only as external second
+opinions, adjudicates findings, then runs proof commands. External AI reviewers
+are governed by the second-opinion mode: `ask` approval-gates them for
+Codex-style sandboxes, `native-only` skips them, and `strict` requires them.
+External reviewers receive context through `collect-review-context`, which
+redacts likely secrets and caps total/per-file bytes. Optional Snyk dependency
+scanning is separate from AI review and runs only when configured or explicitly
+requested.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
@@ -169,7 +189,15 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 ### `/areyousure`
 
-Native plus external plan verification. Verifies either a plan file or the latest conversation-backed plan against repository files, checked-in guidance, manifests, lockfiles, and safe read-only local commands. Native verification runs in the active harness through `plan-verifier` or equivalent direct read-only checks; configured non-native `/pza-settings` reviewers then run as plan-review second opinions through `run-reviewer plan`. Claims that local evidence cannot prove are reported as unverifiable.
+Subagent-first native plus external plan verification. Verifies either a plan
+file or the latest conversation-backed plan against repository files, checked-in
+guidance, manifests, lockfiles, and safe read-only local commands. Native
+verification runs through the `plan-verifier` subagent when available, with
+native verification marked blocked when no read-only subagent facility exists;
+configured non-native `/pza-settings` reviewers then run as plan-review second opinions
+through `run-reviewer plan`. Claims that local evidence cannot prove are
+reported as unverifiable, and reviewer findings are adjudicated before the final
+report.
 
 **Flags:** `--report-only`
 
@@ -217,7 +245,9 @@ New writes use harness-neutral paths:
 
 See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portability.md).
 
-- Codex: install canonical skills into `~/.codex/skills/` and agents into `~/.codex/agents/`.
+- Codex: install canonical skills into `~/.codex/skills/`, then run
+  `scripts/install-codex-agents.sh` to install PZA reviewer agents into
+  `~/.codex/agents/`.
 - OpenCode: project wrappers live in `.opencode/commands/` and `.opencode/agents/`.
 - Pi: load canonical `SKILL.md` directories directly; optional slash aliases live in `.pi/prompts/`.
 - Claude Code: `.claude-plugin/` and `hooks/hooks.json` remain as compatibility packaging.
@@ -232,7 +262,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/agent-docs-audit` | — | — |
 | `/agent-docs-revise` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
-| `/areyousure` | — | — |
+| `/areyousure` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 
 Skills gracefully degrade when optional dependencies are missing.
 

@@ -24,6 +24,7 @@ other project directories:
 npx skills add pizzayap/pza-skills
 git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
 ~/.pza-skills/package/scripts/install-runtime.sh
+~/.pza-skills/package/scripts/install-codex-agents.sh
 ```
 
 When the package updates, refresh both installed surfaces. The skills command
@@ -34,6 +35,7 @@ the machine-local settings UI and reviewer helper:
 npx skills add pizzayap/pza-skills
 git -C ~/.pza-skills/package pull --ff-only
 ~/.pza-skills/package/scripts/install-runtime.sh
+~/.pza-skills/package/scripts/install-codex-agents.sh
 ```
 
 If the local skills CLI supports `update`, `npx skills@latest update` is
@@ -60,16 +62,25 @@ Install skills by copying or symlinking each skill directory into:
 ~/.codex/skills/
 ```
 
-Install agents by copying or symlinking `agents/*.md` into:
+Install PZA agents with the repo script:
 
 ```sh
-~/.codex/agents/
+~/.pza-skills/package/scripts/install-codex-agents.sh
 ```
+
+The script copies the four provider-agnostic PZA agent roles into
+`~/.codex/agents/` and writes read-only `.toml` configs beside them. Restart
+Codex or start a fresh session after running it so the roles are loaded.
 
 Codex translation notes:
 
 - Claude-style `AskUserQuestion` means Codex `request_user_input` when available, or a concise direct question when it is not.
 - Claude-style `Task(...)` means Codex subagent/collaboration tools such as `spawn_agent`; omit inline model selection unless Codex exposes it.
+- Native `/arewedone` and `/areyousure` lanes are subagent-first when Codex
+  exposes read-only subagent tools. If the PZA roles are unavailable, the final
+  report must show `blocked: read-only subagent unavailable` in
+  `Lane Execution`; do not emulate reviewer lanes in the main agent or a
+  background terminal.
 - `AGENTS.md` is the primary project instruction file. `CLAUDE.md` is compatibility-only.
 - Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when bounded local context collection needs a materialized plan.
 - Codex sandboxes can block nested `codex`, `agy`, and other external reviewer CLIs because they need user-state writes, localhost binding, or provider access. In second-opinion `ask` mode, `/arewedone` and `/areyousure` should request approval for the exact `run-reviewer` command and report skipped/blocked lanes if approval is denied.

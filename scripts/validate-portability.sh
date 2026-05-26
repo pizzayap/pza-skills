@@ -580,10 +580,26 @@ printf '%s\n' \
   'OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz1234567890' \
   'normal_hash=0123456789abcdef0123456789abcdef01234567' \
   'Authorization: Bearer abcdefghijklmnopqrstuvwxyzABCDEFGHIJ1234567890' \
+  'agent=structural-completeness-reviewer' \
+  'agent_file=structural-completeness-reviewer.md' \
+  'agent_config=structural-completeness-reviewer.toml' \
+  'padded=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef==' \
+  'webhook=https://api.example.com/webhook/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef' \
+  'pathid=/api/path/1234567890abcdef1234567890abcdef' \
   | node ./lib/pza-runtime.js redact-context > "$redacted_out"
 grep -q '\[REDACTED_SECRET\]' "$redacted_out"
 grep -q 'normal_hash=0123456789abcdef0123456789abcdef01234567' "$redacted_out"
 grep -q '\[REDACTED_AUTH\]' "$redacted_out"
+grep -q 'agent=structural-completeness-reviewer' "$redacted_out"
+grep -q 'agent_file=structural-completeness-reviewer.md' "$redacted_out"
+grep -q 'agent_config=structural-completeness-reviewer.toml' "$redacted_out"
+grep -q 'padded=\[REDACTED_HIGH_ENTROPY_TOKEN\]' "$redacted_out"
+grep -q 'webhook=https:\[REDACTED_HIGH_ENTROPY_TOKEN\]' "$redacted_out"
+grep -q 'pathid=\[REDACTED_HIGH_ENTROPY_TOKEN\]' "$redacted_out"
+if grep -q 'agent=.*REDACTED_HIGH_ENTROPY_TOKEN' "$redacted_out"; then
+  echo "Canonical PZA agent name was incorrectly redacted" >&2
+  exit 1
+fi
 node ./lib/pza-runtime.js collect-review-context --summary --json > "$review_context_json"
 node -e "
   const fs = require('fs');
@@ -641,6 +657,7 @@ for file in \
   .opencode/commands/pza-settings.md \
   .opencode/commands/hook-worthy.md \
   .opencode/commands/work-issue.md \
+  scripts/install-codex-agents.sh \
   .pi/prompts/arewedone.md \
   .pi/prompts/areyousure.md \
   .pi/prompts/agent-docs-audit.md \
@@ -691,6 +708,70 @@ for file in .opencode/agents/*.md; do
   target=$(awk -F'`' '/canonical agent instructions/{print $2; exit}' "$file")
   if [ -z "$target" ] || [ ! -f "$target" ]; then
     echo "OpenCode agent wrapper points at missing canonical agent: $file -> $target" >&2
+    exit 1
+  fi
+done
+test -x scripts/install-codex-agents.sh
+(
+tmp_codex_agents=$(mktemp -d "${TMPDIR:-/tmp}/pza-codex-agents.XXXXXX")
+agent_install_out=$(mktemp "${TMPDIR:-/tmp}/pza-codex-agent-install.XXXXXX")
+agent_install_err=$(mktemp "${TMPDIR:-/tmp}/pza-codex-agent-install-err.XXXXXX")
+cleanup_codex_agent_validation() {
+  rm -rf "$tmp_codex_agents"
+  rm -f "$agent_install_out" "$agent_install_err"
+}
+trap cleanup_codex_agent_validation EXIT
+tmp_codex_agents_abs=$(cd "$tmp_codex_agents" && pwd -P)
+CODEX_AGENTS_DIR="$tmp_codex_agents" scripts/install-codex-agents.sh >"$agent_install_out"
+grep -F -q "Installed PZA Codex agents to $tmp_codex_agents_abs" "$agent_install_out"
+for agent in \
+  structural-completeness-reviewer \
+  code-quality-reviewer \
+  plan-verifier \
+  adversarial-reviewer
+do
+  grep -F -q "$agent" scripts/install-codex-agents.sh
+  test -f "$tmp_codex_agents_abs/$agent.md"
+  test -f "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q "name = \"$agent\"" "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q 'description = "' "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q "$tmp_codex_agents_abs/$agent.md" "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q 'developer_instructions = ' "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q 'sandbox_mode = "read-only"' "$tmp_codex_agents_abs/$agent.toml"
+done
+if CODEX_AGENTS_DIR="$ROOT/agents" scripts/install-codex-agents.sh >"$agent_install_out" 2>"$agent_install_err"; then
+  echo "Codex agent installer accepted canonical source directory as target" >&2
+  exit 1
+fi
+grep -F -q 'Refusing to install over canonical source agent' "$agent_install_err"
+unsafe_codex_agents="${TMPDIR:-/tmp}/pza-codex-agents-unsafe-'"
+if CODEX_AGENTS_DIR="$unsafe_codex_agents" scripts/install-codex-agents.sh >"$agent_install_out" 2>"$agent_install_err"; then
+  echo "Codex agent installer accepted unsafe target path" >&2
+  exit 1
+fi
+grep -F -q 'Unsafe CODEX_AGENTS_DIR' "$agent_install_err"
+)
+grep -F -q 'name = "$agent"' scripts/install-codex-agents.sh
+grep -F -q 'description = "$description"' scripts/install-codex-agents.sh
+grep -F -q 'source_real=' scripts/install-codex-agents.sh
+grep -F -q 'sandbox_mode = "read-only"' scripts/install-codex-agents.sh
+grep -F -q 'rm -f "$target_file" "$target_toml"' scripts/install-codex-agents.sh
+for skill_file in skills/arewedone/SKILL.md skills/areyousure/SKILL.md; do
+  grep -F -q 'subagent-first' "$skill_file"
+  grep -F -q 'read-only' "$skill_file"
+  grep -E -q 'background[- ]terminal' "$skill_file"
+  grep -F -q 'blocked: read-only subagent unavailable' "$skill_file"
+  grep -F -q 'Lane Execution' "$skill_file"
+  grep -F -q 'Adjudicated Findings' "$skill_file"
+  grep -F -q '20 concrete findings' "$skill_file"
+  grep -F -q 'suggested by reviewer output' "$skill_file"
+  grep -F -q 'CONFIRMED' "$skill_file"
+  grep -F -q 'FALSE_POSITIVE' "$skill_file"
+  grep -F -q 'UNVERIFIABLE' "$skill_file"
+  grep -F -q 'DUPLICATE' "$skill_file"
+  grep -F -q 'OUT_OF_SCOPE' "$skill_file"
+  if grep -F -q 'direct fallback' "$skill_file"; then
+    echo "Native reviewer lanes must block instead of using direct fallback: $skill_file" >&2
     exit 1
   fi
 done

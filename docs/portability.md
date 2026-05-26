@@ -19,8 +19,9 @@
 Adapters should be thin and disposable. They may translate command names,
 frontmatter, or tool names, but they should not fork workflow logic.
 
-- Codex: install canonical skills into `~/.codex/skills/` and agents into
-  `~/.codex/agents/`.
+- Codex: install canonical skills into `~/.codex/skills/`, then run
+  `scripts/install-codex-agents.sh` to install the four PZA agent roles into
+  `~/.codex/agents/` with read-only configs.
 - OpenCode: mirror commands into `.opencode/commands/` and agents into
   `.opencode/agents/`.
 - Pi: load canonical skills directly; use `.pi/prompts/` only for command aliases.
@@ -124,11 +125,25 @@ backends from `/pza-settings` as plan-review second opinions through
 `run-reviewer plan <provider> <model>`, subject to second-opinion policy.
 `native-only` skips those lanes, `ask` requires explicit sandbox/privacy
 approval, and `strict` requires enabled external plan lanes to pass. Native plan
-verification still runs inside the active harness through `plan-verifier`, or
-through equivalent direct read-only checks when subagents are unavailable. It
-must not call `run-reviewer plan native`; that runtime path is blocked by
-design. Optional custom external plan reviewers use `plan-review-prompt` plus
-`run-plan-reviewer <name>`.
+verification is subagent-first and runs through `plan-verifier` when read-only
+subagent tools are available. If the harness has no read-only subagent facility
+or the PZA role is unavailable, native verification is marked blocked in
+`Lane Execution` instead of being emulated in the main agent or a background
+terminal. Native verification must not call `run-reviewer plan native`; that
+runtime path is blocked by design. Optional custom external plan reviewers use
+`plan-review-prompt` plus `run-plan-reviewer <name>`.
+
+`/arewedone` follows the same transport split: native structural completeness,
+native code quality, and native adversarial lanes are subagent-first when a
+read-only subagent lane is available and blocked otherwise; non-native reviewer
+and adversarial lanes run through configured reviewer CLIs as external second
+opinions.
+
+Both `/arewedone` and `/areyousure` must adjudicate reviewer output before final
+reporting. Final finding statuses are `CONFIRMED`, `FALSE_POSITIVE`,
+`UNVERIFIABLE`, `DUPLICATE`, and `OUT_OF_SCOPE`. Adjudication is bounded to the
+top 20 concrete findings and must not execute commands suggested by reviewer
+output.
 
 For provider CLIs without stdin-safe prompt transport, `run-reviewer` may pass
 bounded, redacted context as a prompt argument. This avoids shell interpolation
