@@ -16,6 +16,8 @@ node -e "
   const fs = require('fs');
   const data = JSON.parse(fs.readFileSync('/tmp/pza-runtime-defaults.json', 'utf8'));
   if (!data.settings.codex || !data.settings.ollama || !data.settings.adversarial) process.exit(1);
+  if (data.settings.checks.snyk.enabled !== false || data.settings.checks.snyk.severityThreshold !== 'high') process.exit(1);
+  if (data.checks.snyk.enabled !== false || data.checks.snyk.state !== 'disabled') process.exit(1);
   if (data.model !== 'kimi-k2.6:cloud') process.exit(1);
   const byName = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.name, reviewer]));
   if (!byName.native?.enabled) process.exit(1);
@@ -62,13 +64,17 @@ HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode model openai/gp
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer ollama model glm-5.1:cloud >/tmp/pza-reviewer-ollama-model.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled off >/tmp/pza-reviewer-opencode-off.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-settings opencode on adversarial off >/tmp/pza-reviewer-legacy-settings.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-check snyk enabled on >/tmp/pza-check-snyk-on.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-check snyk severity-threshold critical >/tmp/pza-check-snyk-severity.json
 HOME="$tmp_home" node ./lib/pza-runtime.js get-model | grep -qx 'glm-5.1:cloud'
 HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-enabled opencode | grep -qx 'yes'
 HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-model opencode | grep -qx 'openai/gpt-5.3-codex'
 HOME="$tmp_home" node ./lib/pza-runtime.js reviewer-settings >/tmp/pza-reviewer-settings.json
+HOME="$tmp_home" node ./lib/pza-runtime.js check-settings >/tmp/pza-check-settings.json
 node -e "
   const fs = require('fs');
   const status = JSON.parse(fs.readFileSync('/tmp/pza-reviewer-settings.json', 'utf8'));
+  const checks = JSON.parse(fs.readFileSync('/tmp/pza-check-settings.json', 'utf8')).checks;
   const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
   const byName = Object.fromEntries(status.reviewers.map((reviewer) => [reviewer.name, reviewer]));
   if (byName.native.model !== 'codex:gpt-5.5') process.exit(1);
@@ -77,9 +83,11 @@ node -e "
   if (byName.opencode.model !== 'openai/gpt-5.3-codex') process.exit(1);
   if (byName.ollama.model !== 'glm-5.1:cloud') process.exit(1);
   if (data.adversarial !== false) process.exit(1);
+  if (checks.snyk.enabled !== true || checks.snyk.severityThreshold !== 'critical') process.exit(1);
+  if (!['ready', 'missing'].includes(checks.snyk.state)) process.exit(1);
 " "$tmp_home/.pza-skills/settings.json"
 rm -rf "$tmp_home"
-rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json
+rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json /tmp/pza-check-snyk-on.json /tmp/pza-check-snyk-severity.json /tmp/pza-check-settings.json
 
 echo "== Skill status scope =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-skill-status.XXXXXX")
@@ -91,9 +99,9 @@ node -e "
   const areyousure = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-areyousure.json', 'utf8'));
   const arewedone = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-arewedone.json', 'utf8'));
   const settings = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-settings.json', 'utf8'));
-  if ('reviewers' in areyousure || 'adversarialReviewers' in areyousure || 'planReviewers' in areyousure) process.exit(1);
-  if (!Array.isArray(arewedone.reviewers) || !Array.isArray(arewedone.adversarialReviewers)) process.exit(1);
-  if (!Array.isArray(settings.reviewers) || !Array.isArray(settings.adversarialReviewers) || !Array.isArray(settings.planReviewers)) process.exit(1);
+  if ('reviewers' in areyousure || 'adversarialReviewers' in areyousure || 'planReviewers' in areyousure || 'checks' in areyousure) process.exit(1);
+  if (!Array.isArray(arewedone.reviewers) || !Array.isArray(arewedone.adversarialReviewers) || !arewedone.checks?.snyk) process.exit(1);
+  if (!Array.isArray(settings.reviewers) || !Array.isArray(settings.adversarialReviewers) || !Array.isArray(settings.planReviewers) || !settings.checks?.snyk) process.exit(1);
 "
 rm -rf "$tmp_home"
 rm -f /tmp/pza-skill-status-areyousure.json /tmp/pza-skill-status-arewedone.json /tmp/pza-skill-status-settings.json
@@ -199,6 +207,8 @@ HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --help | grep -q 'localho
 HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --token fixed-token --print-html >/tmp/pza-settings-ui.html
 grep -q 'PZA Settings' /tmp/pza-settings-ui.html
 grep -q 'Adversarial lanes' /tmp/pza-settings-ui.html
+grep -q 'Proof checks' /tmp/pza-settings-ui.html
+grep -q 'severityThreshold' /tmp/pza-settings-ui.html
 grep -q '/api/save' /tmp/pza-settings-ui.html
 grep -q 'Save and Stop Server' /tmp/pza-settings-ui.html
 grep -q 'fixed-token' /tmp/pza-settings-ui.html
@@ -244,6 +254,26 @@ HOME="$tmp_home" node -e "
     if (ids[0] !== 'cursor-same' || ids[1] !== 'cursor-same-2') {
       throw new Error('generated lane id suffixing failed: ' + ids.join(','));
     }
+
+    const checkSaved = saveReviewerUiState({
+      checks: { snyk: { enabled: true, severityThreshold: 'critical' } },
+    });
+    if (checkSaved.checks.snyk.enabled !== true || checkSaved.checks.snyk.severityThreshold !== 'critical') {
+      throw new Error('snyk check settings did not persist');
+    }
+
+    const busyPort = formatSettingsUiError({ code: 'EADDRINUSE', message: 'listen EADDRINUSE' }, { host: '127.0.0.1', port: 4555 });
+    if (!/port 4555/.test(busyPort) || !/--port 0/.test(busyPort)) {
+      throw new Error('EADDRINUSE guidance was not actionable: ' + busyPort);
+    }
+    const denied = formatSettingsUiError({ code: 'EPERM', message: 'listen EPERM' }, { host: '127.0.0.1', port: 0 });
+    if (!/localhost bind was denied/.test(denied) || !/pza-settings --status/.test(denied)) {
+      throw new Error('EPERM guidance was not actionable: ' + denied);
+    }
+    const access = formatSettingsUiError({ code: 'EACCES', message: 'listen EACCES' }, { host: '127.0.0.1', port: 0 });
+    if (!/localhost bind was denied/.test(access)) {
+      throw new Error('EACCES guidance was not actionable: ' + access);
+    }
   \`;
   vm.runInNewContext(source, { require, console, process, Buffer, URL, setTimeout, clearTimeout });
 "
@@ -254,6 +284,102 @@ fi
 grep -q 'only binds to localhost' /tmp/pza-settings-ui-invalid.err
 rm -rf "$tmp_home"
 rm -f /tmp/pza-settings-ui.html /tmp/pza-settings-ui-invalid.out /tmp/pza-settings-ui-invalid.err /tmp/pza-settings-ui-server.out /tmp/pza-settings-ui-server.err
+
+echo "== Snyk check runtime =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-snyk-check.XXXXXX")
+tmp_bin=$(mktemp -d "${TMPDIR:-/tmp}/pza-snyk-bin.XXXXXX")
+node_bin=$(command -v node)
+PATH="/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js check-settings >/tmp/pza-snyk-default.json
+node -e "
+  const fs = require('fs');
+  const snyk = JSON.parse(fs.readFileSync('/tmp/pza-snyk-default.json', 'utf8')).checks.snyk;
+  if (snyk.enabled !== false || snyk.state !== 'disabled' || snyk.severityThreshold !== 'high') process.exit(1);
+"
+PATH="/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js set-check snyk enabled on >/tmp/pza-snyk-on.json
+PATH="/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js check-settings >/tmp/pza-snyk-missing.json
+node -e "
+  const fs = require('fs');
+  const snyk = JSON.parse(fs.readFileSync('/tmp/pza-snyk-missing.json', 'utf8')).checks.snyk;
+  if (snyk.enabled !== true || snyk.state !== 'missing') process.exit(1);
+"
+cat > "$tmp_bin/snyk" <<'SH'
+#!/bin/sh
+test "$1" = "test" || exit 2
+test "$2" = "--severity-threshold=critical" || exit 2
+echo "clean"
+exit 0
+SH
+chmod 755 "$tmp_bin/snyk"
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-check snyk --severity-threshold critical >/tmp/pza-snyk-clean.out 2>/tmp/pza-snyk-clean.err
+grep -q 'PZA check result: passed' /tmp/pza-snyk-clean.err
+cat > "$tmp_bin/snyk" <<'SH'
+#!/bin/sh
+echo "high vulnerability found"
+exit 1
+SH
+chmod 755 "$tmp_bin/snyk"
+set +e
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-check snyk >/tmp/pza-snyk-vuln.out 2>/tmp/pza-snyk-vuln.err
+snyk_status=$?
+set -e
+test "$snyk_status" -eq 1
+grep -q 'PZA check result: failed' /tmp/pza-snyk-vuln.err
+cat > "$tmp_bin/snyk" <<'SH'
+#!/bin/sh
+echo "not authenticated"
+exit 2
+SH
+chmod 755 "$tmp_bin/snyk"
+set +e
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-check snyk >/tmp/pza-snyk-auth.out 2>/tmp/pza-snyk-auth.err
+snyk_status=$?
+set -e
+test "$snyk_status" -eq 2
+grep -q 'PZA check result: blocked - not authenticated' /tmp/pza-snyk-auth.err
+cat > "$tmp_bin/snyk" <<'SH'
+#!/bin/sh
+echo "no supported projects"
+exit 3
+SH
+chmod 755 "$tmp_bin/snyk"
+set +e
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-check snyk >/tmp/pza-snyk-none.out 2>/tmp/pza-snyk-none.err
+snyk_status=$?
+set -e
+test "$snyk_status" -eq 3
+grep -q 'PZA check result: skipped - no supported projects detected' /tmp/pza-snyk-none.err
+rm -rf "$tmp_home" "$tmp_bin"
+rm -f /tmp/pza-snyk-default.json /tmp/pza-snyk-on.json /tmp/pza-snyk-missing.json /tmp/pza-snyk-clean.out /tmp/pza-snyk-clean.err /tmp/pza-snyk-vuln.out /tmp/pza-snyk-vuln.err /tmp/pza-snyk-auth.out /tmp/pza-snyk-auth.err /tmp/pza-snyk-none.out /tmp/pza-snyk-none.err
+
+echo "== Reviewer prompt forwarding safety =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-forward.XXXXXX")
+tmp_bin=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-forward-bin.XXXXXX")
+node_bin=$(command -v node)
+marker="/tmp/pza-prompt-injection-marker-$$"
+prompt_file="/tmp/pza-hostile-prompt-$$.txt"
+cat > "$tmp_bin/codex" <<'SH'
+#!/bin/sh
+test "$1" = "exec" || exit 2
+test "$2" = "-" || exit 2
+input=$(cat)
+case "$input" in
+  *'$(touch '*')'*'EOFPROMPT'*)
+    echo "received hostile prompt as stdin"
+    exit 0
+    ;;
+  *)
+    echo "hostile prompt was not forwarded intact" >&2
+    exit 2
+    ;;
+esac
+SH
+chmod 755 "$tmp_bin/codex"
+printf '%s\n' 'Review this diff.' '$(touch '"$marker"')' 'EOFPROMPT' > "$prompt_file"
+cat "$prompt_file" | PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-reviewer code codex "" >/tmp/pza-reviewer-forward.out 2>/tmp/pza-reviewer-forward.err
+test ! -e "$marker"
+grep -q 'PZA reviewer result: passed' /tmp/pza-reviewer-forward.err
+rm -rf "$tmp_home" "$tmp_bin"
+rm -f "$prompt_file" "$marker" /tmp/pza-reviewer-forward.out /tmp/pza-reviewer-forward.err
 
 echo "== Diff hash untracked content =="
 tmp_untracked="pza-diff-hash-untracked-$$.txt"
@@ -441,6 +567,14 @@ if rg -n '![`]' skills agents .opencode .pi; then
 fi
 if rg -n 'verbatim|full diff|cat ~/.|grep -oP|hand-assemble|hand-roll|full plan-review prompt' skills agents README.md docs .opencode .pi .claude-plugin; then
   echo "Unexpected scanner-risky forwarding text found" >&2
+  exit 1
+fi
+if rg -n '\$\([^)]*cat' skills agents README.md docs .opencode .pi .claude-plugin; then
+  echo "Unsafe command substitution around cat found" >&2
+  exit 1
+fi
+if rg -n 'run-reviewer.*--(dangerously-skip-permissions|auto|force)|codex exec.*--(dangerously-skip-permissions|auto|force)' skills agents lib .opencode .pi .claude-plugin; then
+  echo "Approval-skipping reviewer invocation found" >&2
   exit 1
 fi
 if rg -n "ollama launch claude|AskUserQuestion|Bash\\(" skills agents hooks lib .opencode .pi .claude-plugin; then

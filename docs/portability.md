@@ -64,7 +64,10 @@ Legacy Claude/Codex locations are read only as migration fallbacks.
   "adversarialReviewers": [
     { "id": "cursor-sonnet", "provider": "cursor", "model": "anthropic/claude-sonnet-4.5", "enabled": true },
     { "id": "codex-gpt55", "provider": "codex", "model": "gpt-5.5", "enabled": true }
-  ]
+  ],
+  "checks": {
+    "snyk": { "enabled": false, "severityThreshold": "high" }
+  }
 }
 ```
 
@@ -84,6 +87,11 @@ companion. The server binds only to localhost, requires a random URL token, and
 writes the same `~/.pza-skills/` files as the terminal commands. If a harness
 cannot run or expose a local server, use `/pza-settings --status` and direct
 CLI arguments instead.
+
+Optional proof checks are separate from reviewer backends. Snyk lives under
+`checks.snyk`, is disabled by default, and should run only on trusted worktrees
+because the Snyk CLI may execute package-manager code while collecting
+dependency data.
 
 ## Plan Verification
 
@@ -106,6 +114,8 @@ collection. Skills gather runtime state only when invoked:
 - `run-reviewer <code|adversarial> <provider> <model>` runs configured
   reviewer backends through argv arrays, emits `PZA reviewer result:
   passed|blocked|failed`, and guards against worktree mutation.
+- `run-check snyk` runs the optional trusted-worktree dependency check and emits
+  `PZA check result: passed|blocked|failed|skipped`.
 - `collect-plan-context <plan-file|-> <source>` returns bounded plan context for
   `/areyousure`.
 - `redact-context` is the shared stdin/stdout redaction helper.

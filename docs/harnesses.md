@@ -40,6 +40,8 @@ By default `/pza-settings` starts a localhost-only visual settings companion
 when the harness can run a local server. Open the printed tokenized URL, make
 changes, then click **Save and Stop Server**. Terminal-only harnesses can use
 `/pza-settings --status` plus direct `/pza-settings <reviewer> ...` arguments.
+Optional Snyk checks are off by default and should be enabled only for trusted
+worktrees because the Snyk CLI may execute package-manager code while scanning.
 
 ## Codex
 
