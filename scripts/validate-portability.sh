@@ -19,20 +19,22 @@ node -e "
   if (data.settings.secondOpinionMode !== 'ask' || data.secondOpinion.mode !== 'ask' || data.secondOpinion.approvalRequired !== true || data.secondOpinion.strict !== false) process.exit(1);
   if (data.settings.checks.snyk.enabled !== false || data.settings.checks.snyk.severityThreshold !== 'high') process.exit(1);
   if (data.checks.snyk.enabled !== false || data.checks.snyk.state !== 'disabled') process.exit(1);
-  if (data.model !== 'kimi-k2.6:cloud') process.exit(1);
+  if (data.model !== '') process.exit(1);
   const byName = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.name, reviewer]));
   if (!byName.native?.enabled) process.exit(1);
   if (byName.native.state !== 'ready' || byName.native.requiredWhenEnabled !== false || byName.native.forwardsPrivateContext !== false) process.exit(1);
   if (byName.native.adversarialSupported !== true || byName.native.adversarialEnabled !== false || byName.native.adversarialState !== 'disabled') process.exit(1);
-  if (!byName.ollama?.enabled || byName.ollama.model !== 'kimi-k2.6:cloud') process.exit(1);
+  if (!byName.ollama?.enabled || byName.ollama.model !== '') process.exit(1);
   if (!['ready', 'missing', 'blocked'].includes(byName.ollama.state) || byName.ollama.requiredWhenEnabled !== true) process.exit(1);
   if (!byName.codex?.enabled) process.exit(1);
-  if (byName.codex.model !== 'gpt-5.5') process.exit(1);
-  if (byName.codex.adversarialEnabled !== true || byName.codex.adversarialModel !== 'gpt-5.5') process.exit(1);
+  if (byName.codex.model !== '') process.exit(1);
+  if (byName.codex.modelPlaceholder !== 'default') process.exit(1);
+  if (byName.codex.adversarialEnabled !== true || byName.codex.adversarialModel !== '') process.exit(1);
   if (!['ready', 'missing'].includes(byName.codex.state) || byName.codex.forwardsPrivateContext !== true) process.exit(1);
   for (const name of ['opencode', 'kilo', 'cursor', 'antigravity']) {
     if (byName[name]?.enabled !== false) process.exit(1);
     if (byName[name]?.state !== 'disabled') process.exit(1);
+    if (byName[name]?.modelPlaceholder !== 'default') process.exit(1);
   }
   const advById = Object.fromEntries(data.adversarialReviewers.map((reviewer) => [reviewer.id, reviewer]));
   if (!advById['ollama-default']?.legacy || !advById['ollama-default']?.effectiveEnabled) process.exit(1);
@@ -62,9 +64,9 @@ rm -rf "$tmp_home" /tmp/pza-runtime-merged.json
 
 echo "== Reviewer settings runtime =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-settings.XXXXXX")
-HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer native model codex:gpt-5.5 >/tmp/pza-reviewer-native.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer native model native-test-model >/tmp/pza-reviewer-native.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled on >/tmp/pza-reviewer-opencode-on.json
-HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode model openai/gpt-5.3-codex >/tmp/pza-reviewer-opencode-model.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode model opencode-test-model >/tmp/pza-reviewer-opencode-model.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer ollama model glm-5.1:cloud >/tmp/pza-reviewer-ollama-model.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled off >/tmp/pza-reviewer-opencode-off.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-settings opencode on adversarial off >/tmp/pza-reviewer-legacy-settings.json
@@ -73,7 +75,7 @@ HOME="$tmp_home" node ./lib/pza-runtime.js set-check snyk severity-threshold cri
 HOME="$tmp_home" node ./lib/pza-runtime.js set-second-opinion-mode strict >/tmp/pza-second-opinion-strict.json
 HOME="$tmp_home" node ./lib/pza-runtime.js get-model | grep -qx 'glm-5.1:cloud'
 HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-enabled opencode | grep -qx 'yes'
-HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-model opencode | grep -qx 'openai/gpt-5.3-codex'
+HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-model opencode | grep -qx 'opencode-test-model'
 HOME="$tmp_home" node ./lib/pza-runtime.js reviewer-settings >/tmp/pza-reviewer-settings.json
 HOME="$tmp_home" node ./lib/pza-runtime.js check-settings >/tmp/pza-check-settings.json
 node -e "
@@ -83,10 +85,10 @@ node -e "
   const checks = JSON.parse(fs.readFileSync('/tmp/pza-check-settings.json', 'utf8')).checks;
   const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
   const byName = Object.fromEntries(status.reviewers.map((reviewer) => [reviewer.name, reviewer]));
-  if (byName.native.model !== 'codex:gpt-5.5') process.exit(1);
+  if (byName.native.model !== 'native-test-model') process.exit(1);
   if (byName.opencode.enabled !== true) process.exit(1);
   if (!['ready', 'missing'].includes(byName.opencode.state) || byName.opencode.requiredWhenEnabled !== true) process.exit(1);
-  if (byName.opencode.model !== 'openai/gpt-5.3-codex') process.exit(1);
+  if (byName.opencode.model !== 'opencode-test-model') process.exit(1);
   if (byName.ollama.model !== 'glm-5.1:cloud') process.exit(1);
   if (data.adversarial !== false) process.exit(1);
   if (secondOpinion.mode !== 'strict' || secondOpinion.strict !== true || secondOpinion.approvalRequired !== false) process.exit(1);
@@ -165,17 +167,17 @@ node -e "
   const byId = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.id, reviewer]));
   if (!byId['ollama-default']?.legacy || !byId['codex-default']?.legacy) process.exit(1);
 "
-HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 >/tmp/pza-adversarial-add-one.json
-HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 >/tmp/pza-adversarial-add-two.json
-HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer native codex:gpt-5.5 native-adversarial >/tmp/pza-adversarial-add-native.json
-HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer codex gpt-5.5 codex-gpt55 >/tmp/pza-adversarial-add-codex.json
-if HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer ollama kimi-k2.6:cloud codex-gpt55 >/tmp/pza-adversarial-dup.out 2>/tmp/pza-adversarial-dup.err; then
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer cursor cursor-test-model >/tmp/pza-adversarial-add-one.json
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer cursor cursor-test-model >/tmp/pza-adversarial-add-two.json
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer native native-test-model native-adversarial >/tmp/pza-adversarial-add-native.json
+HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer codex codex-test-model codex-review >/tmp/pza-adversarial-add-codex.json
+if HOME="$tmp_home" node ./lib/pza-runtime.js add-adversarial-reviewer ollama ollama-test-model codex-review >/tmp/pza-adversarial-dup.out 2>/tmp/pza-adversarial-dup.err; then
   echo "duplicate adversarial lane id was accepted" >&2
   exit 1
 fi
 grep -q 'already exists' /tmp/pza-adversarial-dup.err
 HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer cursor enabled off >/tmp/pza-adversarial-cursor-off.json
-HOME="$tmp_home" node ./lib/pza-runtime.js set-adversarial-reviewer cursor-anthropic-claude-sonnet-4-5-2 enabled off >/tmp/pza-adversarial-disable-second.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-adversarial-reviewer cursor-cursor-test-model-2 enabled off >/tmp/pza-adversarial-disable-second.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-settings adversarial off >/tmp/pza-adversarial-master-off.json
 HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings >/tmp/pza-adversarial-explicit.json
 node -e "
@@ -183,13 +185,13 @@ node -e "
   const data = JSON.parse(fs.readFileSync('/tmp/pza-adversarial-explicit.json', 'utf8'));
   if (data.explicit !== true || data.adversarial !== false) process.exit(1);
   const byId = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.id, reviewer]));
-  if (!byId['cursor-anthropic-claude-sonnet-4-5']) process.exit(1);
-  if (!byId['cursor-anthropic-claude-sonnet-4-5-2']) process.exit(1);
-  if (byId['cursor-anthropic-claude-sonnet-4-5'].enabled !== true) process.exit(1);
-  if (byId['cursor-anthropic-claude-sonnet-4-5'].effectiveEnabled !== false) process.exit(1);
-  if (byId['cursor-anthropic-claude-sonnet-4-5-2'].enabled !== false) process.exit(1);
+  if (!byId['cursor-cursor-test-model']) process.exit(1);
+  if (!byId['cursor-cursor-test-model-2']) process.exit(1);
+  if (byId['cursor-cursor-test-model'].enabled !== true) process.exit(1);
+  if (byId['cursor-cursor-test-model'].effectiveEnabled !== false) process.exit(1);
+  if (byId['cursor-cursor-test-model-2'].enabled !== false) process.exit(1);
   if (byId['native-adversarial'].provider !== 'native' || byId['native-adversarial'].state !== 'disabled' || byId['native-adversarial'].installed !== true) process.exit(1);
-  if (byId['codex-gpt55'].model !== 'gpt-5.5') process.exit(1);
+  if (byId['codex-review'].model !== 'codex-test-model') process.exit(1);
 "
 HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings --force >/tmp/pza-adversarial-force.json
 node -e "
@@ -197,10 +199,10 @@ node -e "
   const data = JSON.parse(fs.readFileSync('/tmp/pza-adversarial-force.json', 'utf8'));
   const byId = Object.fromEntries(data.reviewers.map((reviewer) => [reviewer.id, reviewer]));
   if (byId['native-adversarial'].effectiveEnabled !== true || byId['native-adversarial'].state !== 'ready') process.exit(1);
-  if (byId['cursor-anthropic-claude-sonnet-4-5'].effectiveEnabled !== true) process.exit(1);
-  if (byId['cursor-anthropic-claude-sonnet-4-5-2'].effectiveEnabled !== false) process.exit(1);
+  if (byId['cursor-cursor-test-model'].effectiveEnabled !== true) process.exit(1);
+  if (byId['cursor-cursor-test-model-2'].effectiveEnabled !== false) process.exit(1);
 "
-HOME="$tmp_home" node ./lib/pza-runtime.js remove-adversarial-reviewer codex-gpt55 >/tmp/pza-adversarial-remove.json
+HOME="$tmp_home" node ./lib/pza-runtime.js remove-adversarial-reviewer codex-review >/tmp/pza-adversarial-remove.json
 mkdir -p "$tmp_home/.pza-skills"
 printf '%s\n' '{"adversarialReviewers":[]}' > "$tmp_home/.pza-skills/settings.json"
 HOME="$tmp_home" node ./lib/pza-runtime.js adversarial-reviewer-settings >/tmp/pza-adversarial-empty.json
@@ -274,21 +276,21 @@ HOME="$tmp_home" node -e "
 
     const reviewerToggleSaved = saveReviewerUiState({
       reviewers: {
-        native: { enabled: true, model: 'codex:gpt-5.5', adversarialEnabled: true, adversarialLaneId: 'native-adversarial' },
-        codex: { enabled: true, model: 'gpt-5.5', adversarialEnabled: true, adversarialLaneId: 'codex-adversarial' },
-        cursor: { enabled: false, model: 'anthropic/claude-sonnet-4.5', adversarialEnabled: false, adversarialLaneId: 'cursor-adversarial' },
+        native: { enabled: true, model: 'native-test-model', adversarialEnabled: true, adversarialLaneId: 'native-adversarial' },
+        codex: { enabled: true, model: 'codex-test-model', adversarialEnabled: true, adversarialLaneId: 'codex-adversarial' },
+        cursor: { enabled: false, model: 'cursor-test-model', adversarialEnabled: false, adversarialLaneId: 'cursor-adversarial' },
       },
       adversarialReviewers: [
-        { id: 'native-adversarial', provider: 'native', model: 'codex:gpt-5.5', enabled: true },
-        { id: 'codex-adversarial', provider: 'codex', model: 'gpt-5.5', enabled: true },
-        { id: 'cursor-adversarial', provider: 'cursor', model: 'anthropic/claude-sonnet-4.5', enabled: false },
+        { id: 'native-adversarial', provider: 'native', model: 'native-test-model', enabled: true },
+        { id: 'codex-adversarial', provider: 'codex', model: 'codex-test-model', enabled: true },
+        { id: 'cursor-adversarial', provider: 'cursor', model: 'cursor-test-model', enabled: false },
       ],
     });
     const reviewerToggleById = Object.fromEntries(reviewerToggleSaved.adversarialReviewers.map((lane) => [lane.id, lane]));
     if (reviewerToggleById['native-adversarial']?.provider !== 'native' || reviewerToggleById['native-adversarial']?.enabled !== true) {
       throw new Error('reviewer adversarial native toggle did not persist');
     }
-    if (reviewerToggleById['codex-adversarial']?.model !== 'gpt-5.5' || reviewerToggleById['codex-adversarial']?.enabled !== true) {
+    if (reviewerToggleById['codex-adversarial']?.model !== 'codex-test-model' || reviewerToggleById['codex-adversarial']?.enabled !== true) {
       throw new Error('reviewer adversarial codex toggle did not persist');
     }
     if (reviewerToggleById['cursor-adversarial']?.enabled !== false) {

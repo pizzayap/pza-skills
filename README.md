@@ -14,8 +14,6 @@ Install all skills from skills.sh:
 npx skills add pizzayap/pza-skills
 ```
 
-Run the same command again to refresh an existing install after package updates.
-
 Install the shared runtime helper once per machine:
 
 ```bash
@@ -23,12 +21,28 @@ git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
 ~/.pza-skills/package/scripts/install-runtime.sh
 ```
 
-Update the installed runtime after package changes:
+## Updating
+
+Refresh both the installed skill files and the machine-local runtime helper after
+package updates, especially for `/pza-settings`, `/arewedone`, reviewer lanes,
+or runtime changes:
 
 ```bash
+npx skills add pizzayap/pza-skills
 git -C ~/.pza-skills/package pull --ff-only
 ~/.pza-skills/package/scripts/install-runtime.sh
 ```
+
+If your skills CLI supports `update`, this is equivalent for the first step:
+
+```bash
+npx skills@latest update
+```
+
+The `npx skills...` command refreshes harness-visible skill markdown and
+adapters. The settings UI and reviewer dispatch helpers run from
+`~/.pza-skills/lib/pza-runtime.js`, so reinstall the runtime helper when runtime
+or UI behavior changes.
 
 Install a single skill:
 
@@ -71,7 +85,7 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, choose second-opinion mode, toggle CLI reviewers, choose exact model names, tick which reviewers also run adversarial security review, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
-**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings second-opinion ask`, `/pza-settings second-opinion strict`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings codex model gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
+**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings second-opinion ask`, `/pza-settings second-opinion strict`, `/pza-settings native model <harness:model>`, `/pza-settings codex model <model>`, `/pza-settings ollama model <model>`, `/pza-settings opencode on`, `/pza-settings opencode model <provider/model>`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add <provider> <model> <lane-id>`
 
 The visual companion can also be run directly after installing the runtime:
 
@@ -121,8 +135,8 @@ The visual settings UI has an **Adversarial** column in the reviewer table, incl
 
 ```text
 /pza-settings cursor off
-/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet
-/pza-settings adversarial add codex gpt-5.5 codex-gpt55
+/pza-settings adversarial add cursor <model> cursor-review
+/pza-settings adversarial add codex <model> codex-review
 ```
 
 Ollama is configured as a reviewer backend through `/pza-settings`; there are no separate Ollama-only setup or review skills.
@@ -193,7 +207,7 @@ New writes use harness-neutral paths:
 
 `~/.pza-skills/` is machine-local user state. Never commit personal settings or model choices into this repository. Legacy Claude/Codex paths are read only as migration fallbacks where needed.
 
-`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility. Codex defaults to `gpt-5.5` when no explicit model is configured. It may also store `adversarialReviewers`, an array of `{id, provider, model, enabled}` lanes used by `/arewedone`; the settings UI now edits the common one-lane-per-reviewer case through the reviewer table's **Adversarial** column, including `provider: "native"`. If `adversarialReviewers` is absent, `/arewedone` preserves legacy Ollama/Codex adversarial behavior; if it is an explicit empty array, no adversarial lanes run. Optional proof checks live under `checks`, for example `{ "checks": { "snyk": { "enabled": false, "severityThreshold": "high" } } }`.
+`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility. Reviewer models default to blank/unset instead of a PZA-selected model; for CLIs that have their own default model, blank means use that provider default, while Ollama requires an explicit configured model. It may also store `adversarialReviewers`, an array of `{id, provider, model, enabled}` lanes used by `/arewedone`; the settings UI now edits the common one-lane-per-reviewer case through the reviewer table's **Adversarial** column, including `provider: "native"`. If `adversarialReviewers` is absent, `/arewedone` preserves legacy Ollama/Codex adversarial behavior; if it is an explicit empty array, no adversarial lanes run. Optional proof checks live under `checks`, for example `{ "checks": { "snyk": { "enabled": false, "severityThreshold": "high" } } }`.
 
 ## Harness Adapters
 

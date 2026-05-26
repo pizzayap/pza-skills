@@ -52,20 +52,20 @@ Legacy Claude/Codex locations are read only as migration fallbacks.
   "ollama": true,
   "adversarial": true,
   "secondOpinionMode": "ask",
-  "nativeModel": "codex:gpt-5.5",
+  "nativeModel": "",
   "reviewers": {
-    "native": { "enabled": true, "model": "codex:gpt-5.5" },
-    "ollama": { "enabled": true, "model": "kimi-k2.6:cloud" },
-    "codex": { "enabled": true, "model": "gpt-5.5" },
+    "native": { "enabled": true, "model": "" },
+    "ollama": { "enabled": true, "model": "" },
+    "codex": { "enabled": true, "model": "" },
     "opencode": { "enabled": false, "model": "" },
     "kilo": { "enabled": false, "model": "" },
     "cursor": { "enabled": false, "model": "" },
     "antigravity": { "enabled": false, "model": "" }
   },
   "adversarialReviewers": [
-    { "id": "native-adversarial", "provider": "native", "model": "codex:gpt-5.5", "enabled": true },
-    { "id": "cursor-sonnet", "provider": "cursor", "model": "anthropic/claude-sonnet-4.5", "enabled": true },
-    { "id": "codex-gpt55", "provider": "codex", "model": "gpt-5.5", "enabled": true }
+    { "id": "native-adversarial", "provider": "native", "model": "", "enabled": true },
+    { "id": "cursor-review", "provider": "cursor", "model": "", "enabled": true },
+    { "id": "codex-review", "provider": "codex", "model": "", "enabled": true }
   ],
   "checks": {
     "snyk": { "enabled": false, "severityThreshold": "high" }
@@ -86,7 +86,9 @@ lanes:
 - `strict`: require enabled external AI reviewer lanes; blocked, denied, or
   failed lanes keep `/arewedone` incomplete.
 
-Codex defaults to `gpt-5.5` when no explicit model is configured.
+Reviewer models default to blank/unset instead of a PZA-selected model. For
+CLIs that have their own default model, blank means use that provider default;
+Ollama requires an explicit configured model.
 
 `adversarialReviewers` is optional. When absent, `/arewedone` preserves legacy
 Ollama/Codex adversarial behavior from the normal reviewer settings. When it is

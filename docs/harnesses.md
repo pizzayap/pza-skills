@@ -26,14 +26,18 @@ git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
 ~/.pza-skills/package/scripts/install-runtime.sh
 ```
 
-Re-run the `npx skills add` command whenever the package updates so installed
-skill copies pick up new runtime invocation paths and workflow text. Also
-refresh the runtime package before reinstalling the helper:
+When the package updates, refresh both installed surfaces. The skills command
+updates harness-visible skill markdown and adapters; the runtime commands update
+the machine-local settings UI and reviewer helper:
 
 ```sh
+npx skills add pizzayap/pza-skills
 git -C ~/.pza-skills/package pull --ff-only
 ~/.pza-skills/package/scripts/install-runtime.sh
 ```
+
+If the local skills CLI supports `update`, `npx skills@latest update` is
+equivalent for the first step.
 
 These commands assume a POSIX shell environment such as macOS, Linux, or WSL2.
 

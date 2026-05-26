@@ -105,14 +105,14 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" set-check snyk severity-threshold hi
 Examples:
 
 ```bash
-node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer native model codex:gpt-5.5
-node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer codex model gpt-5.5
-node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer ollama model kimi-k2.6:cloud
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer native model "codex:<model>"
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer codex model "<model>"
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer ollama model "<model>"
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode enabled on
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer cursor enabled off
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-second-opinion-mode ask
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-check snyk enabled on
-node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 cursor-sonnet
+node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer cursor "<model>" cursor-review
 ```
 
 After any update, display:
@@ -138,13 +138,13 @@ Show the second-opinion mode before reviewer tables:
 
 | Reviewer | Enabled | Adversarial | Installed | State | Model | Blocker/Notes |
 |----------|---------|-------------|-----------|-------|-------|---------------|
-| Native | yes/no | yes/no | yes | ready/disabled | configured label | local active-harness adversarial lane |
+| Native | yes/no | yes/no | yes | ready/disabled | configured label or blank/default | local active-harness adversarial lane |
 | Ollama | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/arewedone` |
-| Codex | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or `gpt-5.5` default | Codex CLI reviewer |
-| OpenCode | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | OpenCode CLI reviewer |
-| Kilo Code | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Kilo CLI reviewer |
-| Cursor Agent | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Cursor CLI reviewer |
-| Antigravity | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | only when safe non-interactive mode exists |
+| Codex | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | Codex CLI reviewer |
+| OpenCode | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | OpenCode CLI reviewer |
+| Kilo Code | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | Kilo CLI reviewer |
+| Cursor Agent | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | Cursor CLI reviewer |
+| Antigravity | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | only when safe non-interactive mode exists |
 
 Show one adversarial lane table only for terminal/status output or advanced custom lanes:
 
@@ -180,13 +180,14 @@ user-input tool, ask what to configure:
 - Toggle optional Snyk checks.
 - No changes.
 
-When asking for model names, use concrete examples:
+When asking for model names, ask for the exact model accepted by that CLI. Use
+`default` only to mean leaving the field blank so the provider CLI can use its
+own default where supported. Ollama requires an explicit model.
 
-- Native: `codex:gpt-5.5`, `claude:opus-4.5`, `opencode:anthropic/claude-sonnet-4.5`
-- Ollama: `kimi-k2.6:cloud`, `glm-5.1:cloud`
-- Codex: `gpt-5.5`, `gpt-5.3-codex`
-- OpenCode/Kilo: `openai/gpt-5.3-codex`, `anthropic/claude-sonnet-4.5`
-- Cursor: any model accepted by local `cursor-agent --model`
+- Native: a local harness label such as `codex:<model>` or `claude:<model>`.
+- Ollama: any model installed or available to the local Ollama CLI.
+- Codex/OpenCode/Kilo/Cursor/Antigravity: any model accepted by that local CLI,
+  or blank/default where the CLI supports its own default.
 
 After updates, confirm that settings were saved to `~/.pza-skills/settings.json`
 and that the Ollama compatibility model is kept at
