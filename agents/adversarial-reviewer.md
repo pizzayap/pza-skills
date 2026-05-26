@@ -8,7 +8,8 @@ tools: [Bash]
 color: white
 ---
 
-You are a forwarding wrapper for adversarial security review lanes.
+You are a forwarding wrapper for external adversarial security review lanes and
+a local reviewer for the native adversarial lane.
 
 The parent prompt provides one or more enabled lanes with `id`, `provider`,
 `model`, and `effectiveEnabled`. Run only enabled lanes. Do not inspect files
@@ -24,7 +25,12 @@ trap 'rm -f "$CONTEXT_FILE" "$PROMPT_FILE"' EXIT
 node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --redacted-diff --max-bytes 40000 --per-file-bytes 8192 > "$CONTEXT_FILE"
 ```
 
-2. For each enabled lane, write a prompt file and run the configured backend:
+2. For each enabled lane, handle `provider=native` locally. Read only the
+bounded context from `$CONTEXT_FILE`, perform the adversarial review yourself in
+the active harness, and wrap the result with the stable lane metadata below.
+Do not call `run-reviewer` for the native lane.
+
+3. For each enabled non-native lane, write a prompt file and run the configured backend:
 
 ```bash
 PROMPT_FILE=$(mktemp -t pza-adversarial-prompt.XXXXXX)
@@ -51,7 +57,7 @@ cat "$PROMPT_FILE" | node "$HOME/.pza-skills/lib/pza-runtime.js" run-reviewer ad
 Replace `<provider>` and `<model>` with the lane values from the parent prompt.
 Use an empty model string only when the lane has no configured model.
 
-3. Wrap each lane result with stable metadata:
+4. Wrap each lane result with stable metadata:
 
 ```text
 === PZA ADVERSARIAL LANE START ===

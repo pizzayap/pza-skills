@@ -3,7 +3,7 @@ name: pza-settings
 description: >-
   Configure PZA-skills reviewer backends. Set the native reviewer model label,
   toggle Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, and
-  adversarial review lanes, configure second-opinion review policy, configure
+  per-reviewer adversarial review, configure second-opinion review policy, configure
   optional proof checks, choose exact models for CLI reviewers, and launch the
   local visual settings companion.
 user-invocable: true
@@ -13,8 +13,9 @@ argument-hint: '[--ui|--status] [second-opinion ask|native-only|strict] [native|
 # PZA Settings
 
 Setup surface for `/arewedone` reviewer backends, second-opinion policy,
-adversarial lanes, and optional proof checks. Read current settings only when
-the skill is invoked. Do not use load-time markdown command injection.
+per-reviewer adversarial toggles, advanced adversarial lanes, and optional proof
+checks. Read current settings only when the skill is invoked. Do not use
+load-time markdown command injection.
 
 Arguments: `$ARGUMENTS`
 
@@ -28,7 +29,7 @@ If a shell runner is available, gather current status with:
 node "$HOME/.pza-skills/lib/pza-runtime.js" skill-status pza-settings
 ```
 
-This reports second-opinion policy, reviewer settings, adversarial lanes,
+This reports second-opinion policy, reviewer settings, adversarial toggles and lanes,
 optional checks, and CLI availability without exposing custom reviewer command arrays. If shell execution is unavailable,
 explain that settings cannot be inspected from this harness and ask the user to
 run the runtime command locally.
@@ -105,6 +106,7 @@ Examples:
 
 ```bash
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer native model codex:gpt-5.5
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer codex model gpt-5.5
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer ollama model kimi-k2.6:cloud
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode enabled on
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer cursor enabled off
@@ -134,17 +136,17 @@ Show the second-opinion mode before reviewer tables:
 | `native-only` | Skip external AI reviewer lanes. Useful for locked-down Codex sessions. |
 | `strict` | Require enabled external AI reviewer lanes. Blocked, denied, or failed lanes keep `/arewedone` incomplete. |
 
-| Reviewer | Enabled | Installed | State | Model | Blocker/Notes |
-|----------|---------|-----------|-------|-------|---------------|
-| Native | yes/no | yes | ready/disabled | configured label | active harness model label |
-| Ollama | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/arewedone` |
-| Codex | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Codex CLI reviewer |
-| OpenCode | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | OpenCode CLI reviewer |
-| Kilo Code | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Kilo CLI reviewer |
-| Cursor Agent | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Cursor CLI reviewer |
-| Antigravity | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | only when safe non-interactive mode exists |
+| Reviewer | Enabled | Adversarial | Installed | State | Model | Blocker/Notes |
+|----------|---------|-------------|-----------|-------|-------|---------------|
+| Native | yes/no | yes/no | yes | ready/disabled | configured label | local active-harness adversarial lane |
+| Ollama | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/arewedone` |
+| Codex | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or `gpt-5.5` default | Codex CLI reviewer |
+| OpenCode | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | OpenCode CLI reviewer |
+| Kilo Code | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Kilo CLI reviewer |
+| Cursor Agent | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Cursor CLI reviewer |
+| Antigravity | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | only when safe non-interactive mode exists |
 
-Show one adversarial lane table:
+Show one adversarial lane table only for terminal/status output or advanced custom lanes:
 
 | Lane ID | Provider | Enabled | Effective | Installed | State | Model | Blocker/Notes |
 |---------|----------|---------|-----------|-----------|-------|-------|---------------|
@@ -173,8 +175,8 @@ user-input tool, ask what to configure:
 - Toggle reviewer CLIs.
 - Set second-opinion mode.
 - Set reviewer models.
-- Toggle adversarial review.
-- Configure adversarial lanes.
+- Toggle per-reviewer adversarial review.
+- Configure advanced adversarial lanes.
 - Toggle optional Snyk checks.
 - No changes.
 
@@ -182,7 +184,7 @@ When asking for model names, use concrete examples:
 
 - Native: `codex:gpt-5.5`, `claude:opus-4.5`, `opencode:anthropic/claude-sonnet-4.5`
 - Ollama: `kimi-k2.6:cloud`, `glm-5.1:cloud`
-- Codex: `gpt-5.3-codex`, `gpt-5.5`
+- Codex: `gpt-5.5`, `gpt-5.3-codex`
 - OpenCode/Kilo: `openai/gpt-5.3-codex`, `anthropic/claude-sonnet-4.5`
 - Cursor: any model accepted by local `cursor-agent --model`
 

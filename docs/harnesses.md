@@ -7,7 +7,8 @@ Runtime settings are stored in `~/.pza-skills/` on each user's machine. That
 directory is local-only and should never be committed into a shared skill repo.
 After installing skills in any harness, run `/pza-settings` to record the native
 model label, toggle optional reviewer CLIs, choose backend-specific model names,
-and configure `/arewedone` adversarial provider/model lanes.
+and choose which reviewer backends also run `/arewedone` adversarial security
+review.
 
 Canonical agents are provider-agnostic: `structural-completeness-reviewer`,
 `code-quality-reviewer`, `plan-verifier`, and `adversarial-reviewer`.

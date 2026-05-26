@@ -43,8 +43,9 @@ Use this output to decide which reviewer lanes are enabled, installed, and ready
 Use `secondOpinion.mode` to decide whether external AI reviewer lanes should be
 skipped, approval-gated, or required:
 
-- `native-only`: skip CLI-backed AI reviewer and adversarial lanes. Native
-  structural/code review plus proof commands may still declare local completion.
+- `native-only`: skip CLI-backed AI reviewer and external adversarial lanes.
+  Native structural/code review, native adversarial review when enabled, and
+  proof commands may still declare local completion.
 - `ask`: default Codex-safe mode. Run native review first. Treat external AI
   lanes as second opinions that cross a sandbox/privacy boundary. Request
   explicit user/harness approval before sending bounded review context to those
@@ -66,7 +67,7 @@ otherwise run them sequentially.
 - Structural completeness: use `structural-completeness-reviewer`.
 - Native code quality: use `code-quality-reviewer` with `mode=native`.
 - Backend code quality: use `code-quality-reviewer` with `mode=backend` for each enabled reviewer backend with `state=ready` from `skill-status`, only when second-opinion policy and arguments allow external lanes.
-- Adversarial lanes: launch only lanes marked `effectiveEnabled=true`, unless `--no-adversarial` was passed, and only when second-opinion policy and arguments allow external lanes.
+- Adversarial lanes: launch only lanes marked `effectiveEnabled=true`, unless `--no-adversarial` was passed. Native adversarial lanes are local and may run in `native-only`; non-native adversarial lanes run only when second-opinion policy and arguments allow external lanes.
 - Enabled reviewer backends with `state=missing` or `state=blocked` are required
   only in strict mode or when `--strict-second-opinion` was passed. In `ask`
   mode, report them as unavailable second opinions without failing native
@@ -140,8 +141,8 @@ explicit flags, and approval-gated second opinions that the user declines.
 ### 4. Adversarial Review Lanes
 
 Launch `adversarial-reviewer` for configured lanes. It receives lane metadata
-from `skill-status` and runs each enabled lane through `run-reviewer
-adversarial`.
+from `skill-status`. Native lanes run locally in the active harness; non-native
+lanes run through `run-reviewer adversarial`.
 
 Each lane result must include stable metadata:
 

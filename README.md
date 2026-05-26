@@ -42,7 +42,7 @@ npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
 ```
 
-Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, configure `/arewedone` adversarial provider/model lanes, and opt in to trusted-worktree proof checks such as Snyk.
+Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, choose which reviewer rows also run adversarial security review, and opt in to trusted-worktree proof checks such as Snyk.
 
 Recommended first run after installation:
 
@@ -69,9 +69,9 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 ### `/pza-settings`
 
-Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, choose second-opinion mode, toggle CLI reviewers, choose exact model names, add multiple adversarial review lanes with independent providers and models, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
+Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, choose second-opinion mode, toggle CLI reviewers, choose exact model names, tick which reviewers also run adversarial security review, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
-**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings second-opinion ask`, `/pza-settings second-opinion strict`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
+**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings second-opinion ask`, `/pza-settings second-opinion strict`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings codex model gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
 
 The visual companion can also be run directly after installing the runtime:
 
@@ -117,7 +117,7 @@ changed while the reviewer was running.
 | Cursor Agent | `cursor-agent` | `ready`, `disabled`, `missing`, or `blocked` |
 | Antigravity | `agy` | `ready` only when local `agy --help` shows safe `--sandbox --print` support |
 
-Adversarial lanes are configured separately from normal reviewer toggles. For example, Cursor normal review can be off while a Cursor adversarial lane is on:
+The visual settings UI has an **Adversarial** column in the reviewer table, including the Native row. Ticking a reviewer row writes the same `adversarialReviewers` config used by `/arewedone`. The native adversarial lane runs locally in the active harness; non-native lanes run through configured reviewer CLIs. Direct lane commands remain available for advanced cases, such as preserving a custom adversarial model while normal review is off:
 
 ```text
 /pza-settings cursor off
@@ -193,7 +193,7 @@ New writes use harness-neutral paths:
 
 `~/.pza-skills/` is machine-local user state. Never commit personal settings or model choices into this repository. Legacy Claude/Codex paths are read only as migration fallbacks where needed.
 
-`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility. It may also store `adversarialReviewers`, an array of `{id, provider, model, enabled}` lanes used by `/arewedone`. If `adversarialReviewers` is absent, `/arewedone` preserves legacy Ollama/Codex adversarial behavior; if it is an explicit empty array, no adversarial lanes run. Optional proof checks live under `checks`, for example `{ "checks": { "snyk": { "enabled": false, "severityThreshold": "high" } } }`.
+`settings.json` is the canonical reviewer-backend config. It stores `native`, `ollama`, `codex`, `opencode`, `kilo`, `cursor`, and `antigravity` enabled/model choices; top-level `codex` and `ollama` booleans remain for compatibility. Codex defaults to `gpt-5.5` when no explicit model is configured. It may also store `adversarialReviewers`, an array of `{id, provider, model, enabled}` lanes used by `/arewedone`; the settings UI now edits the common one-lane-per-reviewer case through the reviewer table's **Adversarial** column, including `provider: "native"`. If `adversarialReviewers` is absent, `/arewedone` preserves legacy Ollama/Codex adversarial behavior; if it is an explicit empty array, no adversarial lanes run. Optional proof checks live under `checks`, for example `{ "checks": { "snyk": { "enabled": false, "severityThreshold": "high" } } }`.
 
 ## Harness Adapters
 

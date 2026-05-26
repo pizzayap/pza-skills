@@ -56,13 +56,14 @@ Legacy Claude/Codex locations are read only as migration fallbacks.
   "reviewers": {
     "native": { "enabled": true, "model": "codex:gpt-5.5" },
     "ollama": { "enabled": true, "model": "kimi-k2.6:cloud" },
-    "codex": { "enabled": true, "model": "gpt-5.3-codex" },
+    "codex": { "enabled": true, "model": "gpt-5.5" },
     "opencode": { "enabled": false, "model": "" },
     "kilo": { "enabled": false, "model": "" },
     "cursor": { "enabled": false, "model": "" },
     "antigravity": { "enabled": false, "model": "" }
   },
   "adversarialReviewers": [
+    { "id": "native-adversarial", "provider": "native", "model": "codex:gpt-5.5", "enabled": true },
     { "id": "cursor-sonnet", "provider": "cursor", "model": "anthropic/claude-sonnet-4.5", "enabled": true },
     { "id": "codex-gpt55", "provider": "codex", "model": "gpt-5.5", "enabled": true }
   ],
@@ -85,12 +86,16 @@ lanes:
 - `strict`: require enabled external AI reviewer lanes; blocked, denied, or
   failed lanes keep `/arewedone` incomplete.
 
+Codex defaults to `gpt-5.5` when no explicit model is configured.
+
 `adversarialReviewers` is optional. When absent, `/arewedone` preserves legacy
 Ollama/Codex adversarial behavior from the normal reviewer settings. When it is
 present, even as an empty array, it is the explicit source of truth for
-adversarial lanes. Adversarial lanes are independent from normal reviewer
-enablement, so a user can keep normal Cursor review disabled while enabling a
-Cursor adversarial lane.
+adversarial lanes. The settings UI edits the common one-lane-per-reviewer case
+through an **Adversarial** column in the reviewer table, including `native`.
+Native adversarial review stays local to the active harness; non-native lanes
+run through configured reviewer CLIs. Direct lane commands remain available for
+advanced provider/model lane setups.
 
 `/pza-settings` may launch `node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui` as a visual
 companion. The server binds only to localhost, requires a random URL token, and
