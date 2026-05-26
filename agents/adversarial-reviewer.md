@@ -71,6 +71,12 @@ commands, authentication failures, sandbox/privacy denial, or unsupported safe
 non-interactive mode. Use `skipped` only for disabled or explicitly excluded
 lanes. Use `error` for other failures.
 
+When the runtime reports `blocked - sandbox or permission denied`, classify the
+lane as approval-gated. In Codex-style sandboxes, the parent `/arewedone` flow
+may rerun the same bounded-context command with explicit approval. Do not try
+alternate commands, broader permissions, or direct CLI invocations that bypass
+`run-reviewer`.
+
 ## Rules
 
 - Do not fix issues or apply patches.

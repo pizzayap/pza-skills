@@ -3,17 +3,18 @@ name: pza-settings
 description: >-
   Configure PZA-skills reviewer backends. Set the native reviewer model label,
   toggle Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, and
-  adversarial review lanes, configure optional proof checks, choose exact models
-  for CLI reviewers, and launch the local visual settings companion.
+  adversarial review lanes, configure second-opinion review policy, configure
+  optional proof checks, choose exact models for CLI reviewers, and launch the
+  local visual settings companion.
 user-invocable: true
-argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [snyk on|off|severity-threshold <level>] [adversarial on|off|add <provider> <model> [id]|set <id> enabled|model <value>|remove <id>]'
+argument-hint: '[--ui|--status] [second-opinion ask|native-only|strict] [native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [snyk on|off|severity-threshold <level>] [adversarial on|off|add <provider> <model> [id]|set <id> enabled|model <value>|remove <id>]'
 ---
 
 # PZA Settings
 
-Setup surface for `/arewedone` reviewer backends, adversarial lanes, and
-optional proof checks. Read current settings only when the skill is invoked. Do
-not use load-time markdown command injection.
+Setup surface for `/arewedone` reviewer backends, second-opinion policy,
+adversarial lanes, and optional proof checks. Read current settings only when
+the skill is invoked. Do not use load-time markdown command injection.
 
 Arguments: `$ARGUMENTS`
 
@@ -27,8 +28,8 @@ If a shell runner is available, gather current status with:
 node "$HOME/.pza-skills/lib/pza-runtime.js" skill-status pza-settings
 ```
 
-This reports reviewer settings, adversarial lanes, optional checks, and CLI
-availability without exposing custom reviewer command arrays. If shell execution is unavailable,
+This reports second-opinion policy, reviewer settings, adversarial lanes,
+optional checks, and CLI availability without exposing custom reviewer command arrays. If shell execution is unavailable,
 explain that settings cannot be inspected from this harness and ask the user to
 run the runtime command locally.
 
@@ -54,6 +55,9 @@ Supported direct forms:
 - `<reviewer> on`
 - `<reviewer> off`
 - `<reviewer> model <model>`
+- `second-opinion ask`
+- `second-opinion native-only`
+- `second-opinion strict`
 - `adversarial on`
 - `adversarial off`
 - `adversarial add <provider> <model> [id]`
@@ -82,6 +86,9 @@ Apply changes through the shared runtime:
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER enabled on
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER enabled off
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer REVIEWER model MODEL
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-second-opinion-mode ask
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-second-opinion-mode native-only
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-second-opinion-mode strict
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-settings adversarial on
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-settings adversarial off
 node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer PROVIDER MODEL [ID]
@@ -101,6 +108,7 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer native model codex:gpt-
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer ollama model kimi-k2.6:cloud
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer opencode enabled on
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-reviewer cursor enabled off
+node "$HOME/.pza-skills/lib/pza-runtime.js" set-second-opinion-mode ask
 node "$HOME/.pza-skills/lib/pza-runtime.js" set-check snyk enabled on
 node "$HOME/.pza-skills/lib/pza-runtime.js" add-adversarial-reviewer cursor anthropic/claude-sonnet-4.5 cursor-sonnet
 ```
@@ -109,6 +117,7 @@ After any update, display:
 
 ```bash
 node "$HOME/.pza-skills/lib/pza-runtime.js" reviewer-settings
+node "$HOME/.pza-skills/lib/pza-runtime.js" second-opinion-policy
 node "$HOME/.pza-skills/lib/pza-runtime.js" check-settings
 node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings
 ```
@@ -116,6 +125,14 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" adversarial-reviewer-settings
 ### 4. Display Status
 
 Show one reviewer table:
+
+Show the second-opinion mode before reviewer tables:
+
+| Mode | Meaning |
+|------|---------|
+| `ask` | Default Codex-safe mode. Native review always runs; external AI reviewers run only after explicit sandbox/privacy approval. |
+| `native-only` | Skip external AI reviewer lanes. Useful for locked-down Codex sessions. |
+| `strict` | Require enabled external AI reviewer lanes. Blocked, denied, or failed lanes keep `/arewedone` incomplete. |
 
 | Reviewer | Enabled | Installed | State | Model | Blocker/Notes |
 |----------|---------|-----------|-------|-------|---------------|
@@ -139,8 +156,9 @@ Show one optional proof-check table:
 | Snyk | yes/no | yes/no | ready/disabled/missing | high by default | trusted-worktree dependency scan |
 
 If a reviewer is enabled with `state=missing` or `state=blocked`, report it as a
-strict-review blocker. It must be disabled, fixed, or explicitly excluded before
-`/arewedone` can declare strict verification complete.
+strict-review blocker only when second-opinion mode is `strict`. In `ask` mode,
+it is an approval-gated or unavailable second opinion; native review can still
+complete.
 
 If Snyk is enabled but missing, report it as an optional-check blocker. Snyk is
 opt-in because it may execute package-manager code while collecting dependency
@@ -153,6 +171,7 @@ user-input tool, ask what to configure:
 
 - Set native model label.
 - Toggle reviewer CLIs.
+- Set second-opinion mode.
 - Set reviewer models.
 - Toggle adversarial review.
 - Configure adversarial lanes.

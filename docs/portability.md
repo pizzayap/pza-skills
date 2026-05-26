@@ -51,6 +51,7 @@ Legacy Claude/Codex locations are read only as migration fallbacks.
   "codex": true,
   "ollama": true,
   "adversarial": true,
+  "secondOpinionMode": "ask",
   "nativeModel": "codex:gpt-5.5",
   "reviewers": {
     "native": { "enabled": true, "model": "codex:gpt-5.5" },
@@ -74,6 +75,15 @@ Legacy Claude/Codex locations are read only as migration fallbacks.
 The top-level `codex` and `ollama` booleans remain for backward compatibility.
 `~/.pza-skills/ollama-model` is mirrored when the Ollama reviewer model is set
 through `/pza-settings`.
+
+`secondOpinionMode` controls how `/arewedone` handles external AI reviewer
+lanes:
+
+- `ask`: default Codex-safe mode. Native review runs locally; external AI
+  reviewers are approval-gated before bounded repo context is sent to a CLI.
+- `native-only`: skip external AI reviewer lanes.
+- `strict`: require enabled external AI reviewer lanes; blocked, denied, or
+  failed lanes keep `/arewedone` incomplete.
 
 `adversarialReviewers` is optional. When absent, `/arewedone` preserves legacy
 Ollama/Codex adversarial behavior from the normal reviewer settings. When it is
@@ -111,6 +121,8 @@ collection. Skills gather runtime state only when invoked:
 - `skill-status <skill>` returns reviewer/config/CLI status.
 - `collect-review-context --summary|--redacted-diff` returns bounded review
   context for `/arewedone`.
+- `second-opinion-policy` and `set-second-opinion-mode <ask|native-only|strict>`
+  expose and update external AI reviewer policy.
 - `run-reviewer <code|adversarial> <provider> <model>` runs configured
   reviewer backends through argv arrays, emits `PZA reviewer result:
   passed|blocked|failed`, and guards against worktree mutation.

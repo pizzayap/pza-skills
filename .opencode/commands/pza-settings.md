@@ -1,5 +1,5 @@
 ---
-description: Configure PZA reviewer backends, adversarial lanes, proof checks, model choices, and the visual setup companion
+description: Configure PZA reviewer backends, second-opinion mode, adversarial lanes, proof checks, model choices, and the visual setup companion
 agent: build
 ---
 

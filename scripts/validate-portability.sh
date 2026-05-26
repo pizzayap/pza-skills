@@ -16,6 +16,7 @@ node -e "
   const fs = require('fs');
   const data = JSON.parse(fs.readFileSync('/tmp/pza-runtime-defaults.json', 'utf8'));
   if (!data.settings.codex || !data.settings.ollama || !data.settings.adversarial) process.exit(1);
+  if (data.settings.secondOpinionMode !== 'ask' || data.secondOpinion.mode !== 'ask' || data.secondOpinion.approvalRequired !== true || data.secondOpinion.strict !== false) process.exit(1);
   if (data.settings.checks.snyk.enabled !== false || data.settings.checks.snyk.severityThreshold !== 'high') process.exit(1);
   if (data.checks.snyk.enabled !== false || data.checks.snyk.state !== 'disabled') process.exit(1);
   if (data.model !== 'kimi-k2.6:cloud') process.exit(1);
@@ -66,6 +67,7 @@ HOME="$tmp_home" node ./lib/pza-runtime.js set-reviewer opencode enabled off >/t
 HOME="$tmp_home" node ./lib/pza-runtime.js set-settings opencode on adversarial off >/tmp/pza-reviewer-legacy-settings.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-check snyk enabled on >/tmp/pza-check-snyk-on.json
 HOME="$tmp_home" node ./lib/pza-runtime.js set-check snyk severity-threshold critical >/tmp/pza-check-snyk-severity.json
+HOME="$tmp_home" node ./lib/pza-runtime.js set-second-opinion-mode strict >/tmp/pza-second-opinion-strict.json
 HOME="$tmp_home" node ./lib/pza-runtime.js get-model | grep -qx 'glm-5.1:cloud'
 HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-enabled opencode | grep -qx 'yes'
 HOME="$tmp_home" node ./lib/pza-runtime.js get-reviewer-model opencode | grep -qx 'openai/gpt-5.3-codex'
@@ -74,6 +76,7 @@ HOME="$tmp_home" node ./lib/pza-runtime.js check-settings >/tmp/pza-check-settin
 node -e "
   const fs = require('fs');
   const status = JSON.parse(fs.readFileSync('/tmp/pza-reviewer-settings.json', 'utf8'));
+  const secondOpinion = JSON.parse(fs.readFileSync('/tmp/pza-second-opinion-strict.json', 'utf8')).secondOpinion;
   const checks = JSON.parse(fs.readFileSync('/tmp/pza-check-settings.json', 'utf8')).checks;
   const data = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
   const byName = Object.fromEntries(status.reviewers.map((reviewer) => [reviewer.name, reviewer]));
@@ -83,11 +86,13 @@ node -e "
   if (byName.opencode.model !== 'openai/gpt-5.3-codex') process.exit(1);
   if (byName.ollama.model !== 'glm-5.1:cloud') process.exit(1);
   if (data.adversarial !== false) process.exit(1);
+  if (secondOpinion.mode !== 'strict' || secondOpinion.strict !== true || secondOpinion.approvalRequired !== false) process.exit(1);
+  if (data.secondOpinionMode !== 'strict') process.exit(1);
   if (checks.snyk.enabled !== true || checks.snyk.severityThreshold !== 'critical') process.exit(1);
   if (!['ready', 'missing'].includes(checks.snyk.state)) process.exit(1);
 " "$tmp_home/.pza-skills/settings.json"
 rm -rf "$tmp_home"
-rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json /tmp/pza-check-snyk-on.json /tmp/pza-check-snyk-severity.json /tmp/pza-check-settings.json
+rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json /tmp/pza-check-snyk-on.json /tmp/pza-check-snyk-severity.json /tmp/pza-second-opinion-strict.json /tmp/pza-check-settings.json
 
 echo "== Skill status scope =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-skill-status.XXXXXX")
@@ -99,9 +104,9 @@ node -e "
   const areyousure = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-areyousure.json', 'utf8'));
   const arewedone = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-arewedone.json', 'utf8'));
   const settings = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-settings.json', 'utf8'));
-  if ('reviewers' in areyousure || 'adversarialReviewers' in areyousure || 'planReviewers' in areyousure || 'checks' in areyousure) process.exit(1);
-  if (!Array.isArray(arewedone.reviewers) || !Array.isArray(arewedone.adversarialReviewers) || !arewedone.checks?.snyk) process.exit(1);
-  if (!Array.isArray(settings.reviewers) || !Array.isArray(settings.adversarialReviewers) || !Array.isArray(settings.planReviewers) || !settings.checks?.snyk) process.exit(1);
+  if ('reviewers' in areyousure || 'adversarialReviewers' in areyousure || 'planReviewers' in areyousure || 'checks' in areyousure || 'secondOpinion' in areyousure) process.exit(1);
+  if (!Array.isArray(arewedone.reviewers) || !Array.isArray(arewedone.adversarialReviewers) || !arewedone.checks?.snyk || arewedone.secondOpinion?.mode !== 'ask') process.exit(1);
+  if (!Array.isArray(settings.reviewers) || !Array.isArray(settings.adversarialReviewers) || !Array.isArray(settings.planReviewers) || !settings.checks?.snyk || settings.secondOpinion?.mode !== 'ask') process.exit(1);
 "
 rm -rf "$tmp_home"
 rm -f /tmp/pza-skill-status-areyousure.json /tmp/pza-skill-status-arewedone.json /tmp/pza-skill-status-settings.json
@@ -206,6 +211,8 @@ tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-settings-ui.XXXXXX")
 HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --help | grep -q 'localhost-only visual settings companion'
 HOME="$tmp_home" node ./lib/pza-runtime.js settings-ui --token fixed-token --print-html >/tmp/pza-settings-ui.html
 grep -q 'PZA Settings' /tmp/pza-settings-ui.html
+grep -q 'Second-opinion mode' /tmp/pza-settings-ui.html
+grep -q 'secondOpinionMode' /tmp/pza-settings-ui.html
 grep -q 'Adversarial lanes' /tmp/pza-settings-ui.html
 grep -q 'Proof checks' /tmp/pza-settings-ui.html
 grep -q 'severityThreshold' /tmp/pza-settings-ui.html
@@ -245,11 +252,15 @@ HOME="$tmp_home" node -e "
     if (!invalidRejected) throw new Error('invalid explicit lane id was not rejected');
 
     const saved = saveReviewerUiState({
+      secondOpinionMode: 'native-only',
       adversarialReviewers: [
         { provider: 'cursor', model: 'same', enabled: true },
         { provider: 'cursor', model: 'same', enabled: true },
       ],
     });
+    if (saved.secondOpinion.mode !== 'native-only' || saved.secondOpinion.externalReviewersEnabled !== false) {
+      throw new Error('second-opinion mode did not persist');
+    }
     const ids = saved.adversarialReviewers.map((lane) => lane.id);
     if (ids[0] !== 'cursor-same' || ids[1] !== 'cursor-same-2') {
       throw new Error('generated lane id suffixing failed: ' + ids.join(','));
@@ -482,7 +493,24 @@ session_id="pza-validate-$$"
 printf '%s' "{\"session_id\":\"$session_id\",\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"/tmp/example.txt\"}}" \
   | node hooks/scripts/track-session-files.js >/tmp/pza-hook-output.json
 node ./lib/pza-runtime.js session-files "$session_id" | grep -qx '/tmp/example.txt'
-rm -f "/tmp/pza-skills-session-$session_id-files.json" "/tmp/pza-skills-session-$session_id-reviewed.json" /tmp/pza-hook-output.json
+node ./lib/pza-runtime.js mark-reviewed arewedone "$session_id" >/tmp/pza-hook-reviewed-path.txt
+printf '%s' "{\"session_id\":\"$session_id\"}" \
+  | node hooks/scripts/review-reminder.js >/tmp/pza-hook-reminder-current.json
+node -e "
+  const fs = require('fs');
+  const reminder = JSON.parse(fs.readFileSync('/tmp/pza-hook-reminder-current.json', 'utf8'));
+  if (reminder.continue !== true || reminder.systemMessage) process.exit(1);
+"
+printf '%s' "{\"session_id\":\"$session_id\",\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"/tmp/example-after-review.txt\"}}" \
+  | node hooks/scripts/track-session-files.js >/tmp/pza-hook-output-after-review.json
+printf '%s' "{\"session_id\":\"$session_id\"}" \
+  | node hooks/scripts/review-reminder.js >/tmp/pza-hook-reminder-stale.json
+node -e "
+  const fs = require('fs');
+  const reminder = JSON.parse(fs.readFileSync('/tmp/pza-hook-reminder-stale.json', 'utf8'));
+  if (reminder.continue !== true || !/no code review was run/.test(reminder.systemMessage || '')) process.exit(1);
+"
+rm -f "/tmp/pza-skills-session-$session_id-files.json" "/tmp/pza-skills-session-$session_id-reviewed.json" /tmp/pza-hook-output.json /tmp/pza-hook-reviewed-path.txt /tmp/pza-hook-reminder-current.json /tmp/pza-hook-output-after-review.json /tmp/pza-hook-reminder-stale.json
 
 echo "== Adapter files =="
 for file in \

@@ -42,6 +42,10 @@ changes, then click **Save and Stop Server**. Terminal-only harnesses can use
 `/pza-settings --status` plus direct `/pza-settings <reviewer> ...` arguments.
 Optional Snyk checks are off by default and should be enabled only for trusted
 worktrees because the Snyk CLI may execute package-manager code while scanning.
+Second-opinion mode defaults to `ask`: native review runs locally, and external
+AI reviewer CLIs require explicit approval before bounded repo context crosses a
+sandbox or privacy boundary. Use `native-only` for locked-down sessions and
+`strict` when external reviewer lanes are mandatory.
 
 ## Codex
 
@@ -63,6 +67,7 @@ Codex translation notes:
 - Claude-style `Task(...)` means Codex subagent/collaboration tools such as `spawn_agent`; omit inline model selection unless Codex exposes it.
 - `AGENTS.md` is the primary project instruction file. `CLAUDE.md` is compatibility-only.
 - Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when bounded local context collection needs a materialized plan.
+- Codex sandboxes can block nested `codex`, `agy`, and other external reviewer CLIs because they need user-state writes, localhost binding, or provider access. In second-opinion `ask` mode, `/arewedone` should request approval for the exact `run-reviewer` command and report skipped/blocked lanes if approval is denied.
 
 ## OpenCode
 

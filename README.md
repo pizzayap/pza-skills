@@ -61,7 +61,7 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 
 ### `/arewedone`
 
-Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled), and optional adversarial security lanes, then synthesizes findings and runs proof commands. Enabled CLI reviewers are required; missing, blocked, or failed reviewer runs make the strict check incomplete. External reviewers receive context through `collect-review-context`, which redacts likely secrets and caps total/per-file bytes. Optional Snyk dependency scanning is separate from AI review and runs only when configured or explicitly requested.
+Multi-reviewer completeness check. Launches structural completeness, code quality, configured CLI-backed reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where enabled), and optional adversarial security lanes, then synthesizes findings and runs proof commands. External AI reviewers are governed by the second-opinion mode: `ask` approval-gates them for Codex-style sandboxes, `native-only` skips them, and `strict` requires them. External reviewers receive context through `collect-review-context`, which redacts likely secrets and caps total/per-file bytes. Optional Snyk dependency scanning is separate from AI review and runs only when configured or explicitly requested.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
@@ -69,9 +69,9 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 ### `/pza-settings`
 
-Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, add multiple adversarial review lanes with independent providers and models, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
+Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, choose second-opinion mode, toggle CLI reviewers, choose exact model names, add multiple adversarial review lanes with independent providers and models, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
-**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
+**Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings second-opinion ask`, `/pza-settings second-opinion strict`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
 
 The visual companion can also be run directly after installing the runtime:
 
@@ -80,6 +80,14 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" settings-ui
 ```
 
 Supported reviewer backends:
+
+Second-opinion modes:
+
+| Mode | Meaning |
+|---|---|
+| `ask` | Default. Native review runs locally; external AI reviewer lanes require explicit approval before repo context leaves a sandbox. |
+| `native-only` | Skip external AI reviewer lanes and run only native/local review plus proof commands. |
+| `strict` | Require enabled external AI reviewer lanes; blocked, denied, or failed lanes keep `/arewedone` incomplete. |
 
 | Reviewer | CLI | State meaning |
 |---|---|---|
@@ -148,6 +156,7 @@ Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 - `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
 - `collect-plan-context <plan-file|-> <source>` — bounded local plan context for `/areyousure`.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
+- `second-opinion-policy` / `set-second-opinion-mode <ask|native-only|strict>` — controls approval-gated external AI reviewer behavior.
 - `run-reviewer <code|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard and `PZA reviewer result: passed|blocked|failed` status output.
 - `run-check snyk` — optional trusted-worktree dependency scan with `PZA check result: passed|blocked|failed|skipped` status output.
 - `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.

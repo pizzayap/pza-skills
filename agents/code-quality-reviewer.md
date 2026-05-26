@@ -90,6 +90,12 @@ Return a concise backend report with verdict, findings, and any
 Report blocked, failed, skipped, and authentication states distinctly. A blocked
 enabled backend means strict review is incomplete, not clean.
 
+If the runtime reports `blocked - sandbox or permission denied`, classify the
+backend as approval-gated. In Codex-style sandboxes, the parent `/arewedone`
+flow may rerun the same bounded-context command with explicit approval. Do not
+try alternate commands, broader permissions, or direct CLI invocations that
+bypass `run-reviewer`.
+
 ## Native Mode
 
 Your review scope is strictly limited to four quality dimensions. You explicitly DO NOT review:

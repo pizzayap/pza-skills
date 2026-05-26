@@ -44,14 +44,24 @@ const hasFiles =
 
 function currentDiffHash() {
   const hash = crypto.createHash("sha256");
+  for (const args of [["diff"], ["diff", "--cached"]]) {
+    try {
+      hash.update(`git ${args.join(" ")}\0`);
+      hash.update(execFileSync("git", args, { timeout: 3000 }));
+    } catch {}
+  }
   try {
-    hash.update(execFileSync("git", ["diff"], { encoding: "utf8", timeout: 3000 }));
-  } catch {}
-  try {
-    hash.update(execFileSync("git", ["diff", "--cached"], { encoding: "utf8", timeout: 3000 }));
-  } catch {}
-  try {
-    hash.update(execFileSync("git", ["ls-files", "--others", "--exclude-standard"], { encoding: "utf8", timeout: 3000 }));
+    const output = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], { timeout: 3000 });
+    const files = output.toString("utf8").split("\0").filter(Boolean).sort();
+    for (const file of files) {
+      hash.update(`untracked\0${file}\0`);
+      try {
+        const stat = fs.statSync(file);
+        if (stat.isFile()) hash.update(fs.readFileSync(file));
+      } catch (error) {
+        hash.update(`unreadable\0${error.code || error.message}\0`);
+      }
+    }
   } catch {}
   return hash.digest("hex");
 }
