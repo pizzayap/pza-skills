@@ -80,7 +80,7 @@ Every backend review is review-only. Do not pass approval-skipping
 flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or
 equivalent. Backend review execution must go through `run-reviewer`, which
 compares `diff-hash` before and after each run. If the hash changes, report
-that the reviewer modified the worktree and stop for user direction.
+the emitted `PZA worktree-change details` and stop for user direction.
 
 In sandboxed harnesses such as Codex, external AI reviewer lanes may fail with
 `PZA reviewer result: blocked - sandbox or permission denied` because the CLI

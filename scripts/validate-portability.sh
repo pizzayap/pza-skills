@@ -392,6 +392,31 @@ grep -q 'PZA reviewer result: passed' /tmp/pza-reviewer-forward.err
 rm -rf "$tmp_home" "$tmp_bin"
 rm -f "$prompt_file" "$marker" /tmp/pza-reviewer-forward.out /tmp/pza-reviewer-forward.err
 
+echo "== Reviewer worktree-change diagnostics =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-change.XXXXXX")
+tmp_bin=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-change-bin.XXXXXX")
+changed_file="pza-reviewer-changed-$$.txt"
+prompt_file="/tmp/pza-reviewer-change-prompt-$$.txt"
+cat > "$tmp_bin/codex" <<'SH'
+#!/usr/bin/env sh
+cat >/dev/null
+printf '%s\n' 'changed during review' > "$PZA_TEST_CHANGED_FILE"
+printf '%s\n' 'review output'
+exit 0
+SH
+chmod 755 "$tmp_bin/codex"
+printf '%s\n' 'Review this diff.' > "$prompt_file"
+set +e
+PATH="$tmp_bin:/bin:/usr/bin" HOME="$tmp_home" PZA_TEST_CHANGED_FILE="$changed_file" "$node_bin" ./lib/pza-runtime.js run-reviewer code codex "" < "$prompt_file" >/tmp/pza-reviewer-change.out 2>/tmp/pza-reviewer-change.err
+review_status=$?
+set -e
+test "$review_status" -eq 3
+grep -q 'PZA worktree-change details:' /tmp/pza-reviewer-change.err
+grep -q "$changed_file" /tmp/pza-reviewer-change.err
+grep -q 'PZA reviewer result: failed - worktree changed during review' /tmp/pza-reviewer-change.err
+rm -rf "$tmp_home" "$tmp_bin"
+rm -f "$changed_file" "$prompt_file" /tmp/pza-reviewer-change.out /tmp/pza-reviewer-change.err
+
 echo "== Diff hash untracked content =="
 tmp_untracked="pza-diff-hash-untracked-$$.txt"
 printf '%s\n' 'one' > "$tmp_untracked"

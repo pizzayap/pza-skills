@@ -89,6 +89,24 @@ Second-opinion modes:
 | `native-only` | Skip external AI reviewer lanes and run only native/local review plus proof commands. |
 | `strict` | Require enabled external AI reviewer lanes; blocked, denied, or failed lanes keep `/arewedone` incomplete. |
 
+External reviewer blocking has two layers. `ask`, `native-only`, and `strict`
+control PZA's review policy; they do not grant OS, harness, provider, or CLI
+authentication permissions. If reviewers still report blocked after choosing
+`strict` or enabling full-access permissions, inspect the exact runtime line:
+
+```text
+PZA reviewer result: blocked - <reason>
+```
+
+Common reasons are `sandbox or permission denied` for harness/provider
+restrictions, `not authenticated` for CLI login issues, and Antigravity safe-mode
+support failures when `agy --help` does not confirm the required non-interactive
+mode.
+
+For `worktree changed during review` failures, the runtime prints
+`PZA worktree-change details` with tracked, staged, and untracked paths that
+changed while the reviewer was running.
+
 | Reviewer | CLI | State meaning |
 |---|---|---|
 | Native | active harness | `ready` when enabled |
@@ -157,7 +175,7 @@ Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 - `collect-plan-context <plan-file|-> <source>` — bounded local plan context for `/areyousure`.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
 - `second-opinion-policy` / `set-second-opinion-mode <ask|native-only|strict>` — controls approval-gated external AI reviewer behavior.
-- `run-reviewer <code|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard and `PZA reviewer result: passed|blocked|failed` status output.
+- `run-reviewer <code|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard, automatic worktree-change diagnostics, and `PZA reviewer result: passed|blocked|failed` status output.
 - `run-check snyk` — optional trusted-worktree dependency scan with `PZA check result: passed|blocked|failed|skipped` status output.
 - `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.
 
