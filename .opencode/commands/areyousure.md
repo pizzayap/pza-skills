@@ -1,5 +1,5 @@
 ---
-description: Verify the current implementation plan with native and CLI-backed reviewers
+description: Verify the current implementation plan against local repo evidence
 agent: plan
 ---
 

@@ -33,7 +33,6 @@ New writes use:
 - `~/.pza-skills/lib/pza-runtime.js`
 - `~/.pza-skills/settings.json`
 - `~/.pza-skills/ollama-model`
-- `~/.pza-skills/plan-reviewers.json`
 - `/tmp/pza-skills-session-<id>-files.json`
 - `/tmp/pza-skills-session-<id>-reviewed.json`
 
@@ -86,31 +85,15 @@ writes the same `~/.pza-skills/` files as the terminal commands. If a harness
 cannot run or expose a local server, use `/pza-settings --status` and direct
 CLI arguments instead.
 
-## Plan Reviewers
+## Plan Verification
 
 `/areyousure` can verify file-backed plans or conversation-backed plans. When a
 plan only exists in chat, the workflow treats the conversation as the source of
-truth and only materializes temporary `/tmp` files for CLI reviewers.
-
-Custom plan reviewers are configured locally in
-`~/.pza-skills/plan-reviewers.json`:
-
-```json
-{
-  "reviewers": [
-    {
-      "name": "my-reviewer",
-      "command": ["my-reviewer-cli", "review-plan", "--stdin"],
-      "enabled": true
-    }
-  ]
-}
-```
-
-Runtime helpers execute custom reviewer commands as argv arrays and pass the
-review prompt on stdin. Adapters must not turn these commands into shell strings.
-The `plan-reviewers` status command redacts command arrays and exposes only
-non-sensitive metadata for skill context.
+truth and only materializes temporary `/tmp` files when needed for bounded local
+context collection. The public workflow is local-only: it verifies paths,
+imports, manifests, lockfiles, and checked-in guidance, and reports remote
+documentation freshness claims as unverifiable when local evidence cannot prove
+them.
 
 ## Context Handling
 
@@ -120,15 +103,11 @@ collection. Skills gather runtime state only when invoked:
 - `skill-status <skill>` returns reviewer/config/CLI status.
 - `collect-review-context --summary|--redacted-diff` returns bounded review
   context for `/arewedone`.
-- `run-reviewer <code|plan|adversarial> <provider> <model>` runs configured
+- `run-reviewer <code|adversarial> <provider> <model>` runs configured
   reviewer backends through argv arrays, emits `PZA reviewer result:
   passed|blocked|failed`, and guards against worktree mutation.
-- `run-plan-reviewer <name>` runs custom plan reviewers through configured argv
-  arrays and emits `PZA reviewer result: passed|blocked|failed`.
 - `collect-plan-context <plan-file|-> <source>` returns bounded plan context for
   `/areyousure`.
-- `plan-review-prompt` uses the same redaction and plan-size cap before
-  forwarding content to CLI verifiers.
 - `redact-context` is the shared stdin/stdout redaction helper.
 
 Adapters should call these helpers rather than duplicating diff assembly,

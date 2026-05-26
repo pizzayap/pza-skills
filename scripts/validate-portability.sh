@@ -81,6 +81,23 @@ node -e "
 rm -rf "$tmp_home"
 rm -f /tmp/pza-reviewer-native.json /tmp/pza-reviewer-opencode-on.json /tmp/pza-reviewer-opencode-model.json /tmp/pza-reviewer-ollama-model.json /tmp/pza-reviewer-opencode-off.json /tmp/pza-reviewer-legacy-settings.json /tmp/pza-reviewer-settings.json
 
+echo "== Skill status scope =="
+tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-skill-status.XXXXXX")
+HOME="$tmp_home" node ./lib/pza-runtime.js skill-status areyousure >/tmp/pza-skill-status-areyousure.json
+HOME="$tmp_home" node ./lib/pza-runtime.js skill-status arewedone >/tmp/pza-skill-status-arewedone.json
+HOME="$tmp_home" node ./lib/pza-runtime.js skill-status pza-settings >/tmp/pza-skill-status-settings.json
+node -e "
+  const fs = require('fs');
+  const areyousure = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-areyousure.json', 'utf8'));
+  const arewedone = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-arewedone.json', 'utf8'));
+  const settings = JSON.parse(fs.readFileSync('/tmp/pza-skill-status-settings.json', 'utf8'));
+  if ('reviewers' in areyousure || 'adversarialReviewers' in areyousure || 'planReviewers' in areyousure) process.exit(1);
+  if (!Array.isArray(arewedone.reviewers) || !Array.isArray(arewedone.adversarialReviewers)) process.exit(1);
+  if (!Array.isArray(settings.reviewers) || !Array.isArray(settings.adversarialReviewers) || !Array.isArray(settings.planReviewers)) process.exit(1);
+"
+rm -rf "$tmp_home"
+rm -f /tmp/pza-skill-status-areyousure.json /tmp/pza-skill-status-arewedone.json /tmp/pza-skill-status-settings.json
+
 echo "== Reviewer preflight states =="
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-preflight.XXXXXX")
 tmp_bin=$(mktemp -d "${TMPDIR:-/tmp}/pza-reviewer-bin.XXXXXX")

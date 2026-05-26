@@ -60,7 +60,7 @@ Codex translation notes:
 - Claude-style `AskUserQuestion` means Codex `request_user_input` when available, or a concise direct question when it is not.
 - Claude-style `Task(...)` means Codex subagent/collaboration tools such as `spawn_agent`; omit inline model selection unless Codex exposes it.
 - `AGENTS.md` is the primary project instruction file. `CLAUDE.md` is compatibility-only.
-- Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when invoking CLI reviewers.
+- Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when bounded local context collection needs a materialized plan.
 
 ## OpenCode
 

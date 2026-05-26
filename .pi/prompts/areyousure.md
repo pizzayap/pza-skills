@@ -1,6 +1,6 @@
 ---
-description: Verify the current implementation plan
-argument-hint: "[--native-only|--ollama-only|--codex-only|--cli-only|--no-cli|--custom-only]"
+description: Verify the current implementation plan against local repo evidence
+argument-hint: "[--report-only]"
 ---
 
 Load and execute `/skill:areyousure` with arguments: $ARGUMENTS

@@ -11,8 +11,9 @@ argument-hint: '[--ui|--status] [native|ollama|codex|opencode|kilo|cursor|antigr
 
 # PZA Settings
 
-Setup surface for `/areyousure` and `/arewedone`. Read current settings only
-when the skill is invoked. Do not use load-time markdown command injection.
+Setup surface for `/arewedone` reviewer backends and adversarial lanes. Read
+current settings only when the skill is invoked. Do not use load-time markdown
+command injection.
 
 Arguments: `$ARGUMENTS`
 
@@ -111,7 +112,7 @@ Show one reviewer table:
 | Reviewer | Enabled | Installed | State | Model | Blocker/Notes |
 |----------|---------|-----------|-------|-------|---------------|
 | Native | yes/no | yes | ready/disabled | configured label | active harness model label |
-| Ollama | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/areyousure` and `/arewedone` |
+| Ollama | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/arewedone` |
 | Codex | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Codex CLI reviewer |
 | OpenCode | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | OpenCode CLI reviewer |
 | Kilo Code | yes/no | yes/no | ready/disabled/missing/blocked | configured model or default | Kilo CLI reviewer |
@@ -125,7 +126,7 @@ Show one adversarial lane table:
 
 If a reviewer is enabled with `state=missing` or `state=blocked`, report it as a
 strict-review blocker. It must be disabled, fixed, or explicitly excluded before
-`/areyousure` or `/arewedone` can declare strict verification complete.
+`/arewedone` can declare strict verification complete.
 
 ### 5. Terminal Interactive Fallback
 

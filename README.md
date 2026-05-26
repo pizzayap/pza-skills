@@ -42,7 +42,7 @@ npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
 ```
 
-Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, and configure adversarial provider/model lanes.
+Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, and configure `/arewedone` adversarial provider/model lanes.
 
 Recommended first run after installation:
 
@@ -69,7 +69,7 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 ### `/pza-settings`
 
-Configures reviewer backends for `/areyousure` and `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and add multiple adversarial review lanes with independent providers and models. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
+Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, toggle CLI reviewers, choose exact model names, and add multiple adversarial review lanes with independent providers and models. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
 **Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings native model codex:gpt-5.5`, `/pza-settings ollama model kimi-k2.6:cloud`, `/pza-settings opencode on`, `/pza-settings opencode model openai/gpt-5.3-codex`, `/pza-settings adversarial off`, `/pza-settings adversarial add cursor anthropic/claude-sonnet-4.5 cursor-sonnet`
 
@@ -127,32 +127,15 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 ### `/areyousure`
 
-Multi-engine plan verification. Verifies either a plan file or the latest conversation-backed plan, then launches native, enabled CLI-backed verifiers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity), and configured custom CLI verifiers to re-check the plan against the codebase and current stable APIs. Enabled CLI verifiers are required; missing, blocked, or failed reviewer runs make the strict check incomplete. CLI plan prompts are produced by `plan-review-prompt`, which redacts likely secrets and caps forwarded plan content.
+Local plan verification. Verifies either a plan file or the latest conversation-backed plan against repository files, checked-in guidance, manifests, lockfiles, and safe read-only local commands. Claims that local evidence cannot prove are reported as unverifiable.
 
-**Flags:** `--native-only`, `--ollama-only`, `--codex-only`, `--opencode-only`, `--kilo-only`, `--cursor-only`, `--antigravity-only`, `--cli-only`, `--no-cli`, `--custom-only`; `--claude-only` remains a deprecated alias for `--native-only`.
-
-**Custom plan reviewers:** add local-only reviewers to `~/.pza-skills/plan-reviewers.json`:
-
-```json
-{
-  "reviewers": [
-    {
-      "name": "my-reviewer",
-      "command": ["my-reviewer-cli", "review-plan", "--stdin"],
-      "enabled": true
-    }
-  ]
-}
-```
-
-Custom reviewer commands receive the generated plan-review prompt on stdin and should return markdown/prose with Critical, Warning, Info, and Verified Correct sections.
-The runtime keeps command arrays private; skill context only shows reviewer names and enabled status.
+**Flags:** `--report-only`
 
 ## Agents
 
 - `structural-completeness-reviewer` — codebase hygiene, dead code, integration completeness, dependency/config completeness.
 - `code-quality-reviewer` — correctness, security, architecture, and performance review; also forwards bounded context to configured reviewer backends in backend mode.
-- `plan-verifier` — verifies plans against local code/current docs; also forwards bounded plan context to configured reviewer backends in backend mode.
+- `plan-verifier` — verifies plans against local code, project guidance, manifests, and lockfiles.
 - `adversarial-reviewer` — runs configured security-focused adversarial lanes with bounded, redacted review context.
 
 ## Runtime Helpers
@@ -161,10 +144,9 @@ Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 
 - `skill-status <skill>` — invocation-time reviewer/config/CLI status without exposing custom command arrays.
 - `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
-- `collect-plan-context <plan-file|-> <source>` — bounded plan context for `/areyousure`.
+- `collect-plan-context <plan-file|-> <source>` — bounded local plan context for `/areyousure`.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
-- `run-reviewer <code|plan|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard and `PZA reviewer result: passed|blocked|failed` status output.
-- `run-plan-reviewer <name>` — argv-array custom plan reviewer runner with the same `PZA reviewer result: passed|blocked|failed` status output.
+- `run-reviewer <code|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard and `PZA reviewer result: passed|blocked|failed` status output.
 - `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.
 
 Skill markdown does not use load-time command injection for context collection.
@@ -176,7 +158,6 @@ New writes use harness-neutral paths:
 - `~/.pza-skills/lib/pza-runtime.js`
 - `~/.pza-skills/settings.json`
 - `~/.pza-skills/ollama-model`
-- `~/.pza-skills/plan-reviewers.json`
 - `/tmp/pza-skills-session-<id>-files.json`
 - `/tmp/pza-skills-session-<id>-reviewed.json`
 
@@ -203,7 +184,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/agent-docs-audit` | — | — |
 | `/agent-docs-revise` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
-| `/areyousure` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, custom CLI reviewers, Exa MCP |
+| `/areyousure` | — | — |
 
 Skills gracefully degrade when optional dependencies are missing.
 
