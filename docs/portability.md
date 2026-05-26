@@ -77,14 +77,14 @@ The top-level `codex` and `ollama` booleans remain for backward compatibility.
 `~/.pza-skills/ollama-model` is mirrored when the Ollama reviewer model is set
 through `/pza-settings`.
 
-`secondOpinionMode` controls how `/arewedone` handles external AI reviewer
-lanes:
+`secondOpinionMode` controls how `/arewedone` and `/areyousure` handle external
+AI reviewer lanes:
 
 - `ask`: default Codex-safe mode. Native review runs locally; external AI
   reviewers are approval-gated before bounded repo context is sent to a CLI.
 - `native-only`: skip external AI reviewer lanes.
 - `strict`: require enabled external AI reviewer lanes; blocked, denied, or
-  failed lanes keep `/arewedone` incomplete.
+  failed lanes keep `/arewedone` or `/areyousure` incomplete.
 
 Reviewer models default to blank/unset instead of a PZA-selected model. For
 CLIs that have their own default model, blank means use that provider default;
@@ -115,10 +115,26 @@ dependency data.
 `/areyousure` can verify file-backed plans or conversation-backed plans. When a
 plan only exists in chat, the workflow treats the conversation as the source of
 truth and only materializes temporary `/tmp` files when needed for bounded local
-context collection. The public workflow is local-only: it verifies paths,
-imports, manifests, lockfiles, and checked-in guidance, and reports remote
-documentation freshness claims as unverifiable when local evidence cannot prove
-them.
+context collection. Native verification checks paths, imports, manifests,
+lockfiles, and checked-in guidance, and reports remote documentation freshness
+claims as unverifiable when local evidence cannot prove them.
+
+After native verification, `/areyousure` can run configured non-native reviewer
+backends from `/pza-settings` as plan-review second opinions through
+`run-reviewer plan <provider> <model>`, subject to second-opinion policy.
+`native-only` skips those lanes, `ask` requires explicit sandbox/privacy
+approval, and `strict` requires enabled external plan lanes to pass. Native plan
+verification still runs inside the active harness through `plan-verifier`, or
+through equivalent direct read-only checks when subagents are unavailable. It
+must not call `run-reviewer plan native`; that runtime path is blocked by
+design. Optional custom external plan reviewers use `plan-review-prompt` plus
+`run-plan-reviewer <name>`.
+
+For provider CLIs without stdin-safe prompt transport, `run-reviewer` may pass
+bounded, redacted context as a prompt argument. This avoids shell interpolation
+because runtime execution uses argv arrays, but it can still expose that
+redacted context to same-machine process-list observers. Use non-native reviewer
+lanes only on trusted machines.
 
 ## Context Handling
 
@@ -130,9 +146,11 @@ collection. Skills gather runtime state only when invoked:
   context for `/arewedone`.
 - `second-opinion-policy` and `set-second-opinion-mode <ask|native-only|strict>`
   expose and update external AI reviewer policy.
-- `run-reviewer <code|adversarial> <provider> <model>` runs configured
+- `run-reviewer <code|plan|adversarial> <provider> <model>` runs configured
   reviewer backends through argv arrays, emits `PZA reviewer result:
   passed|blocked|failed`, and guards against worktree mutation.
+- `run-plan-reviewer <name>` runs optional custom external plan reviewers.
+  Native `/areyousure` verification does not use `run-reviewer plan native`.
 - `run-check snyk` runs the optional trusted-worktree dependency check and emits
   `PZA check result: passed|blocked|failed|skipped`.
 - `collect-plan-context <plan-file|-> <source>` returns bounded plan context for

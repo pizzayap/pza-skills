@@ -1,20 +1,21 @@
 ---
 name: pza-settings
 description: >-
-  Configure PZA-skills reviewer backends. Set the native reviewer model label,
-  toggle Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, and
-  per-reviewer adversarial review, configure second-opinion review policy, configure
-  optional proof checks, choose exact models for CLI reviewers, and launch the
-  local visual settings companion.
+  Configure PZA-skills reviewer backends for code review and plan verification.
+  Set the native reviewer model label, toggle Ollama, Codex, OpenCode, Kilo
+  Code, Cursor Agent, Antigravity, and per-reviewer adversarial review,
+  configure second-opinion review policy, configure optional proof checks,
+  choose exact models for CLI reviewers, and launch the local visual settings
+  companion.
 user-invocable: true
 argument-hint: '[--ui|--status] [second-opinion ask|native-only|strict] [native|ollama|codex|opencode|kilo|cursor|antigravity model <model>] [ollama|codex|opencode|kilo|cursor|antigravity on|off] [snyk on|off|severity-threshold <level>] [adversarial on|off|add <provider> <model> [id]|set <id> enabled|model <value>|remove <id>]'
 ---
 
 # PZA Settings
 
-Setup surface for `/arewedone` reviewer backends, second-opinion policy,
-per-reviewer adversarial toggles, advanced adversarial lanes, and optional proof
-checks. Read current settings only when the skill is invoked. Do not use
+Setup surface for reviewer backends used by `/arewedone` and `/areyousure`,
+second-opinion policy, per-reviewer adversarial toggles, advanced adversarial
+lanes, and optional proof checks. Read current settings only when the skill is invoked. Do not use
 load-time markdown command injection.
 
 Arguments: `$ARGUMENTS`
@@ -134,17 +135,17 @@ Show the second-opinion mode before reviewer tables:
 |------|---------|
 | `ask` | Default Codex-safe mode. Native review always runs; external AI reviewers run only after explicit sandbox/privacy approval. |
 | `native-only` | Skip external AI reviewer lanes. Useful for locked-down Codex sessions. |
-| `strict` | Require enabled external AI reviewer lanes. Blocked, denied, or failed lanes keep `/arewedone` incomplete. |
+| `strict` | Require enabled external AI reviewer lanes. Blocked, denied, or failed lanes keep `/arewedone` or `/areyousure` incomplete. |
 
 | Reviewer | Enabled | Adversarial | Installed | State | Model | Blocker/Notes |
 |----------|---------|-------------|-----------|-------|-------|---------------|
 | Native | yes/no | yes/no | yes | ready/disabled | configured label or blank/default | local active-harness adversarial lane |
-| Ollama | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/arewedone` |
-| Codex | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | Codex CLI reviewer |
-| OpenCode | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | OpenCode CLI reviewer |
-| Kilo Code | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | Kilo CLI reviewer |
-| Cursor Agent | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | Cursor CLI reviewer |
-| Antigravity | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | only when safe non-interactive mode exists |
+| Ollama | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model | `/arewedone` and `/areyousure` plan reviews |
+| Codex | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | `/arewedone` and `/areyousure` plan reviews |
+| OpenCode | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | `/arewedone` and `/areyousure` plan reviews |
+| Kilo Code | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | `/arewedone` and `/areyousure` plan reviews |
+| Cursor Agent | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | `/arewedone` and `/areyousure` plan reviews |
+| Antigravity | yes/no | yes/no | yes/no | ready/disabled/missing/blocked | configured model or blank/default | `/arewedone` and `/areyousure` plan reviews; only when safe non-interactive mode exists |
 
 Show one adversarial lane table only for terminal/status output or advanced custom lanes:
 

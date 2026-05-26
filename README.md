@@ -83,7 +83,7 @@ Multi-reviewer completeness check. Launches structural completeness, code qualit
 
 ### `/pza-settings`
 
-Configures reviewer backends for `/arewedone`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, choose second-opinion mode, toggle CLI reviewers, choose exact model names, tick which reviewers also run adversarial security review, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
+Configures reviewer backends for `/arewedone` and `/areyousure`. With no arguments it launches a tokenized localhost settings UI. Use it to set the native harness/model label, choose second-opinion mode, toggle CLI reviewers, choose exact model names, tick which reviewers also run adversarial security review, and enable optional proof checks. Settings are saved to `~/.pza-skills/settings.json`; the Ollama model is also mirrored to `~/.pza-skills/ollama-model` for compatibility.
 
 **Usage:** `/pza-settings`, `/pza-settings --status`, `/pza-settings second-opinion ask`, `/pza-settings second-opinion strict`, `/pza-settings native model <harness:model>`, `/pza-settings codex model <model>`, `/pza-settings ollama model <model>`, `/pza-settings opencode on`, `/pza-settings opencode model <provider/model>`, `/pza-settings snyk on`, `/pza-settings snyk severity-threshold high`, `/pza-settings adversarial off`, `/pza-settings adversarial add <provider> <model> <lane-id>`
 
@@ -101,7 +101,7 @@ Second-opinion modes:
 |---|---|
 | `ask` | Default. Native review runs locally; external AI reviewer lanes require explicit approval before repo context leaves a sandbox. |
 | `native-only` | Skip external AI reviewer lanes and run only native/local review plus proof commands. |
-| `strict` | Require enabled external AI reviewer lanes; blocked, denied, or failed lanes keep `/arewedone` incomplete. |
+| `strict` | Require enabled external AI reviewer lanes; blocked, denied, or failed lanes keep strict review or plan verification incomplete. |
 
 External reviewer blocking has two layers. `ask`, `native-only`, and `strict`
 control PZA's review policy; they do not grant OS, harness, provider, or CLI
@@ -169,7 +169,7 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 ### `/areyousure`
 
-Local plan verification. Verifies either a plan file or the latest conversation-backed plan against repository files, checked-in guidance, manifests, lockfiles, and safe read-only local commands. Claims that local evidence cannot prove are reported as unverifiable.
+Native plus external plan verification. Verifies either a plan file or the latest conversation-backed plan against repository files, checked-in guidance, manifests, lockfiles, and safe read-only local commands. Native verification runs in the active harness through `plan-verifier` or equivalent direct read-only checks; configured non-native `/pza-settings` reviewers then run as plan-review second opinions through `run-reviewer plan`. Claims that local evidence cannot prove are reported as unverifiable.
 
 **Flags:** `--report-only`
 
@@ -185,11 +185,15 @@ Local plan verification. Verifies either a plan file or the latest conversation-
 Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 
 - `skill-status <skill>` — invocation-time reviewer/config/CLI status without exposing custom command arrays.
+- `reviewer-settings` — configured reviewer backend table used by `/arewedone`, `/areyousure`, and `/pza-settings`.
+- `plan-reviewers` — sanitized status for optional custom external plan reviewers without exposing command arrays.
 - `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
 - `collect-plan-context <plan-file|-> <source>` — bounded local plan context for `/areyousure`.
+- `plan-review-prompt <plan-file|-> <source>` — bounded, redacted external plan-review prompt builder.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
 - `second-opinion-policy` / `set-second-opinion-mode <ask|native-only|strict>` — controls approval-gated external AI reviewer behavior.
-- `run-reviewer <code|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard, automatic worktree-change diagnostics, and `PZA reviewer result: passed|blocked|failed` status output.
+- `run-reviewer <code|plan|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard, automatic worktree-change diagnostics, and `PZA reviewer result: passed|blocked|failed` status output.
+- `run-plan-reviewer <name>` — optional custom external plan-reviewer runner; native `/areyousure` still does not use `run-reviewer plan native`.
 - `run-check snyk` — optional trusted-worktree dependency scan with `PZA check result: passed|blocked|failed|skipped` status output.
 - `validate-hook-proposal` — JSON hook proposal validation for `/hook-worthy`.
 

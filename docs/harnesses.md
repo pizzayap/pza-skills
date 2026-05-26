@@ -72,7 +72,8 @@ Codex translation notes:
 - Claude-style `Task(...)` means Codex subagent/collaboration tools such as `spawn_agent`; omit inline model selection unless Codex exposes it.
 - `AGENTS.md` is the primary project instruction file. `CLAUDE.md` is compatibility-only.
 - Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when bounded local context collection needs a materialized plan.
-- Codex sandboxes can block nested `codex`, `agy`, and other external reviewer CLIs because they need user-state writes, localhost binding, or provider access. In second-opinion `ask` mode, `/arewedone` should request approval for the exact `run-reviewer` command and report skipped/blocked lanes if approval is denied.
+- Codex sandboxes can block nested `codex`, `agy`, and other external reviewer CLIs because they need user-state writes, localhost binding, or provider access. In second-opinion `ask` mode, `/arewedone` and `/areyousure` should request approval for the exact `run-reviewer` command and report skipped/blocked lanes if approval is denied.
+- Some reviewer CLIs do not expose a stdin-safe prompt transport. For those providers, PZA forwards only bounded, redacted context, but the local CLI process may still receive that context as a prompt argument visible to same-machine process-list observers. Treat non-native reviewer lanes as trusted-machine operations.
 - `strict` removes PZA's approval gate, but it does not override Codex or provider restrictions. If a full-access session still blocks a lane, use the exact `PZA reviewer result: blocked - <reason>` suffix to distinguish sandbox denial, missing authentication, and unsupported CLI safe mode.
 - If a reviewer reports `worktree changed during review`, the runtime should also print `PZA worktree-change details` so the user does not need to manually run git status commands to identify changed paths.
 

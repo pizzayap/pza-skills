@@ -458,6 +458,7 @@ rm -f "$tmp_untracked"
 test "$hash_one" != "$hash_two"
 
 echo "== Plan reviewer runtime =="
+(
 tmp_home=$(mktemp -d "${TMPDIR:-/tmp}/pza-plan-reviewers.XXXXXX")
 mkdir -p "$tmp_home/.pza-skills"
 cat > "$tmp_home/.pza-skills/plan-reviewers.json" <<'JSON'
@@ -480,11 +481,17 @@ cat > "$tmp_home/.pza-skills/plan-reviewers.json" <<'JSON'
   ]
 }
 JSON
-plan_file="/tmp/pza-plan-validate-$$.md"
-prompt_file="/tmp/pza-plan-prompt-$$.md"
-review_out="/tmp/pza-plan-review-$$.out"
-review_err="/tmp/pza-plan-review-$$.err"
-reviewers_json="/tmp/pza-plan-reviewers-$$.json"
+plan_file=$(mktemp "${TMPDIR:-/tmp}/pza-plan-validate.XXXXXX")
+prompt_file=$(mktemp "${TMPDIR:-/tmp}/pza-plan-prompt.XXXXXX")
+review_out=$(mktemp "${TMPDIR:-/tmp}/pza-plan-review-out.XXXXXX")
+review_err=$(mktemp "${TMPDIR:-/tmp}/pza-plan-review-err.XXXXXX")
+reviewers_json=$(mktemp "${TMPDIR:-/tmp}/pza-plan-reviewers.XXXXXX")
+tmp_bin=$(mktemp -d "${TMPDIR:-/tmp}/pza-plan-reviewer-bin.XXXXXX")
+cleanup_plan_review_runtime() {
+  rm -rf "$tmp_home" "$tmp_bin"
+  rm -f "$plan_file" "$prompt_file" "$review_out" "$review_err" "$reviewers_json"
+}
+trap cleanup_plan_review_runtime EXIT
 printf '%s\n' '# Plan' '' '- Do the safe thing' > "$plan_file"
 HOME="$tmp_home" node ./lib/pza-runtime.js plan-reviewers > "$reviewers_json"
 node -e "
@@ -505,8 +512,65 @@ grep -q '\[REDACTED_SECRET\]' "$prompt_file"
 HOME="$tmp_home" node ./lib/pza-runtime.js run-plan-reviewer fake < "$prompt_file" > "$review_out" 2>"$review_err"
 grep -q 'fake reviewer ran' "$review_out"
 grep -q 'PZA reviewer result: passed' "$review_err"
-rm -rf "$tmp_home"
-rm -f "$plan_file" "$prompt_file" "$review_out" "$review_err" "$reviewers_json"
+cat > "$tmp_bin/codex" <<'SH'
+#!/bin/sh
+test "$1" = "exec" || exit 2
+test "$2" = "-" || exit 2
+grep -q "Plan content:" || {
+  echo "missing plan content" >&2
+  exit 2
+}
+echo "fake codex plan reviewer ran"
+SH
+chmod 755 "$tmp_bin/codex"
+PATH="$tmp_bin:$PATH" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-reviewer plan codex "" < "$prompt_file" > "$review_out" 2>"$review_err"
+grep -q 'fake codex plan reviewer ran' "$review_out"
+grep -q 'PZA reviewer result: passed' "$review_err"
+cat > "$tmp_bin/opencode" <<'SH'
+#!/bin/sh
+test "$1" = "run" || exit 2
+test "$2" = "--model" || exit 2
+test "$3" = "test-plan-model" || exit 2
+case "$4" in
+  *"Plan content:"*) echo "fake opencode plan reviewer ran"; exit 0 ;;
+  *) echo "missing plan content" >&2; exit 2 ;;
+esac
+SH
+chmod 755 "$tmp_bin/opencode"
+PATH="$tmp_bin:$PATH" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-reviewer plan opencode "test-plan-model" < "$prompt_file" > "$review_out" 2>"$review_err"
+grep -q 'fake opencode plan reviewer ran' "$review_out"
+grep -q 'PZA reviewer result: passed' "$review_err"
+cat > "$tmp_bin/agy" <<'SH'
+#!/bin/sh
+if [ "$1" = "--help" ]; then
+  echo "Usage: agy --print --sandbox"
+  exit 0
+fi
+test "$1" = "--sandbox" || exit 2
+test "$2" = "--print" || exit 2
+case "$3" in
+  *"Plan content:"*) echo "fake antigravity plan reviewer ran"; exit 0 ;;
+  *) echo "missing plan content" >&2; exit 2 ;;
+esac
+SH
+chmod 755 "$tmp_bin/agy"
+PATH="$tmp_bin:$PATH" HOME="$tmp_home" "$node_bin" ./lib/pza-runtime.js run-reviewer plan antigravity "" < "$prompt_file" > "$review_out" 2>"$review_err"
+grep -q 'fake antigravity plan reviewer ran' "$review_out"
+grep -q 'PZA reviewer result: passed' "$review_err"
+set +e
+HOME="$tmp_home" node ./lib/pza-runtime.js run-reviewer plan native "" < "$prompt_file" > "$review_out" 2>"$review_err"
+native_status=$?
+set -e
+test "$native_status" -ne 0
+grep -q 'native review runs inside the active harness' "$review_err"
+grep -q 'PZA reviewer result: blocked' "$review_err"
+grep -F -q 'second-opinion-policy' skills/areyousure/SKILL.md
+grep -F -q 'reviewer-settings' skills/areyousure/SKILL.md
+grep -F -q 'plan-reviewers' skills/areyousure/SKILL.md
+grep -F -q 'run-reviewer plan "$PROVIDER" "$MODEL"' skills/areyousure/SKILL.md
+grep -F -q 'run-plan-reviewer "$NAME"' skills/areyousure/SKILL.md
+cleanup_plan_review_runtime
+)
 
 echo "== Redacted context helpers =="
 redacted_out="/tmp/pza-redacted-$$.out"
