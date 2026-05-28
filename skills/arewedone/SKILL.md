@@ -4,11 +4,11 @@ description: >-
   Run when the user says "are we done", "review my changes", or "check
   completeness", or after implementing features, refactoring code, or making
   significant modifications. Launches native subagent-first structural
-  completeness, code quality, and adversarial reviews, runs configured
-  CLI-backed second opinions, adjudicates findings, then runs proof commands
-  before declaring done.
+  completeness, code quality, standards compliance, spec compliance, and
+  adversarial reviews, runs configured CLI-backed second opinions, adjudicates
+  findings, then runs proof commands before declaring done.
 user-invocable: true
-argument-hint: '[--second-opinion] [--no-second-opinion] [--strict-second-opinion] [--adversarial] [--no-adversarial] [--snyk] [--no-snyk]'
+argument-hint: '[--second-opinion] [--no-second-opinion] [--strict-second-opinion] [--adversarial] [--no-adversarial] [--spec <path-or-issue-ref>] [--no-spec] [--snyk] [--no-snyk]'
 ---
 
 # Are We Done
@@ -31,6 +31,8 @@ Arguments: `$ARGUMENTS`
 - `--second-opinion`: run configured external AI reviewer lanes for this run, requesting sandbox/privacy approval when needed.
 - `--no-second-opinion`: skip configured external AI reviewer lanes for this run.
 - `--strict-second-opinion`: require configured external AI reviewer lanes; blocked, denied, or failed lanes keep the result incomplete.
+- `--spec <path-or-issue-ref>`: force the spec compliance lane to use a specific local spec path or issue reference.
+- `--no-spec`: skip the spec compliance lane for this run.
 - `--snyk`: run the optional local Snyk dependency check for this trusted worktree.
 - `--no-snyk`: skip the Snyk check even when configured on.
 
@@ -48,8 +50,8 @@ Use `secondOpinion.mode` to decide whether external AI reviewer lanes should be
 skipped, approval-gated, or required:
 
 - `native-only`: skip CLI-backed AI reviewer and external adversarial lanes.
-  Native structural/code review, native adversarial review when enabled, and
-  proof commands may still declare local completion.
+  Native structural, code-quality, standards, spec, and adversarial review when
+  enabled, plus proof commands, may still declare local completion.
 - `ask`: default Codex-safe mode. Run native review first. Treat external AI
   lanes as second opinions that cross a sandbox/privacy boundary. Request
   explicit user/harness approval before sending bounded review context to those
@@ -77,6 +79,16 @@ the overall result incomplete until native review can run.
   subagent.
 - Native code quality: use `code-quality-reviewer` as a native subagent with
   `mode=native`.
+- Standards compliance: use `standards-compliance-reviewer` as a native
+  subagent. It checks only documented repo standards and must cite each source
+  rule. If no standards source exists, the lane returns
+  `skipped - no standards source found` and does not block completion.
+- Spec compliance: use `spec-compliance-reviewer` as a native subagent unless
+  `--no-spec` was passed. It checks changed work against `--spec` when provided,
+  then issue references from the current branch or reviewed commit messages, then
+  local spec-like files under `docs/`, `specs/`, or `.scratch/`. If no spec
+  source exists, the lane returns `skipped - no spec source found` and does not
+  block completion. Do not ask the user for a spec during `/arewedone`.
 - Native adversarial: use `adversarial-reviewer` as a native subagent for
   configured `provider=native` lanes only when adversarial review is enabled and
   `--no-adversarial` was not passed. This lane must follow
@@ -89,11 +101,25 @@ the overall result incomplete until native review can run.
   mode, report them as unavailable second opinions without failing native
   completion.
 
-Give structural and code-quality native subagents the summary context from
-`collect-review-context --summary`. They may inspect changed files directly, but
-must not broaden into unrelated areas unless the change requires it. Native
-adversarial subagents receive bounded, redacted context and must not inspect
-files independently.
+Give structural, code-quality, standards-compliance, and spec-compliance native
+subagents the summary context from `collect-review-context --summary`. They may
+inspect changed files directly, but must not broaden into unrelated areas unless
+their lane requires it. Native adversarial subagents receive bounded, redacted
+context and must not inspect files independently.
+
+Standards compliance source discovery should consider `AGENTS.md`, `CLAUDE.md`,
+`CONTRIBUTING.md`, `CONTEXT.md`, `CONTEXT-MAP.md`, nested context files,
+`docs/adr/`, root or docs `STYLE.md`, `STANDARDS.md`, `STYLEGUIDE.md`,
+`.editorconfig`, `eslint.config.*`, `biome.json`, `prettier.config.*`, and
+`tsconfig.json`. Config files may be cited as standards, but the lane should skip
+issues already enforced by normal tooling unless the changed work breaks the
+config itself.
+
+Spec compliance source discovery should prefer `--spec`, then issue references
+from the current branch name or reviewed commit messages, then matching local
+spec or PRD files. Use `gh` only for read-only issue fetching when available and
+when the issue reference is clear. If fetching is unavailable, report the exact
+skip or blocker reason instead of guessing requirements.
 
 Every backend review is review-only. Do not pass approval-skipping
 flags such as `--dangerously-skip-permissions`, `--auto`, `--force`, or
@@ -209,6 +235,9 @@ Merge all launched reviews into one adjudicated report:
   evidence supports them.
 - Security findings corroborated by a quality reviewer and an adversarial lane
   are highest priority.
+- Standards and spec findings are independent native findings. They should be
+  adjudicated with the same statuses as other lanes while keeping their source
+  citations visible.
 - Keep skipped and blocked lanes visible, but do not count them as findings.
 - A blocked enabled reviewer prevents declaring the strict review complete. In
   `ask` mode, it prevents only the external second-opinion portion from being

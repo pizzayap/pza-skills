@@ -5,7 +5,8 @@
 - `skills/*/SKILL.md` defines reusable workflows.
 - `agents/*.md` defines reusable reviewer/verifier roles. Canonical agent names
   are provider-agnostic: `structural-completeness-reviewer`,
-  `code-quality-reviewer`, `plan-verifier`, and `adversarial-reviewer`.
+  `code-quality-reviewer`, `standards-compliance-reviewer`,
+  `spec-compliance-reviewer`, `plan-verifier`, and `adversarial-reviewer`.
 - `lib/pza-runtime.js` owns shared runtime behavior: config, reviewer backend
   model selection, session files, diff hashes, review markers, plan-review
   prompt assembly, redacted context collection, custom plan reviewer
@@ -20,7 +21,7 @@ Adapters should be thin and disposable. They may translate command names,
 frontmatter, or tool names, but they should not fork workflow logic.
 
 - Codex: install canonical skills into `~/.codex/skills/`, then run
-  `scripts/install-codex-agents.sh` to install the four PZA agent roles into
+  `scripts/install-codex-agents.sh` to install the six PZA agent roles into
   `~/.codex/agents/` with read-only configs.
 - OpenCode: mirror commands into `.opencode/commands/` and agents into
   `.opencode/agents/`.
@@ -134,10 +135,12 @@ runtime path is blocked by design. Optional custom external plan reviewers use
 `plan-review-prompt` plus `run-plan-reviewer <name>`.
 
 `/arewedone` follows the same transport split: native structural completeness,
-native code quality, and native adversarial lanes are subagent-first when a
-read-only subagent lane is available and blocked otherwise; non-native reviewer
-and adversarial lanes run through configured reviewer CLIs as external second
-opinions.
+native code quality, native standards compliance, native spec compliance, and
+native adversarial lanes are subagent-first when a read-only subagent lane is
+available and blocked otherwise; non-native reviewer and adversarial lanes run
+through configured reviewer CLIs as external second opinions. Standards and spec
+lanes are local-only; missing standards or spec sources are visible skipped
+lanes rather than external reviewer failures.
 
 Both `/arewedone` and `/areyousure` must adjudicate reviewer output before final
 reporting. Final finding statuses are `CONFIRMED`, `FALSE_POSITIVE`,

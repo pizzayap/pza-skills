@@ -86,20 +86,22 @@ For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
 ### `/arewedone`
 
 Subagent-first completeness check. Launches native structural completeness, code
-quality, and native adversarial lanes as local subagents when the harness
-supports them, runs configured CLI-backed reviewers (Ollama, Codex, OpenCode,
-Kilo Code, Cursor Agent, and Antigravity where enabled) only as external second
-opinions, adjudicates findings, then runs proof commands. External AI reviewers
-are governed by the second-opinion mode: `ask` approval-gates them for
-Codex-style sandboxes, `native-only` skips them, and `strict` requires them.
-External reviewers receive context through `collect-review-context`, which
-redacts likely secrets and caps total/per-file bytes. Optional Snyk dependency
-scanning is separate from AI review and runs only when configured or explicitly
-requested.
+quality, standards compliance, spec compliance, and native adversarial lanes as
+local subagents when the harness supports them, runs configured CLI-backed
+reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity
+where enabled) only as external second opinions, adjudicates findings, then runs
+proof commands. External AI reviewers are governed by the second-opinion mode:
+`ask` approval-gates them for Codex-style sandboxes, `native-only` skips them,
+and `strict` requires them. External reviewers receive context through
+`collect-review-context`, which redacts likely secrets and caps total/per-file
+bytes. Optional Snyk dependency scanning is separate from AI review and runs only
+when configured or explicitly requested. Spec compliance can be directed with
+`--spec <path-or-issue-ref>` or skipped with `--no-spec`; missing standards or
+spec sources are reported as skipped lanes rather than failed completion.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
-**Optional:** [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex), OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk (toggleable via `/pza-settings`; Snyk should only be run on trusted worktrees)
+**Optional:** GitHub CLI (`gh`), [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex), OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk (toggleable via `/pza-settings`; Snyk should only be run on trusted worktrees)
 
 ### `/pza-settings`
 
@@ -205,6 +207,8 @@ report.
 
 - `structural-completeness-reviewer` — codebase hygiene, dead code, integration completeness, dependency/config completeness.
 - `code-quality-reviewer` — correctness, security, architecture, and performance review; also forwards bounded context to configured reviewer backends in backend mode.
+- `standards-compliance-reviewer` — documented repo standards and convention compliance.
+- `spec-compliance-reviewer` — issue, PRD, and requirement compliance for changed work.
 - `plan-verifier` — verifies plans against local code, project guidance, manifests, and lockfiles.
 - `adversarial-reviewer` — runs configured security-focused adversarial lanes with bounded, redacted review context.
 
@@ -256,7 +260,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 
 | Skill | Required | Optional |
 |---|---|---|
-| `/arewedone` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk |
+| `/arewedone` | — | GitHub CLI (`gh`), Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk |
 | `/pza-settings` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk |
 | `/hook-worthy` | — | — |
 | `/agent-docs-audit` | — | — |

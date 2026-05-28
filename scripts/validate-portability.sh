@@ -675,10 +675,14 @@ echo "== Agent inventory =="
 for file in \
   agents/structural-completeness-reviewer.md \
   agents/code-quality-reviewer.md \
+  agents/standards-compliance-reviewer.md \
+  agents/spec-compliance-reviewer.md \
   agents/plan-verifier.md \
   agents/adversarial-reviewer.md \
   .opencode/agents/structural-completeness-reviewer.md \
   .opencode/agents/code-quality-reviewer.md \
+  .opencode/agents/standards-compliance-reviewer.md \
+  .opencode/agents/spec-compliance-reviewer.md \
   .opencode/agents/plan-verifier.md \
   .opencode/agents/adversarial-reviewer.md
 do
@@ -704,6 +708,29 @@ for file in agents/*.md; do
     exit 1
   fi
 done
+agent_colors=$(mktemp "${TMPDIR:-/tmp}/pza-agent-colors.XXXXXX")
+for file in agents/*.md; do
+  color=$(awk -F': ' '
+    NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+    in_frontmatter && $0 == "---" { exit }
+    in_frontmatter && /^color:/ { print $2; found = 1; exit }
+    END { if (!found) exit 1 }
+  ' "$file") || {
+    echo "Canonical agent is missing color frontmatter: $file" >&2
+    rm -f "$agent_colors"
+    exit 1
+  }
+  printf '%s %s\n' "$color" "$file" >> "$agent_colors"
+done
+color_count=$(wc -l < "$agent_colors" | tr -d ' ')
+unique_color_count=$(awk '{print $1}' "$agent_colors" | sort -u | wc -l | tr -d ' ')
+if [ "$color_count" != "$unique_color_count" ]; then
+  echo "Canonical agent colors must be unique:" >&2
+  cat "$agent_colors" >&2
+  rm -f "$agent_colors"
+  exit 1
+fi
+rm -f "$agent_colors"
 for file in .opencode/agents/*.md; do
   target=$(awk -F'`' '/canonical agent instructions/{print $2; exit}' "$file")
   if [ -z "$target" ] || [ ! -f "$target" ]; then
@@ -727,6 +754,8 @@ grep -F -q "Installed PZA Codex agents to $tmp_codex_agents_abs" "$agent_install
 for agent in \
   structural-completeness-reviewer \
   code-quality-reviewer \
+  standards-compliance-reviewer \
+  spec-compliance-reviewer \
   plan-verifier \
   adversarial-reviewer
 do
@@ -774,6 +803,21 @@ for skill_file in skills/arewedone/SKILL.md skills/areyousure/SKILL.md; do
     echo "Native reviewer lanes must block instead of using direct fallback: $skill_file" >&2
     exit 1
   fi
+done
+grep -F -q 'standards-compliance-reviewer' skills/arewedone/SKILL.md
+grep -F -q 'spec-compliance-reviewer' skills/arewedone/SKILL.md
+grep -F -q -- '--spec <path-or-issue-ref>' skills/arewedone/SKILL.md
+grep -F -q -- '--no-spec' skills/arewedone/SKILL.md
+grep -F -q -- '--spec <path-or-issue-ref>' .pi/prompts/arewedone.md
+grep -F -q -- '--no-spec' .pi/prompts/arewedone.md
+grep -F -q -- '--spec <path-or-issue-ref>' .opencode/commands/arewedone.md
+grep -F -q -- '--no-spec' .opencode/commands/arewedone.md
+grep -F -q 'Native structural, code-quality, standards, spec, and adversarial review' skills/arewedone/SKILL.md
+grep -F -q 'GitHub CLI (`gh`), Ollama' README.md
+grep -F -q '**Optional:** GitHub CLI (`gh`)' README.md
+for file in README.md docs/harnesses.md docs/portability.md AGENTS.md CLAUDE.md; do
+  grep -F -q 'standards-compliance-reviewer' "$file"
+  grep -F -q 'spec-compliance-reviewer' "$file"
 done
 
 echo "== User-invocable discovery parity =="

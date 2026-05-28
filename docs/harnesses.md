@@ -11,7 +11,8 @@ and choose which reviewer backends also run `/arewedone` adversarial security
 review.
 
 Canonical agents are provider-agnostic: `structural-completeness-reviewer`,
-`code-quality-reviewer`, `plan-verifier`, and `adversarial-reviewer`.
+`code-quality-reviewer`, `standards-compliance-reviewer`,
+`spec-compliance-reviewer`, `plan-verifier`, and `adversarial-reviewer`.
 
 Installed skills collect settings and review context only at invocation time
 through `~/.pza-skills/lib/pza-runtime.js`. Harness adapters should not add
@@ -68,7 +69,7 @@ Install PZA agents with the repo script:
 ~/.pza-skills/package/scripts/install-codex-agents.sh
 ```
 
-The script copies the four provider-agnostic PZA agent roles into
+The script copies the six provider-agnostic PZA agent roles into
 `~/.codex/agents/` and writes read-only `.toml` configs beside them. Restart
 Codex or start a fresh session after running it so the roles are loaded.
 

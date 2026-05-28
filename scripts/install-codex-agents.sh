@@ -25,6 +25,8 @@ esac
 agents=(
   structural-completeness-reviewer
   code-quality-reviewer
+  standards-compliance-reviewer
+  spec-compliance-reviewer
   plan-verifier
   adversarial-reviewer
 )
@@ -42,6 +44,12 @@ for agent in "${agents[@]}"; do
       ;;
     code-quality-reviewer)
       description="Read-only quality reviewer for correctness, security, architecture, and performance risks."
+      ;;
+    standards-compliance-reviewer)
+      description="Read-only standards reviewer for documented repo conventions and guidance compliance."
+      ;;
+    spec-compliance-reviewer)
+      description="Read-only spec reviewer for issue, PRD, and requirement compliance."
       ;;
     plan-verifier)
       description="Read-only plan verifier that checks technical claims against local repository evidence."
