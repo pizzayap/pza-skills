@@ -650,6 +650,14 @@ rm -f "/tmp/pza-skills-session-$session_id-files.json" "/tmp/pza-skills-session-
 
 echo "== Adapter files =="
 for file in \
+  .codex-plugin/plugin.json \
+  .agents/plugins/marketplace.json \
+  plugins/pza-skills/.codex-plugin/plugin.json \
+  plugins/pza-skills/skills/arewedone/SKILL.md \
+  plugins/pza-skills/agents/plan-verifier.md \
+  .claude-plugin/plugin.json \
+  .claude-plugin/marketplace.json \
+  hooks/hooks.json \
   .opencode/commands/arewedone.md \
   .opencode/commands/areyousure.md \
   .opencode/commands/agent-docs-audit.md \
@@ -670,6 +678,40 @@ for file in \
 do
   test -f "$file"
 done
+test ! -e plugins/pza-skills/hooks/hooks.json
+diff -qr .codex-plugin plugins/pza-skills/.codex-plugin >/dev/null
+diff -qr skills plugins/pza-skills/skills >/dev/null
+diff -qr agents plugins/pza-skills/agents >/dev/null
+diff -qr hooks/scripts plugins/pza-skills/hooks/scripts >/dev/null
+diff -qr lib plugins/pza-skills/lib >/dev/null
+diff -q scripts/install-runtime.sh plugins/pza-skills/scripts/install-runtime.sh >/dev/null
+diff -q scripts/install-codex-agents.sh plugins/pza-skills/scripts/install-codex-agents.sh >/dev/null
+diff -q README.md plugins/pza-skills/README.md >/dev/null
+diff -q LICENSE plugins/pza-skills/LICENSE >/dev/null
+
+echo "== Plugin manifests =="
+node -e "
+  const fs = require('fs');
+  const codex = JSON.parse(fs.readFileSync('.codex-plugin/plugin.json', 'utf8'));
+  if (codex.name !== 'pza-skills') process.exit(1);
+  if (codex.skills !== './skills/') process.exit(1);
+  if ('hooks' in codex || 'agents' in codex) process.exit(1);
+  if (codex.interface?.displayName !== 'PZA-skills') process.exit(1);
+  const codexMarketplace = JSON.parse(fs.readFileSync('.agents/plugins/marketplace.json', 'utf8'));
+  const codexEntry = codexMarketplace.plugins?.find((entry) => entry.name === 'pza-skills');
+  if (!codexEntry || codexEntry.source?.source !== 'local' || codexEntry.source?.path !== './plugins/pza-skills') process.exit(1);
+  if (codexEntry.policy?.installation !== 'AVAILABLE' || codexEntry.policy?.authentication !== 'ON_INSTALL') process.exit(1);
+  if (codexEntry.category !== 'Coding') process.exit(1);
+  const claude = JSON.parse(fs.readFileSync('.claude-plugin/plugin.json', 'utf8'));
+  if (claude.name !== 'pza-skills' || claude.displayName !== 'PZA-skills') process.exit(1);
+  if ('agents' in claude || 'hooks' in claude) process.exit(1);
+	  const claudeMarketplace = JSON.parse(fs.readFileSync('.claude-plugin/marketplace.json', 'utf8'));
+	  if (claudeMarketplace.name !== 'pza-skills' || claudeMarketplace.version !== '1.3.0' || !claudeMarketplace.description) process.exit(1);
+	  if (claudeMarketplace.plugins?.[0]?.name !== 'pza-skills' || claudeMarketplace.plugins?.[0]?.version !== '1.3.0') process.exit(1);
+	"
+	grep -F -q '${CLAUDE_PLUGIN_ROOT}/hooks/scripts/track-session-files.js' hooks/hooks.json
+	grep -F -q '${CLAUDE_PLUGIN_ROOT}/hooks/scripts/review-reminder.js' hooks/hooks.json
+grep -F -q 'Hooks (2)' docs/harnesses.md
 
 echo "== Agent inventory =="
 for file in \
@@ -834,28 +876,46 @@ for skill_file in skills/*/SKILL.md; do
 done
 
 echo "== Portability scan =="
-if rg -n '![`]' skills agents .opencode .pi; then
+if rg -n '![`]' skills agents .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Unexpected load-time markdown command injection found" >&2
   exit 1
 fi
-if rg -n 'verbatim|full diff|cat ~/.|grep -oP|hand-assemble|hand-roll|full plan-review prompt' skills agents README.md docs .opencode .pi .claude-plugin; then
+if rg -n 'verbatim|full diff|cat ~/.|grep -oP|hand-assemble|hand-roll|full plan-review prompt' skills agents README.md docs .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Unexpected scanner-risky forwarding text found" >&2
   exit 1
 fi
-if rg -n '\$\([^)]*cat' skills agents README.md docs .opencode .pi .claude-plugin; then
+if rg -n '\$\([^)]*cat' skills agents README.md docs .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Unsafe command substitution around cat found" >&2
   exit 1
 fi
-if rg -n 'run-reviewer.*--(dangerously-skip-permissions|auto|force)|codex exec.*--(dangerously-skip-permissions|auto|force)' skills agents lib .opencode .pi .claude-plugin; then
+if rg -n 'git clone .*2>/dev/null \|\| git -C .*pull --ff-only' skills README.md docs plugins; then
+  echo "Unsafe suppress-clone-then-pull bootstrap command found" >&2
+  exit 1
+fi
+for file in README.md docs/harnesses.md docs/portability.md skills/pza-settings/SKILL.md plugins/pza-skills/README.md plugins/pza-skills/skills/pza-settings/SKILL.md; do
+  grep -F -q 'set -eu' "$file"
+  grep -F -q 'core.hooksPath=/dev/null' "$file"
+  grep -F -q 'git -c core.hooksPath=/dev/null -C "$pkg" fetch --prune origin' "$file"
+  grep -F -q 'git -c core.hooksPath=/dev/null -C "$pkg" merge --ff-only "$upstream"' "$file"
+  grep -F -q 'git -c core.hooksPath=/dev/null clone "$repo" "$pkg"' "$file"
+  grep -F -q 'Unexpected pza-skills origin' "$file"
+  grep -F -q 'must track an origin/* upstream' "$file"
+  grep -F -q 'is not exactly at $upstream' "$file"
+  grep -F -q 'diff --quiet -- scripts lib' "$file"
+  grep -F -q 'diff --cached --quiet -- scripts lib' "$file"
+  grep -F -q 'diff --quiet -- agents' "$file"
+  grep -F -q 'diff --cached --quiet -- agents' "$file"
+done
+if rg -n 'run-reviewer.*--(dangerously-skip-permissions|auto|force)|codex exec.*--(dangerously-skip-permissions|auto|force)' skills agents lib .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Approval-skipping reviewer invocation found" >&2
   exit 1
 fi
-if rg -n "ollama launch claude|AskUserQuestion|Bash\\(" skills agents hooks lib .opencode .pi .claude-plugin; then
+if rg -n "ollama launch claude|AskUserQuestion|Bash\\(" skills agents hooks lib .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Unexpected non-portable invocation text found" >&2
   exit 1
 fi
 
 echo "Remaining Claude compatibility references:"
-rg -n "CLAUDE_SESSION_ID|/tmp/claude-session|~/.claude" skills agents README.md AGENTS.md CLAUDE.md docs hooks lib .opencode .pi .claude-plugin || true
+rg -n "CLAUDE_SESSION_ID|/tmp/claude-session|~/.claude" skills agents README.md AGENTS.md CLAUDE.md docs hooks lib .opencode .pi .codex-plugin .agents/plugins .claude-plugin || true
 
 echo "validate-portability: PASS"

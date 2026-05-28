@@ -1,0 +1,41 @@
+{
+  "name": "pza-skills",
+  "version": "1.3.0",
+  "description": "Portable multi-reviewer agent skills for code review, plan verification, hook auditing, agent-guidance maintenance, and reviewer settings.",
+  "author": {
+    "name": "pizzayap",
+    "url": "https://github.com/pizzayap"
+  },
+  "homepage": "https://github.com/pizzayap/pza-skills",
+  "repository": "https://github.com/pizzayap/pza-skills",
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "plan-verification",
+    "agent-skills",
+    "codex",
+    "claude-code",
+    "ollama"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "PZA-skills",
+    "shortDescription": "Multi-reviewer skills for code review and plan verification",
+    "longDescription": "Use PZA-skills to run multi-lane code completion checks, verify implementation plans against local repository evidence, audit hook-worthy workflow patterns, maintain agent guidance, and configure optional reviewer backends through a shared local runtime.",
+    "developerName": "pizzayap",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/pizzayap/pza-skills",
+    "defaultPrompt": [
+      "Review my changes with PZA-skills",
+      "Verify this implementation plan with PZA-skills",
+      "Configure PZA reviewer backends"
+    ],
+    "brandColor": "#2F6FEB",
+    "screenshots": []
+  }
+}

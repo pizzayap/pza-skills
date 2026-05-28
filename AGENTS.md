@@ -9,13 +9,16 @@ This is a portable Agent Skills package (`PZA-skills`) that provides personal sk
 ## Architecture
 
 ```
+.codex-plugin/plugin.json    — Codex plugin manifest
+.agents/plugins/marketplace.json — Codex local/Git marketplace manifest
+plugins/pza-skills/*         — Codex marketplace plugin bundle mirrored from canonical skills, agents, runtime, and scripts
 .claude-plugin/plugin.json   — Claude Code compatibility manifest
+hooks/hooks.json             — Claude Code compatibility hook bindings
 lib/pza-runtime.js           — Shared runtime for config, session markers, diff hashes, bounded/redacted context, plan context collection, reviewer dispatch, hook proposal validation, and Ollama invocation
 .opencode/*                  — OpenCode command/agent adapters
 .pi/prompts/*                — Pi slash-command aliases
 skills/*/SKILL.md            — Skill definitions (markdown with frontmatter)
 agents/*.md                  — Agent definitions (markdown with frontmatter + tools)
-hooks/hooks.json             — Hook event bindings
 hooks/scripts/*.js           — Hook implementation scripts
 ```
 
@@ -23,7 +26,7 @@ hooks/scripts/*.js           — Hook implementation scripts
 
 `/arewedone` review agents have strictly non-overlapping native scopes: `structural-completeness-reviewer` (codebase hygiene — dead code, dev artifacts, dependency/config completeness), `code-quality-reviewer` (correctness, security, architecture, performance with confidence scoring), `standards-compliance-reviewer` (documented repo standards only), and `spec-compliance-reviewer` (explicit or discovered issue/spec alignment only). Configured backend reviewers still run through `code-quality-reviewer` in backend mode. Adversarial lanes provide security-focused review from a defensive risk perspective across configured providers/models through the provider-agnostic `adversarial-reviewer`; `provider: "native"` runs locally in the active harness, while non-native providers run through configured reviewer CLIs. Their security scope intentionally overlaps with `code-quality-reviewer`'s security dimension, with overlap handled by adjudication: final statuses are `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`, `DUPLICATE`, or `OUT_OF_SCOPE`.
 
-**Hooks** run automatically on Claude Code compatibility tool events. The `track-session-files` hook fires on every Write/Edit to maintain a JSON manifest of modified files at `/tmp/pza-skills-session-<id>-files.json`, which `/arewedone` uses to scope reviews. The `review-reminder` hook fires on Stop to nudge the user if files were modified but no review was run (checks for the review marker file). Do not promise hook support for Codex/OpenCode/Pi until their hook payloads are verified.
+**Hooks** run automatically on Claude Code compatibility tool events through `hooks/hooks.json`. The `track-session-files` hook fires on every Write/Edit to maintain a JSON manifest of modified files at `/tmp/pza-skills-session-<id>-files.json`, which `/arewedone` uses to scope reviews. The `review-reminder` hook fires on Stop to nudge the user if files were modified but no review was run (checks for the review marker file). Do not expose or promise hook support for Codex/OpenCode/Pi until their hook payloads are verified; the Codex marketplace bundle intentionally omits `hooks/hooks.json`.
 
 ## Key Conventions
 
@@ -69,7 +72,7 @@ No build step or test suite. Validate changes by:
 1. For runtime, skill, adapter, or hook changes, run `scripts/validate-portability.sh`; it covers Node syntax, runtime defaults, settings UI, reviewer status scope, plan context helpers, redaction/context helpers, hook session tracking, adapter parity, Codex agent install checks, load-time command injection, and scanner-risk static checks
 2. Installing locally in the target harness; see `docs/harnesses.md`
 3. Running skills in a Codex/OpenCode/Pi/Claude compatibility session and checking subagent dispatch, `Lane Execution`, adjudication, and result merging
-4. For Claude compatibility hooks: trigger a Write/Edit and verify `/tmp/pza-skills-session-*-files.json` updates
+4. For Claude compatibility hooks: trigger a Write/Edit and verify `/tmp/pza-skills-session-*-files.json` updates through `hooks/hooks.json`
 5. For review marker: run `/arewedone` and verify `/tmp/pza-skills-session-*-reviewed.json` exists
 6. For structured Ollama output: enable the Ollama reviewer through `/pza-settings`, run `/arewedone`, and check if JSON parsing succeeds (or fallback triggers cleanly)
 
@@ -77,7 +80,7 @@ No build step or test suite. Validate changes by:
 
 ## Plugin Manifest
 
-Skills and agents are canonical in `skills/*/SKILL.md` and `agents/*.md`. Harness adapters live in `.opencode/`, `.pi/`, and `.claude-plugin/`.
+Skills and agents are canonical in `skills/*/SKILL.md` and `agents/*.md`. Harness adapters live in `.opencode/`, `.pi/`, `.codex-plugin/`, `.agents/plugins/`, `plugins/pza-skills/`, and `.claude-plugin/`.
 
 ## External Config
 

@@ -1,26 +1,29 @@
 {
-  "PostToolUse": [
-    {
-      "matcher": "Write|Edit",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node \"$CLAUDE_PLUGIN_ROOT/hooks/scripts/track-session-files.js\"",
-          "timeout": 5
-        }
-      ]
-    }
-  ],
-  "Stop": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node \"$CLAUDE_PLUGIN_ROOT/hooks/scripts/review-reminder.js\"",
-          "timeout": 5
-        }
-      ]
-    }
-  ]
+  "description": "Track modified files and remind when a session ends without a current PZA review.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/track-session-files.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/review-reminder.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
 }

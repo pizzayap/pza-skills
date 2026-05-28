@@ -22,21 +22,69 @@ Install the shared helper runtime once per machine before using the skills from
 other project directories:
 
 ```sh
-npx skills add pizzayap/pza-skills
-git clone https://github.com/pizzayap/pza-skills.git ~/.pza-skills/package
-~/.pza-skills/package/scripts/install-runtime.sh
-~/.pza-skills/package/scripts/install-codex-agents.sh
+set -eu
+pkg="${PZA_SKILLS_PACKAGE:-$HOME/.pza-skills/package}"
+repo="https://github.com/pizzayap/pza-skills.git"
+mkdir -p "$(dirname "$pkg")"
+if [ -e "$pkg" ] && [ ! -d "$pkg/.git" ]; then
+  echo "$pkg exists but is not a git checkout" >&2
+  exit 1
+fi
+if [ -d "$pkg/.git" ]; then
+  origin=$(git -C "$pkg" remote get-url origin)
+  case "$origin" in
+    "$repo"|https://github.com/pizzayap/pza-skills|git@github.com:pizzayap/pza-skills.git) ;;
+    *) echo "Unexpected pza-skills origin: $origin" >&2; exit 1 ;;
+  esac
+  upstream=$(git -C "$pkg" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+  case "$upstream" in
+    origin/*) ;;
+    *) echo "$pkg must track an origin/* upstream" >&2; exit 1 ;;
+  esac
+  git -c core.hooksPath=/dev/null -C "$pkg" fetch --prune origin
+  git -c core.hooksPath=/dev/null -C "$pkg" merge --ff-only "$upstream"
+  if [ "$(git -C "$pkg" rev-parse HEAD)" != "$(git -C "$pkg" rev-parse "$upstream")" ]; then
+    echo "$pkg is not exactly at $upstream" >&2
+    exit 1
+  fi
+  git -C "$pkg" diff --quiet -- scripts lib || { echo "$pkg has local runtime changes" >&2; exit 1; }
+  git -C "$pkg" diff --cached --quiet -- scripts lib || { echo "$pkg has staged runtime changes" >&2; exit 1; }
+else
+  git -c core.hooksPath=/dev/null clone "$repo" "$pkg"
+fi
+"$pkg/scripts/install-runtime.sh"
 ```
 
-When the package updates, refresh both installed surfaces. The skills command
-updates harness-visible skill markdown and adapters; the runtime commands update
-the machine-local settings UI and reviewer helper:
+When the package updates, refresh both installed surfaces. The plugin or skills
+installer updates harness-visible skill markdown and adapters; the runtime
+commands update the machine-local settings UI and reviewer helper:
 
 ```sh
-npx skills add pizzayap/pza-skills
-git -C ~/.pza-skills/package pull --ff-only
-~/.pza-skills/package/scripts/install-runtime.sh
-~/.pza-skills/package/scripts/install-codex-agents.sh
+set -eu
+pkg="${PZA_SKILLS_PACKAGE:-$HOME/.pza-skills/package}"
+test -d "$pkg/.git"
+origin=$(git -C "$pkg" remote get-url origin)
+case "$origin" in
+  https://github.com/pizzayap/pza-skills.git|https://github.com/pizzayap/pza-skills|git@github.com:pizzayap/pza-skills.git) ;;
+  *) echo "Unexpected pza-skills origin: $origin" >&2; exit 1 ;;
+esac
+upstream=$(git -C "$pkg" rev-parse --abbrev-ref --symbolic-full-name '@{u}')
+case "$upstream" in
+  origin/*) ;;
+  *) echo "$pkg must track an origin/* upstream" >&2; exit 1 ;;
+esac
+git -c core.hooksPath=/dev/null -C "$pkg" fetch --prune origin
+git -c core.hooksPath=/dev/null -C "$pkg" merge --ff-only "$upstream"
+if [ "$(git -C "$pkg" rev-parse HEAD)" != "$(git -C "$pkg" rev-parse "$upstream")" ]; then
+  echo "$pkg is not exactly at $upstream" >&2
+  exit 1
+fi
+git -C "$pkg" diff --quiet -- scripts lib || { echo "$pkg has local runtime changes" >&2; exit 1; }
+git -C "$pkg" diff --cached --quiet -- scripts lib || { echo "$pkg has staged runtime changes" >&2; exit 1; }
+git -C "$pkg" diff --quiet -- agents || { echo "$pkg has local agent changes" >&2; exit 1; }
+git -C "$pkg" diff --cached --quiet -- agents || { echo "$pkg has staged agent changes" >&2; exit 1; }
+"$pkg/scripts/install-runtime.sh"
+"$pkg/scripts/install-codex-agents.sh"
 ```
 
 If the local skills CLI supports `update`, `npx skills@latest update` is
@@ -57,21 +105,31 @@ sandbox or privacy boundary. Use `native-only` for locked-down sessions and
 
 ## Codex
 
-Install skills by copying or symlinking each skill directory into:
+Install the Codex plugin from the repository marketplace:
 
 ```sh
-~/.codex/skills/
+codex plugin marketplace add https://github.com/pizzayap/pza-skills
+codex plugin add pza-skills --marketplace pza-skills
 ```
 
-Install PZA agents with the repo script:
+Install PZA agents with the repo script until Codex plugin agent discovery is
+verified for this package:
 
 ```sh
-~/.pza-skills/package/scripts/install-codex-agents.sh
+set -eu
+pkg="${PZA_SKILLS_PACKAGE:-$HOME/.pza-skills/package}"
+git -C "$pkg" diff --quiet -- agents || { echo "$pkg has local agent changes" >&2; exit 1; }
+git -C "$pkg" diff --cached --quiet -- agents || { echo "$pkg has staged agent changes" >&2; exit 1; }
+"$pkg/scripts/install-codex-agents.sh"
 ```
 
 The script copies the six provider-agnostic PZA agent roles into
 `~/.codex/agents/` and writes read-only `.toml` configs beside them. Restart
 Codex or start a fresh session after running it so the roles are loaded.
+
+The Codex marketplace bundle intentionally omits `hooks/hooks.json`. PZA's
+current hook payloads are Claude-compatibility payloads only; do not expose them
+to Codex until Codex hook payload compatibility is verified.
 
 Codex translation notes:
 
@@ -125,6 +183,18 @@ conversation-backed plan unless the user provides a file path.
 
 ## Claude Code Compatibility
 
-The `.claude-plugin/` manifest and `hooks/hooks.json` remain for existing Claude
-Code installs. Hook behavior is compatibility-scoped: only Claude-style hook
-payloads are implemented until other harness payloads are verified.
+Install the Claude Code plugin from the repository marketplace:
+
+```sh
+claude plugin marketplace add https://github.com/pizzayap/pza-skills
+claude plugin install pza-skills@pza-skills
+```
+
+Claude discovers `hooks/hooks.json`; hook scripts stay in `hooks/scripts/`. Hook
+behavior is compatibility-scoped: only Claude-style hook payloads are
+implemented until other harness payloads are verified.
+
+Confirm hook config loading with `claude plugin details pza-skills`; the
+component inventory should list `Hooks (2)` for `PostToolUse` and `Stop`. To
+verify hook execution, trigger a Write/Edit in a Claude Code compatibility
+session and check that `/tmp/pza-skills-session-*-files.json` updates.

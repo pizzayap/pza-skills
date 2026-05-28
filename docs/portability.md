@@ -20,13 +20,19 @@
 Adapters should be thin and disposable. They may translate command names,
 frontmatter, or tool names, but they should not fork workflow logic.
 
-- Codex: install canonical skills into `~/.codex/skills/`, then run
-  `scripts/install-codex-agents.sh` to install the six PZA agent roles into
-  `~/.codex/agents/` with read-only configs.
+- Codex: install the repository as a Codex plugin through `.agents/plugins/marketplace.json`.
+  The marketplace entry points to `plugins/pza-skills/`, a mirrored bundle that
+  is validated against canonical `skills/`, `agents/`, runtime, and script
+  content.
+  Run `scripts/install-codex-agents.sh` to install the six PZA agent roles into
+  `~/.codex/agents/` with read-only configs until plugin agent discovery is
+  verified.
 - OpenCode: mirror commands into `.opencode/commands/` and agents into
   `.opencode/agents/`.
 - Pi: load canonical skills directly; use `.pi/prompts/` only for command aliases.
-- Claude Code: keep `.claude-plugin/` as compatibility packaging.
+- Claude Code: keep `.claude-plugin/` and `hooks/hooks.json` as
+  compatibility packaging. `claude plugin details pza-skills` should list
+  `Hooks (2)` for `PostToolUse` and `Stop`.
 
 ## Runtime State
 
@@ -43,6 +49,52 @@ Do not commit personal settings or model choices to the repository.
 
 Runtime installation commands assume a POSIX shell environment such as macOS,
 Linux, or WSL2.
+
+Bootstrap or refresh the installed runtime with:
+
+```sh
+set -eu
+pkg="${PZA_SKILLS_PACKAGE:-$HOME/.pza-skills/package}"
+repo="https://github.com/pizzayap/pza-skills.git"
+mkdir -p "$(dirname "$pkg")"
+if [ -e "$pkg" ] && [ ! -d "$pkg/.git" ]; then
+  echo "$pkg exists but is not a git checkout" >&2
+  exit 1
+fi
+if [ -d "$pkg/.git" ]; then
+  origin=$(git -C "$pkg" remote get-url origin)
+  case "$origin" in
+    "$repo"|https://github.com/pizzayap/pza-skills|git@github.com:pizzayap/pza-skills.git) ;;
+    *) echo "Unexpected pza-skills origin: $origin" >&2; exit 1 ;;
+  esac
+  upstream=$(git -C "$pkg" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+  case "$upstream" in
+    origin/*) ;;
+    *) echo "$pkg must track an origin/* upstream" >&2; exit 1 ;;
+  esac
+  git -c core.hooksPath=/dev/null -C "$pkg" fetch --prune origin
+  git -c core.hooksPath=/dev/null -C "$pkg" merge --ff-only "$upstream"
+  if [ "$(git -C "$pkg" rev-parse HEAD)" != "$(git -C "$pkg" rev-parse "$upstream")" ]; then
+    echo "$pkg is not exactly at $upstream" >&2
+    exit 1
+  fi
+  git -C "$pkg" diff --quiet -- scripts lib || { echo "$pkg has local runtime changes" >&2; exit 1; }
+  git -C "$pkg" diff --cached --quiet -- scripts lib || { echo "$pkg has staged runtime changes" >&2; exit 1; }
+else
+  git -c core.hooksPath=/dev/null clone "$repo" "$pkg"
+fi
+"$pkg/scripts/install-runtime.sh"
+```
+
+Codex users who want native subagent lanes should also run:
+
+```sh
+set -eu
+pkg="${PZA_SKILLS_PACKAGE:-$HOME/.pza-skills/package}"
+git -C "$pkg" diff --quiet -- agents || { echo "$pkg has local agent changes" >&2; exit 1; }
+git -C "$pkg" diff --cached --quiet -- agents || { echo "$pkg has staged agent changes" >&2; exit 1; }
+"$pkg/scripts/install-codex-agents.sh"
+```
 
 Legacy Claude/Codex locations are read only as migration fallbacks.
 
@@ -106,6 +158,9 @@ companion. The server binds only to localhost, requires a random URL token, and
 writes the same `~/.pza-skills/` files as the terminal commands. If a harness
 cannot run or expose a local server, use `/pza-settings --status` and direct
 CLI arguments instead.
+
+If `~/.pza-skills/lib/pza-runtime.js` is missing, install or refresh the runtime
+with the bootstrap commands above before using `/pza-settings`.
 
 Optional proof checks are separate from reviewer backends. Snyk lives under
 `checks.snyk`, is disabled by default, and should run only on trusted worktrees

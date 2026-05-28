@@ -1,13 +1,21 @@
 {
-  "name": "PZA-skills",
+  "name": "pza-skills",
+  "version": "1.3.0",
+  "description": "PZA-skills plugin marketplace for portable code review, plan verification, hook auditing, and reviewer settings workflows.",
   "owner": {
     "name": "pizzayap"
   },
   "plugins": [
     {
-      "name": "PZA-skills",
+      "name": "pza-skills",
+      "version": "1.3.0",
       "description": "Code review, plan verification, hook auditing, and session file tracking.",
-      "source": "./"
+      "author": {
+        "name": "pizzayap"
+      },
+      "category": "development",
+      "source": "./",
+      "homepage": "https://github.com/pizzayap/pza-skills"
     }
   ]
 }
