@@ -164,9 +164,14 @@ quality, standards compliance, spec compliance, and native adversarial lanes as
 local subagents when the harness supports them, runs configured CLI-backed
 reviewers (Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity
 where enabled) only as external second opinions, adjudicates findings, then runs
-proof commands. External AI reviewers are governed by the second-opinion mode:
-`ask` approval-gates them for Codex-style sandboxes, `native-only` skips them,
-and `strict` requires them. External reviewers receive context through
+proof commands from the parent `/arewedone` flow. Native reviewer subagents are
+review-only: they must not request escalated sandbox permissions or run tests,
+builds, compilers, or regression scripts. If a reviewer hits that boundary, it
+reports `blocked: requires parent-approved proof command` so the parent flow can
+surface any required approval in the main conversation. External AI reviewers
+are governed by the second-opinion mode: `ask` approval-gates them for
+Codex-style sandboxes, `native-only` skips them, and `strict` requires them.
+External reviewers receive context through
 `collect-review-context`, which redacts likely secrets and caps total/per-file
 bytes. Optional Snyk dependency scanning is separate from AI review and runs only
 when configured or explicitly requested. Spec compliance can be directed with

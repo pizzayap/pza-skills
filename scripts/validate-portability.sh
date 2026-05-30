@@ -826,6 +826,9 @@ do
   grep -F -q "$tmp_codex_agents_abs/$agent.md" "$tmp_codex_agents_abs/$agent.toml"
   grep -F -q 'developer_instructions = ' "$tmp_codex_agents_abs/$agent.toml"
   grep -F -q 'sandbox_mode = "read-only"' "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q 'Do not request escalated sandbox permissions' "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q 'run proof commands' "$tmp_codex_agents_abs/$agent.toml"
+  grep -F -q 'report blockers for the parent skill to handle' "$tmp_codex_agents_abs/$agent.toml"
 done
 if CODEX_AGENTS_DIR="$ROOT/agents" scripts/install-codex-agents.sh >"$agent_install_out" 2>"$agent_install_err"; then
   echo "Codex agent installer accepted canonical source directory as target" >&2
@@ -843,7 +846,14 @@ grep -F -q 'name = "$agent"' scripts/install-codex-agents.sh
 grep -F -q 'description = "$description"' scripts/install-codex-agents.sh
 grep -F -q 'source_real=' scripts/install-codex-agents.sh
 grep -F -q 'sandbox_mode = "read-only"' scripts/install-codex-agents.sh
+grep -F -q 'Do not request escalated sandbox permissions' scripts/install-codex-agents.sh
+grep -F -q 'run proof commands' scripts/install-codex-agents.sh
+grep -F -q 'report blockers for the parent skill to handle' scripts/install-codex-agents.sh
 grep -F -q 'rm -f "$target_file" "$target_toml"' scripts/install-codex-agents.sh
+for agent_file in agents/*.md; do
+  grep -F -q 'Do not request escalated sandbox permissions' "$agent_file"
+  grep -F -q 'blocked: requires parent-approved proof command' "$agent_file"
+done
 for skill_file in skills/arewedone/SKILL.md skills/areyousure/SKILL.md; do
   grep -F -q 'subagent-first' "$skill_file"
   grep -F -q 'read-only' "$skill_file"
@@ -863,6 +873,11 @@ for skill_file in skills/arewedone/SKILL.md skills/areyousure/SKILL.md; do
     exit 1
   fi
 done
+grep -F -q 'Native reviewer subagents are review-only' skills/arewedone/SKILL.md
+grep -F -q '`/arewedone` flow owns proof-command execution' skills/arewedone/SKILL.md
+grep -F -q 'Do not delegate proof commands to reviewer subagents' skills/arewedone/SKILL.md
+grep -F -q 'blocked: requires parent-approved proof command' README.md
+grep -F -q 'Native reviewer subagents are' README.md
 grep -F -q 'standards-compliance-reviewer' skills/arewedone/SKILL.md
 grep -F -q 'spec-compliance-reviewer' skills/arewedone/SKILL.md
 grep -F -q -- '--spec <path-or-issue-ref>' skills/arewedone/SKILL.md

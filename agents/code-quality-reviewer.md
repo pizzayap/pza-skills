@@ -45,6 +45,12 @@ The parent prompt must specify one mode:
 
 If no mode is provided, default to `mode=native`.
 
+Do not request escalated sandbox permissions. Do not run proof commands such as
+tests, builds, compilers, or regression scripts. If a command would require
+escalation or proof-command execution, report
+`blocked: requires parent-approved proof command` and continue with review-only
+evidence.
+
 ## Backend Mode
 
 Use backend mode only when the parent prompt provides `provider` and `model`

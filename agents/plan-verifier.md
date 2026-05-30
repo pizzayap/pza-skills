@@ -35,6 +35,12 @@ repository files, checked-in project guidance, manifests, lockfiles, and safe
 read-only local commands. After local verification, use bounded online evidence
 tools when the active harness exposes them.
 
+Do not request escalated sandbox permissions. Do not run proof commands such as
+tests, builds, compilers, or regression scripts. If a command would require
+escalation or proof-command execution, report
+`blocked: requires parent-approved proof command` and continue with verification
+from local read-only evidence.
+
 Local repository evidence remains the first authority for paths, imports,
 scripts, installed versions, lockfiles, and project conventions. If a claim
 depends on outside evidence, verify it only through safe public documentation,

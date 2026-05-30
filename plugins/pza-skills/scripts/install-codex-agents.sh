@@ -84,6 +84,7 @@ sandbox_mode = "read-only"
 developer_instructions = '''
 You are the PZA $agent role. Follow the installed agent markdown at $target_file.
 Do not modify files. Report findings only.
+Do not request escalated sandbox permissions or run proof commands; report blockers for the parent skill to handle.
 '''
 EOF
   chmod 644 "$target_toml"

@@ -107,6 +107,14 @@ inspect changed files directly, but must not broaden into unrelated areas unless
 their lane requires it. Native adversarial subagents receive bounded, redacted
 context and must not inspect files independently.
 
+Native reviewer subagents are review-only. They must not run proof commands
+such as tests, builds, compilers, or regression scripts, and must not request
+escalated sandbox permissions. If a reviewer discovers that a command would
+require escalation or proof-command execution, it should report
+`blocked: requires parent-approved proof command` and return. The parent
+`/arewedone` flow owns proof-command execution and any visible harness approval
+prompt.
+
 Standards compliance source discovery should consider `AGENTS.md`, `CLAUDE.md`,
 `CONTRIBUTING.md`, `CONTEXT.md`, `CONTEXT-MAP.md`, nested context files,
 `docs/adr/`, root or docs `STYLE.md`, `STANDARDS.md`, `STYLEGUIDE.md`,
@@ -259,8 +267,9 @@ overwriting it.
 
 ### 7. Proof
 
-Run relevant proof commands before declaring completion. Detect scripts and
-ecosystem commands from manifests such as `package.json`, `Cargo.toml`,
+Run relevant proof commands from the parent `/arewedone` flow before declaring
+completion. Do not delegate proof commands to reviewer subagents. Detect scripts
+and ecosystem commands from manifests such as `package.json`, `Cargo.toml`,
 `go.mod`, `pyproject.toml`, `Makefile`, or `deno.json`.
 
 Default command order:

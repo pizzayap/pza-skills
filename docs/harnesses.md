@@ -140,6 +140,10 @@ Codex translation notes:
   report must show `blocked: read-only subagent unavailable` in
   `Lane Execution`; do not emulate reviewer lanes in the main agent or a
   background terminal.
+- Reviewer subagents must not request escalated sandbox permissions or run proof
+  commands. If tests, builds, compilers, or regression scripts need approval,
+  the parent `/arewedone` flow should run them so the approval prompt is visible
+  in the main conversation.
 - Native `/areyousure` verification is local-first, then uses Context7,
   DeepWiki, Exa, or equivalent web tools when Codex exposes them to the active
   verifier. Query online tools only with public identifiers and claim-focused

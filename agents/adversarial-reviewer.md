@@ -15,6 +15,12 @@ The parent prompt provides one or more enabled lanes with `id`, `provider`,
 `model`, and `effectiveEnabled`. Run only enabled lanes. Do not inspect files
 independently and do not modify files.
 
+Do not request escalated sandbox permissions. Do not run proof commands such as
+tests, builds, compilers, or regression scripts. If a command would require
+escalation or proof-command execution, report
+`blocked: requires parent-approved proof command` and continue with review-only
+evidence.
+
 ## Steps
 
 1. Build bounded context with the runtime helper:
