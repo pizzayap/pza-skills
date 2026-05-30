@@ -504,6 +504,11 @@ node -e "
 HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt "$plan_file" file-backed > "$prompt_file"
 grep -q 'Plan source: file-backed' "$prompt_file"
 grep -q 'Context handling: PZA plan context is redacted' "$prompt_file"
+grep -F -q 'Use web search or current public documentation tools' "$prompt_file"
+grep -F -q 'If you do not have web access, state that explicitly' "$prompt_file"
+grep -F -q 'Web access status and source references used' "$prompt_file"
+grep -F -q 'Do not send raw private' "$prompt_file"
+grep -F -q 'plans, plan content, source code, secrets, diffs' "$prompt_file"
 printf '%s\n' '# Plan from stdin' | HOME="$tmp_home" node ./lib/pza-runtime.js plan-review-prompt - conversation-backed > "$prompt_file"
 grep -q 'Plan source: conversation-backed' "$prompt_file"
 printf '%s\n' 'api_token=abcdefghijklmnopqrstuvwxyz1234567890' \
@@ -569,6 +574,18 @@ grep -F -q 'reviewer-settings' skills/areyousure/SKILL.md
 grep -F -q 'plan-reviewers' skills/areyousure/SKILL.md
 grep -F -q 'run-reviewer plan "$PROVIDER" "$MODEL"' skills/areyousure/SKILL.md
 grep -F -q 'run-plan-reviewer "$NAME"' skills/areyousure/SKILL.md
+grep -F -q 'Context7' skills/areyousure/SKILL.md
+grep -F -q 'DeepWiki' skills/areyousure/SKILL.md
+grep -F -q 'Exa' skills/areyousure/SKILL.md
+grep -F -q 'claim-focused questions' skills/areyousure/SKILL.md
+grep -F -q 'source reference' skills/areyousure/SKILL.md
+grep -F -q 'skipped or unavailable' skills/areyousure/SKILL.md
+grep -F -q 'Context7' agents/plan-verifier.md
+grep -F -q 'DeepWiki' agents/plan-verifier.md
+grep -F -q 'Exa' agents/plan-verifier.md
+grep -F -q 'claim-focused questions' agents/plan-verifier.md
+grep -F -q 'source references' agents/plan-verifier.md
+grep -F -q 'skipped or unavailable' agents/plan-verifier.md
 cleanup_plan_review_runtime
 )
 

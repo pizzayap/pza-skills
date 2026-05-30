@@ -140,7 +140,7 @@ npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
 ```
 
-Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, choose which reviewer rows also run adversarial security review, and opt in to trusted-worktree proof checks such as Snyk.
+Optional integrations are detected at runtime. Use `/pza-settings` after installation to open the local visual settings companion, record the native reviewer model label, toggle reviewer CLIs, choose exact models for Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, and Antigravity where installed, choose which reviewer rows also run adversarial security review, and opt in to trusted-worktree proof checks such as Snyk. `/areyousure` also attempts bounded online evidence through Context7, DeepWiki, Exa, or equivalent web tools when the active harness exposes them.
 
 Recommended first run after installation:
 
@@ -267,13 +267,14 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 Subagent-first native plus external plan verification. Verifies either a plan
 file or the latest conversation-backed plan against repository files, checked-in
-guidance, manifests, lockfiles, and safe read-only local commands. Native
-verification runs through the `plan-verifier` subagent when available, with
-native verification marked blocked when no read-only subagent facility exists;
-configured non-native `/pza-settings` reviewers then run as plan-review second opinions
-through `run-reviewer plan`. Claims that local evidence cannot prove are
-reported as unverifiable, and reviewer findings are adjudicated before the final
-report.
+guidance, manifests, lockfiles, safe read-only local commands, and bounded
+online evidence when Context7, DeepWiki, Exa, or equivalent web tools are
+available. Native verification runs through the `plan-verifier` subagent when
+available, with native verification marked blocked when no read-only subagent
+facility exists; configured non-native `/pza-settings` reviewers then run as
+plan-review second opinions through `run-reviewer plan`. Claims that local and
+safely queried online evidence cannot prove are reported as unverifiable, and
+reviewer findings are adjudicated before the final report.
 
 **Flags:** `--report-only`
 
@@ -283,7 +284,7 @@ report.
 - `code-quality-reviewer` — correctness, security, architecture, and performance review; also forwards bounded context to configured reviewer backends in backend mode.
 - `standards-compliance-reviewer` — documented repo standards and convention compliance.
 - `spec-compliance-reviewer` — issue, PRD, and requirement compliance for changed work.
-- `plan-verifier` — verifies plans against local code, project guidance, manifests, and lockfiles.
+- `plan-verifier` — verifies plans against local code, project guidance, manifests, lockfiles, and bounded online evidence when MCP/web tools are available.
 - `adversarial-reviewer` — runs configured security-focused adversarial lanes with bounded, redacted review context.
 
 ## Runtime Helpers
@@ -295,7 +296,7 @@ Installed skills use runtime helpers at `~/.pza-skills/lib/pza-runtime.js`:
 - `plan-reviewers` — sanitized status for optional custom external plan reviewers without exposing command arrays.
 - `collect-review-context --summary|--redacted-diff` — bounded review context for `/arewedone`.
 - `collect-plan-context <plan-file|-> <source>` — bounded local plan context for `/areyousure`.
-- `plan-review-prompt <plan-file|-> <source>` — bounded, redacted external plan-review prompt builder.
+- `plan-review-prompt <plan-file|-> <source>` — bounded, redacted external plan-review prompt builder that asks reviewers to use web search when available and report web-access status.
 - `redact-context` — stdin/stdout redaction helper for likely secrets and high-entropy tokens.
 - `second-opinion-policy` / `set-second-opinion-mode <ask|native-only|strict>` — controls approval-gated external AI reviewer behavior.
 - `run-reviewer <code|plan|adversarial> <provider> <model>` — provider-normalized backend review runner with diff-hash guard, automatic worktree-change diagnostics, and `PZA reviewer result: passed|blocked|failed` status output.
@@ -340,7 +341,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/agent-docs-audit` | — | — |
 | `/agent-docs-revise` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
-| `/areyousure` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
+| `/areyousure` | — | Context7, DeepWiki, Exa, Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 
 Skills gracefully degrade when optional dependencies are missing.
 

@@ -173,8 +173,17 @@ dependency data.
 plan only exists in chat, the workflow treats the conversation as the source of
 truth and only materializes temporary `/tmp` files when needed for bounded local
 context collection. Native verification checks paths, imports, manifests,
-lockfiles, and checked-in guidance, and reports remote documentation freshness
-claims as unverifiable when local evidence cannot prove them.
+lockfiles, and checked-in guidance first. It then attempts bounded online
+evidence checks when Context7, DeepWiki, Exa, or equivalent web tools are
+available in the active harness. Context7 is for public library/framework/SDK,
+API, CLI, and cloud-service docs; DeepWiki is for public GitHub repository
+claims when an `owner/repo` is identifiable; Exa or web search is for public
+changelogs, deprecations, migration notes, release docs, and current
+implementation guidance not covered by the other tools. Online queries must be
+claim-focused and use only public identifiers; never send raw private plans,
+private source, secrets, diffs, proprietary details, or unredacted local context
+to MCP/web tools. Missing online tools are reported in `Lane Execution` as
+skipped or unavailable, not as failed verification.
 
 After native verification, `/areyousure` can run configured non-native reviewer
 backends from `/pza-settings` as plan-review second opinions through
@@ -187,7 +196,10 @@ or the PZA role is unavailable, native verification is marked blocked in
 `Lane Execution` instead of being emulated in the main agent or a background
 terminal. Native verification must not call `run-reviewer plan native`; that
 runtime path is blocked by design. Optional custom external plan reviewers use
-`plan-review-prompt` plus `run-plan-reviewer <name>`.
+`plan-review-prompt` plus `run-plan-reviewer <name>`. External reviewers are
+asked to use web search when available, cite source URLs or documentation
+references, and state when they had no web access. PZA cannot force provider web
+access.
 
 `/arewedone` follows the same transport split: native structural completeness,
 native code quality, native standards compliance, native spec compliance, and
@@ -201,7 +213,9 @@ Both `/arewedone` and `/areyousure` must adjudicate reviewer output before final
 reporting. Final finding statuses are `CONFIRMED`, `FALSE_POSITIVE`,
 `UNVERIFIABLE`, `DUPLICATE`, and `OUT_OF_SCOPE`. Adjudication is bounded to the
 top 20 concrete findings and must not execute commands suggested by reviewer
-output.
+output. For `/areyousure`, online evidence can confirm public API, version,
+documentation, deprecation, and migration claims only when it matches the local
+package/version or the plan's stated target.
 
 For provider CLIs without stdin-safe prompt transport, `run-reviewer` may pass
 bounded, redacted context as a prompt argument. This avoids shell interpolation
@@ -228,6 +242,9 @@ collection. Skills gather runtime state only when invoked:
   `PZA check result: passed|blocked|failed|skipped`.
 - `collect-plan-context <plan-file|-> <source>` returns bounded plan context for
   `/areyousure`.
+- Context7, DeepWiki, Exa, or equivalent web tools are used directly by the
+  active harness when exposed to the native `plan-verifier`; their availability
+  is reported in `Lane Execution`, not through `skill-status areyousure`.
 - `redact-context` is the shared stdin/stdout redaction helper.
 
 Adapters should call these helpers rather than duplicating diff assembly,

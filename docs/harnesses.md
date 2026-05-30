@@ -140,6 +140,11 @@ Codex translation notes:
   report must show `blocked: read-only subagent unavailable` in
   `Lane Execution`; do not emulate reviewer lanes in the main agent or a
   background terminal.
+- Native `/areyousure` verification is local-first, then uses Context7,
+  DeepWiki, Exa, or equivalent web tools when Codex exposes them to the active
+  verifier. Query online tools only with public identifiers and claim-focused
+  questions; report unavailable MCP/web lanes in `Lane Execution` rather than
+  adding tool arrays to `skill-status areyousure`.
 - `AGENTS.md` is the primary project instruction file. `CLAUDE.md` is compatibility-only.
 - Codex Plan Mode plans may exist only in the conversation. `/areyousure` should verify that conversation-backed plan read-only, and only write temporary `/tmp` files when bounded local context collection needs a materialized plan.
 - Codex sandboxes can block nested `codex`, `agy`, and other external reviewer CLIs because they need user-state writes, localhost binding, or provider access. In second-opinion `ask` mode, `/arewedone` and `/areyousure` should request approval for the exact `run-reviewer` command and report skipped/blocked lanes if approval is denied.
@@ -162,6 +167,8 @@ frontmatter such as `mode: subagent` and read-only reviewer permissions.
 
 OpenCode plan mode may use `.opencode/plans/*.md`. `/areyousure` should prefer
 that file when present, then fall back to conversation-visible plan content.
+When OpenCode exposes web or MCP documentation tools to the native verifier,
+`/areyousure` should use them only for bounded public claim checks.
 
 ## Pi
 
@@ -179,7 +186,9 @@ files are only for slash-command parity with the existing command names.
 
 Core Pi has no built-in plan mode. If a Pi extension places a plan in the editor
 or conversation, `/areyousure` should treat that visible content as a
-conversation-backed plan unless the user provides a file path.
+conversation-backed plan unless the user provides a file path. If Pi exposes
+online documentation or web-search tools, the native verifier may use them for
+public claim checks without forwarding raw private plan or source content.
 
 ## Claude Code Compatibility
 

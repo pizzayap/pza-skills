@@ -1,5 +1,5 @@
 ---
-description: Verify the current implementation plan against local repo evidence
+description: Verify the current implementation plan against local repo and bounded online evidence
 agent: plan
 ---
 

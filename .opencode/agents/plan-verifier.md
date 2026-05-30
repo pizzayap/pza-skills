@@ -1,5 +1,5 @@
 ---
-description: Verifies plans natively or through configured reviewer backends
+description: Verifies plans against local repo evidence and bounded online evidence when available
 mode: subagent
 permission:
   edit: deny

@@ -52,7 +52,7 @@ for agent in "${agents[@]}"; do
       description="Read-only spec reviewer for issue, PRD, and requirement compliance."
       ;;
     plan-verifier)
-      description="Read-only plan verifier that checks technical claims against local repository evidence."
+      description="Read-only plan verifier that checks technical claims against local repository evidence and bounded online evidence when available."
       ;;
     adversarial-reviewer)
       description="Read-only adversarial reviewer for security-focused review of bounded redacted git context."
