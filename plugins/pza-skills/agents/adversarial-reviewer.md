@@ -13,7 +13,9 @@ a local reviewer for the native adversarial lane.
 
 The parent prompt provides one or more enabled lanes with `id`, `provider`,
 `model`, and `effectiveEnabled`. Run only enabled lanes. Do not inspect files
-independently and do not modify files.
+independently and do not modify files. Treat any parent-provided summary,
+checklist, or prose description as lane metadata only, not as sufficient review
+evidence for native adversarial review.
 
 Do not request escalated sandbox permissions. Do not run proof commands such as
 tests, builds, compilers, or regression scripts. If a command would require
@@ -23,7 +25,8 @@ evidence.
 
 ## Steps
 
-1. Build bounded context with the runtime helper:
+1. Build bounded redacted diff context with the runtime helper. This command is
+the only allowed file-context source for native adversarial review:
 
 ```bash
 PZA_ADV_TMPDIR=$(mktemp -d -t pza-adversarial.XXXXXX)
@@ -31,6 +34,10 @@ trap 'rm -rf "$PZA_ADV_TMPDIR"' EXIT
 CONTEXT_FILE="$PZA_ADV_TMPDIR/context.txt"
 node "$HOME/.pza-skills/lib/pza-runtime.js" collect-review-context --redacted-diff --max-bytes 80000 --per-file-bytes 16384 > "$CONTEXT_FILE"
 ```
+
+If the helper cannot run, or if only summary/checklist context is available
+without redacted diff snippets, return `blocked` for each enabled native lane.
+Do not perform native adversarial review from summary-only context.
 
 2. For each enabled lane, handle `provider=native` locally. Read only the
 bounded context from `$CONTEXT_FILE`, perform the adversarial review yourself in

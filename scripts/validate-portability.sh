@@ -886,7 +886,28 @@ grep -F -q -- '--spec <path-or-issue-ref>' .pi/prompts/arewedone.md
 grep -F -q -- '--no-spec' .pi/prompts/arewedone.md
 grep -F -q -- '--spec <path-or-issue-ref>' .opencode/commands/arewedone.md
 grep -F -q -- '--no-spec' .opencode/commands/arewedone.md
-grep -F -q 'Native structural, code-quality, standards, spec, and adversarial review' skills/arewedone/SKILL.md
+arewedone_launch_section=$(awk '
+  /^### 2\. Launch Reviews/ { in_section = 1 }
+  /^### 3\. Backend Reviewer Context/ { in_section = 0 }
+  in_section { print }
+' skills/arewedone/SKILL.md)
+if printf '%s\n' "$arewedone_launch_section" | grep -F -q -- '- Native adversarial:'; then
+  echo "Native adversarial lanes must not launch from /arewedone section 2" >&2
+  exit 1
+fi
+if printf '%s\n' "$arewedone_launch_section" | grep -F -q -- '- External adversarial lanes:'; then
+  echo "External adversarial lanes must not launch from /arewedone section 2" >&2
+  exit 1
+fi
+grep -F -q 'Backend code quality: use `code-quality-reviewer` with `mode=backend`' skills/arewedone/SKILL.md
+grep -F -q 'Section 4 is the only adversarial launch authority' skills/arewedone/SKILL.md
+grep -F -q 'status.adversarialReviewers' skills/arewedone/SKILL.md
+grep -F -q 'once and only once' skills/arewedone/SKILL.md
+grep -F -q '`effectiveEnabled`, `provider`, `model`' skills/arewedone/SKILL.md
+grep -F -q 'collect-review-context --redacted-diff --max-bytes 80000 --per-file-bytes 16384' agents/adversarial-reviewer.md
+grep -F -q 'only allowed file-context source for native adversarial review' agents/adversarial-reviewer.md
+grep -F -q 'Do not perform native adversarial review from summary-only context' agents/adversarial-reviewer.md
+grep -F -q 'return `blocked` for each enabled native lane' agents/adversarial-reviewer.md
 grep -F -q 'GitHub CLI (`gh`), Ollama' README.md
 grep -F -q '**Optional:** GitHub CLI (`gh`)' README.md
 for file in README.md docs/harnesses.md docs/portability.md AGENTS.md CLAUDE.md; do
