@@ -928,6 +928,30 @@ for skill_file in skills/*/SKILL.md; do
   fi
 done
 
+echo "== Plain areyousure independence =="
+plain_extra=$(find skills/areyousure-plain -mindepth 1 -type f ! -name SKILL.md -print)
+if [ -n "$plain_extra" ]; then
+  echo "areyousure-plain must stay SKILL.md-only:" >&2
+  printf '%s\n' "$plain_extra" >&2
+  exit 1
+fi
+for file in \
+  skills/areyousure-plain/SKILL.md \
+  plugins/pza-skills/skills/areyousure-plain/SKILL.md \
+  .opencode/commands/areyousure-plain.md \
+  .pi/prompts/areyousure-plain.md
+do
+  test -f "$file"
+done
+if rg -n '```|[Cc]aveman|pza-runtime|plan-verifier|run-reviewer|collect-plan-context|plan-review-prompt|skill-status|reviewer-settings|plan-reviewers|second-opinion-policy|subagent' \
+  skills/areyousure-plain/SKILL.md \
+  plugins/pza-skills/skills/areyousure-plain/SKILL.md \
+  .opencode/commands/areyousure-plain.md \
+  .pi/prompts/areyousure-plain.md; then
+  echo "areyousure-plain must not contain code fences or PZA runtime/delegation hooks" >&2
+  exit 1
+fi
+
 echo "== Portability scan =="
 if rg -n '![`]' skills agents .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Unexpected load-time markdown command injection found" >&2

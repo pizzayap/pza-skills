@@ -14,6 +14,7 @@
     "./skills/agent-docs-revise",
     "./skills/arewedone",
     "./skills/areyousure",
+    "./skills/areyousure-plain",
     "./skills/hook-worthy",
     "./skills/pza-settings",
     "./skills/work-issue"

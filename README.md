@@ -133,6 +133,7 @@ Install a single skill:
 ```bash
 npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --skill areyousure
+npx skills add pizzayap/pza-skills --skill areyousure-plain
 npx skills add pizzayap/pza-skills --skill agent-docs-audit
 npx skills add pizzayap/pza-skills --skill agent-docs-revise
 npx skills add pizzayap/pza-skills --skill pza-settings
@@ -285,6 +286,15 @@ reviewer findings are adjudicated before the final report.
 
 **Flags:** `--report-only`
 
+### `/areyousure-plain`
+
+Plain plan verification in one skill file. It checks the resolved plan directly
+against local repo evidence and safe public documentation checks, then reports
+in terse format. It is independent of PZA reviewer settings, helper commands,
+local config, other skills, and delegated review lanes.
+
+**Usage:** `/areyousure-plain`, `/areyousure-plain path/to/plan.md`
+
 ## Agents
 
 - `structural-completeness-reviewer` — codebase hygiene, dead code, integration completeness, dependency/config completeness.
@@ -349,6 +359,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/agent-docs-revise` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
 | `/areyousure` | — | Context7, DeepWiki, Exa, Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
+| `/areyousure-plain` | — | Context7, DeepWiki, Exa |
 
 Skills gracefully degrade when optional dependencies are missing.
 
