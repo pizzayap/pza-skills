@@ -302,8 +302,10 @@ reviewer findings are adjudicated before the final report.
 
 Plain plan verification in one skill file. It checks the resolved plan directly
 against local repo evidence and safe public documentation checks, then reports
-in terse format. It is independent of PZA reviewer settings, helper commands,
-local config, other skills, and delegated review lanes.
+in terse format. It may use generic read-only worker agents for embedded
+Context7, DeepWiki, and Exa lanes when available, with serial fallback. It is
+independent of PZA reviewer settings, helper commands, local config, other
+skills, project-owned agent files, and PZA delegated review lanes.
 
 **Usage:** `/areyousure-plain`, `/areyousure-plain path/to/plan.md`
 
