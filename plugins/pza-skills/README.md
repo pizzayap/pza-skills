@@ -132,6 +132,7 @@ Install a single skill:
 
 ```bash
 npx skills add pizzayap/pza-skills --skill arewedone
+npx skills add pizzayap/pza-skills --skill arewedone-plain
 npx skills add pizzayap/pza-skills --skill areyousure
 npx skills add pizzayap/pza-skills --skill areyousure-plain
 npx skills add pizzayap/pza-skills --skill agent-docs-audit
@@ -184,6 +185,17 @@ spec sources are reported as skipped lanes rather than failed completion.
 **Triggers:** "are we done", "review my changes", "check completeness"
 
 **Optional:** GitHub CLI (`gh`), [Ollama](https://ollama.com), [Codex](https://github.com/openai/codex), OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk (toggleable via `/pza-settings`; Snyk should only be run on trusted worktrees)
+
+### `/arewedone-plain`
+
+Plain completion review in one skill file. It checks changed work directly
+against local repo evidence, embedded read-only review lanes, safe proof
+commands, and safe public documentation checks, then reports in terse format. It
+is independent of PZA reviewer settings, helper commands, hooks, runtime, local
+config, other skills, external agent files, and delegated reviewer machinery.
+When worker spawning is unavailable, it runs the same embedded lanes serially.
+
+**Usage:** `/arewedone-plain`, `/arewedone-plain path/to/file`
 
 ### `/pza-settings`
 
@@ -353,6 +365,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | Skill | Required | Optional |
 |---|---|---|
 | `/arewedone` | — | GitHub CLI (`gh`), Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk |
+| `/arewedone-plain` | — | Context7, DeepWiki, Exa |
 | `/pza-settings` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk |
 | `/hook-worthy` | — | — |
 | `/agent-docs-audit` | — | — |
