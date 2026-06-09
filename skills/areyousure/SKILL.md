@@ -250,16 +250,6 @@ status from the list above.
 
 ### 6. Apply or Return Corrections
 
-For file-backed plans, ask before editing the plan file. After approved edits,
-append verification notes with date, plan source, local evidence checked,
-confidence, and findings applied.
-
-For conversation-backed plans, do not edit files. Return a complete replacement
-plan when corrections are accepted, followed by verification notes.
-
-If the user asks only for the report, show the merged report and do not rewrite
-or edit anything.
-
 Every final report must include:
 
 - `Lane Execution`: each lane, transport (`subagent` or `external CLI`),
@@ -268,3 +258,32 @@ Every final report must include:
   exposing raw tool config arrays.
 - `Adjudicated Findings`: confirmed findings plus a short discarded section for
   `FALSE_POSITIVE`, `UNVERIFIABLE`, `DUPLICATE`, and `OUT_OF_SCOPE` items.
+
+### Post-audit decision
+
+Run this step only after the final report is delivered. Do not edit files
+before the user chooses.
+
+After the final report, if CONFIRMED findings require plan corrections, ask what
+to do next. This post-audit prompt is separate from second-opinion sandbox
+approval, external reviewer lanes, and subagent launch.
+
+If the user passed `--report-only`, asked only for the report, or there are no
+actionable CONFIRMED findings, skip this prompt and do not edit anything.
+
+If the active harness has a user-input tool, use it with these options:
+
+- Apply corrections.
+- Report only.
+
+Otherwise ask a concise direct question listing the same options.
+
+When the user chooses apply corrections:
+
+- File-backed plans: edit the plan file. After approved edits, append
+  verification notes with date, plan source, local evidence checked, confidence,
+  and findings applied.
+- Conversation-backed plans: do not edit files. Return a complete replacement
+  plan in chat, followed by verification notes.
+
+When the user chooses report only, stop without edits.

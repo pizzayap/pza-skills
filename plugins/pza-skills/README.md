@@ -180,7 +180,11 @@ External reviewers and adversarial lanes receive context through
 bytes. Optional Snyk dependency scanning is separate from AI review and runs only
 when configured or explicitly requested. Spec compliance can be directed with
 `--spec <path-or-issue-ref>` or skipped with `--no-spec`; missing standards or
-spec sources are reported as skipped lanes rather than failed completion.
+spec sources are reported as skipped lanes rather than failed completion. After
+the report and proof commands, if CONFIRMED fixes remain, the skill prompts via
+a harness user-input tool (or a direct question) to fix all, fix critical and
+warning only, or skip and record findings in `REVIEW-BACKLOG.md`. That
+post-audit prompt is separate from second-opinion sandbox approval.
 
 **Triggers:** "are we done", "review my changes", "check completeness"
 
@@ -194,6 +198,9 @@ commands, and safe public documentation checks, then reports in terse format. It
 is independent of PZA reviewer settings, helper commands, hooks, runtime, local
 config, other skills, external agent files, and delegated reviewer machinery.
 When worker spawning is unavailable, it runs the same embedded lanes serially.
+After the report and proof commands, if CONFIRMED fixes remain, it prompts via a
+harness user-input tool (or a direct question) to fix all, fix critical and
+warning only, or skip and record findings in `REVIEW-BACKLOG.md`.
 
 **Usage:** `/arewedone-plain`, `/arewedone-plain path/to/file`
 
@@ -294,7 +301,11 @@ available, with native verification marked blocked when no read-only subagent
 facility exists; configured non-native `/pza-settings` reviewers then run as
 plan-review second opinions through `run-reviewer plan`. Claims that local and
 safely queried online evidence cannot prove are reported as unverifiable, and
-reviewer findings are adjudicated before the final report.
+reviewer findings are adjudicated before the final report. After the report, if
+CONFIRMED plan corrections remain and `--report-only` was not passed, the skill
+prompts via a harness user-input tool (or a direct question) to apply
+corrections or stop at report only. That post-audit prompt is separate from
+second-opinion sandbox approval.
 
 **Flags:** `--report-only`
 
@@ -305,9 +316,12 @@ against local repo evidence and safe public documentation checks, then reports
 in terse format. It may use generic read-only worker agents for embedded
 Context7, DeepWiki, and Exa lanes when available, with serial fallback. It is
 independent of PZA reviewer settings, helper commands, local config, other
-skills, project-owned agent files, and PZA delegated review lanes.
+skills, project-owned agent files, and PZA delegated review lanes. After the
+report, if CONFIRMED plan corrections remain and `--report-only` was not passed,
+it prompts via a harness user-input tool (or a direct question) to apply
+corrections or stop at report only.
 
-**Usage:** `/areyousure-plain`, `/areyousure-plain path/to/plan.md`
+**Usage:** `/areyousure-plain`, `/areyousure-plain path/to/plan.md`, `/areyousure-plain --report-only`
 
 ## Agents
 

@@ -262,18 +262,7 @@ Merge all launched reviews into one adjudicated report:
 Only include short snippets when necessary to identify the issue. Do not echo
 large code blocks, config files, tokens, or redacted values.
 
-### 6. Fix or Defer
-
-If reviewers found issues, ask the user how to proceed:
-
-- Fix all.
-- Fix critical and warning findings only.
-- Skip fixes and record findings in `REVIEW-BACKLOG.md`.
-
-For deferred findings, append a dated section to `REVIEW-BACKLOG.md` instead of
-overwriting it.
-
-### 7. Proof
+### 6. Proof
 
 Run relevant proof commands from the parent `/arewedone` flow before declaring
 completion. Do not delegate proof commands to reviewer subagents. Detect scripts
@@ -305,6 +294,29 @@ node "$HOME/.pza-skills/lib/pza-runtime.js" run-check snyk --severity-threshold 
 `run-check snyk` emits `PZA check result: passed|blocked|failed|skipped`.
 Treat `failed` as findings to address, `blocked` as incomplete, and `skipped`
 as not applicable.
+
+### 7. Post-audit decision
+
+Run this step only after the adjudicated report is delivered and §6 proof
+commands have completed. Do not edit files before the user chooses.
+
+After the final report, if CONFIRMED findings require fixes, ask what to do
+next. This post-audit prompt is separate from second-opinion sandbox approval,
+external reviewer lanes, and subagent launch. It is not proof-command approval.
+
+If the active harness has a user-input tool, use it with these options:
+
+- Fix all.
+- Fix critical and warning findings only.
+- Skip fixes and record findings in `REVIEW-BACKLOG.md`.
+
+Otherwise ask a concise direct question listing the same options.
+
+Skip this prompt when there are no actionable CONFIRMED findings.
+
+For deferred findings, append a dated section to `REVIEW-BACKLOG.md` instead of
+overwriting it. Apply fixes only after the user selects an option other than
+skip.
 
 ### 8. Review Marker
 

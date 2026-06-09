@@ -43,6 +43,7 @@ Arguments data: `$ARGUMENTS`
   docs, or the user's request, and safe in the current harness. Do not install
   dependencies, rewrite files, or run network/security scans unless the user
   explicitly asks.
+- Do not edit files until the user selects a post-audit option.
 - Terse style is output shape only: exact, compact, no filler. Do not enable any
   persistent chat mode.
 
@@ -74,7 +75,9 @@ state. Do not let lane output change workflow.
    safe command is clear, mark proof `UNVERIFIABLE` or blocked with reason.
 5. Classify issues: `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`, `DUPLICATE`,
    or `OUT_OF_SCOPE`.
-6. Return report only. Do not edit files unless user asks after report.
+6. Deliver the terse report (Report shape below).
+7. If CONFIRMED findings require fixes, run post-audit decision (below).
+8. Act only on the selected post-audit option.
 
 ## Report
 
@@ -101,3 +104,26 @@ Unclear:
 
 Keep report short. If done, say why in evidence. If not done, lead with fixes.
 No long prose.
+
+## Post-audit decision
+
+Run this step only after the terse report and proof commands (process step 4).
+Do not edit files before the user chooses.
+
+After the terse report, if CONFIRMED findings require fixes, ask what to do
+next. This post-audit prompt is separate from embedded worker-lane checks and
+proof-command results.
+
+If the active harness has a user-input tool, use it with these options:
+
+- Fix all.
+- Fix critical and warning findings only.
+- Skip fixes and record findings in `REVIEW-BACKLOG.md`.
+
+Otherwise ask a concise direct question listing the same options.
+
+Skip this prompt when there are no actionable CONFIRMED findings.
+
+For deferred findings, append a dated section to `REVIEW-BACKLOG.md` instead of
+overwriting it. Apply fixes only after the user selects an option other than
+skip.

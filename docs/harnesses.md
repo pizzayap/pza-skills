@@ -134,6 +134,7 @@ to Codex until Codex hook payload compatibility is verified.
 Codex translation notes:
 
 - Claude-style `AskUserQuestion` means Codex `request_user_input` when available, or a concise direct question when it is not.
+- Post-audit user-input prompts in `/arewedone`, `/areyousure`, and both `-plain` skills are separate from second-opinion `ask` mode. Second-opinion `ask` approval-gates external reviewer CLIs only; post-audit prompts run after the final report (and after proof commands in `/arewedone*`) to choose fix, defer, or report-only next steps.
 - Claude-style `Task(...)` means Codex subagent/collaboration tools such as `spawn_agent`; omit inline model selection unless Codex exposes it.
 - Native `/arewedone` and `/areyousure` lanes are subagent-first when Codex
   exposes read-only subagent tools. If the PZA roles are unavailable, the final

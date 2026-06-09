@@ -1009,6 +1009,22 @@ if rg -n '```|[Cc]aveman|pza-runtime|plan-verifier|run-reviewer|collect-review-c
   exit 1
 fi
 
+echo "== Post-audit decision prompts =="
+for file in \
+  skills/arewedone/SKILL.md \
+  skills/areyousure/SKILL.md \
+  skills/arewedone-plain/SKILL.md \
+  skills/areyousure-plain/SKILL.md \
+  plugins/pza-skills/skills/arewedone/SKILL.md \
+  plugins/pza-skills/skills/areyousure/SKILL.md \
+  plugins/pza-skills/skills/arewedone-plain/SKILL.md \
+  plugins/pza-skills/skills/areyousure-plain/SKILL.md
+do
+  test -f "$file"
+  grep -F -q 'user-input tool' "$file"
+  grep -F -q 'Post-audit decision' "$file"
+done
+
 echo "== Portability scan =="
 if rg -n '![`]' skills agents .opencode .pi .codex-plugin .agents/plugins .claude-plugin; then
   echo "Unexpected load-time markdown command injection found" >&2
