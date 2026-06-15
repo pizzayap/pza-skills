@@ -135,8 +135,8 @@ npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --skill arewedone-plain
 npx skills add pizzayap/pza-skills --skill areyousure
 npx skills add pizzayap/pza-skills --skill areyousure-plain
-npx skills add pizzayap/pza-skills --skill agent-docs-audit
-npx skills add pizzayap/pza-skills --skill agent-docs-revise
+npx skills add pizzayap/pza-skills --skill agents-md-audit
+npx skills add pizzayap/pza-skills --skill agents-md-revise
 npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
@@ -270,17 +270,17 @@ Snyk is configured as an optional proof check, not as a reviewer backend. It run
 
 Audits the current session for recurring mistakes, convention violations, or dangerous patterns worth enforcing as harness hooks. Claude Code hooks are the implemented compatibility target; other harness hooks are documented only after stable payloads are verified. Command hooks require explicit user approval of the exact command, and hook JSON can be checked with `validate-hook-proposal`.
 
-### `/agent-docs-audit`
+### `/agents-md-audit`
 
-Read-only quality audit for `AGENTS.md`, `CLAUDE.md`, and nested agent guidance files. It checks commands, architecture, project-specific gotchas, conciseness, current paths, actionability, and AGENTS/CLAUDE mirror drift against the live repository.
+Read-only terse quality audit for `AGENTS.md` and nested `AGENTS.md` files. Checks commands, architecture, project-specific gotchas, conciseness, current paths, and actionability against the live repository. No edits.
 
-**Usage:** `/agent-docs-audit`, `/agent-docs-audit --root-only`, `/agent-docs-audit --all`, `/agent-docs-audit path/to/docs`
+**Usage:** `/agents-md-audit`, `/agents-md-audit --root-only`, `/agents-md-audit --all`, `/agents-md-audit path/to/docs`
 
-### `/agent-docs-revise`
+### `/agents-md-revise`
 
-Captures durable session learnings and current repo evidence, then proposes a full rewrite or focused diff for `AGENTS.md` before editing. When `CLAUDE.md` exists as a compatibility mirror, it updates that file after `AGENTS.md` with intentional Claude-specific differences.
+Captures durable session learnings and current repo evidence, then proposes a focused diff or full rewrite for `AGENTS.md` before editing. Plain skill: no runtime helpers or other skills required.
 
-**Usage:** `/agent-docs-revise`, `/agent-docs-revise --root-only`, `/agent-docs-revise --all`, `/agent-docs-revise path/to/docs`
+**Usage:** `/agents-md-revise`, `/agents-md-revise --root-only`, `/agents-md-revise --all`, `/agents-md-revise path/to/docs`
 
 ### `/work-issue`
 
@@ -384,8 +384,8 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/arewedone-plain` | — | Context7, DeepWiki, Exa |
 | `/pza-settings` | — | Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity, Snyk |
 | `/hook-worthy` | — | — |
-| `/agent-docs-audit` | — | — |
-| `/agent-docs-revise` | — | — |
+| `/agents-md-audit` | — | — |
+| `/agents-md-revise` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
 | `/areyousure` | — | Context7, DeepWiki, Exa, Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/areyousure-plain` | — | Context7, DeepWiki, Exa |

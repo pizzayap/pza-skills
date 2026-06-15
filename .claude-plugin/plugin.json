@@ -8,10 +8,10 @@
   "repository": "https://github.com/pizzayap/pza-skills",
   "license": "MIT",
   "displayName": "PZA-skills",
-  "keywords": ["code-review", "hooks", "plan-verification", "agent-docs", "ollama", "codex"],
+  "keywords": ["code-review", "hooks", "plan-verification", "agents-md", "ollama", "codex"],
   "skills": [
-    "./skills/agent-docs-audit",
-    "./skills/agent-docs-revise",
+    "./skills/agents-md-audit",
+    "./skills/agents-md-revise",
     "./skills/arewedone",
     "./skills/arewedone-plain",
     "./skills/areyousure",
