@@ -195,6 +195,8 @@ post-audit prompt is separate from second-opinion sandbox approval.
 Plain completion review in one skill file. It checks changed work directly
 against local repo evidence, embedded read-only review lanes, safe proof
 commands, and safe public documentation checks, then reports in terse format. It
+reviews code only — git commit state is used for scope, not as a finding; when
+the review passes, it may add an optional passive note to commit locally. It
 is independent of PZA reviewer settings, helper commands, hooks, runtime, local
 config, other skills, external agent files, and delegated reviewer machinery.
 When worker spawning is unavailable, it runs the same embedded lanes serially.

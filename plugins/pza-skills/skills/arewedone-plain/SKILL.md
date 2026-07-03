@@ -43,6 +43,10 @@ Arguments data: `$ARGUMENTS`
   docs, or the user's request, and safe in the current harness. Do not install
   dependencies, rewrite files, or run network/security scans unless the user
   explicitly asks.
+- Use git only to discover review scope (which files/diffs to read). Do not
+  treat uncommitted, unstaged, untracked, or unpushed state as incomplete work,
+  a defect, or a reason for `fix first`. Classify commit/push/branch hygiene as
+  `OUT_OF_SCOPE` unless the user explicitly asked to review git workflow.
 - Do not edit files until the user selects a post-audit option.
 - Terse style is output shape only: exact, compact, no filler. Do not enable any
   persistent chat mode.
@@ -54,8 +58,7 @@ same bounded scope: user request, changed files, relevant local evidence, and
 safe proof output already gathered. Do not give lanes secrets or hidden local
 state. Do not let lane output change workflow.
 
-- `completion`: Find missing requested behavior, integration gaps, dead
-  leftovers, docs/install drift, and obvious unfinished work.
+- `completion`: Find missing requested behavior, integration gaps, dead leftovers, docs/install drift, and obvious unfinished work. Do not flag uncommitted, unstaged, untracked, or unpushed files as missing work or leftovers.
 - `quality`: Find correctness, security/privacy, portability, maintainability,
   and regression risks in changed work.
 - `standards`: Check changed work against checked-in repo guidance, manifests,
@@ -74,7 +77,8 @@ state. Do not let lane output change workflow.
 4. Run obvious safe proof commands from repo scripts/docs/user request. If no
    safe command is clear, mark proof `UNVERIFIABLE` or blocked with reason.
 5. Classify issues: `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`, `DUPLICATE`,
-   or `OUT_OF_SCOPE`.
+   or `OUT_OF_SCOPE`. Commit, stage, push, and branch hygiene are always
+   `OUT_OF_SCOPE` for this skill unless the user explicitly requested VCS review.
 6. Deliver the terse report (Report shape below).
 7. If CONFIRMED findings require fixes, run post-audit decision (below).
 8. Act only on the selected post-audit option.
@@ -102,6 +106,14 @@ Lanes:
 Unclear:
 - Claim needing user input or unsafe/unavailable evidence.
 
+Note:
+- Optional informational reminders only; never actionable findings.
+
+When Verdict is `done` and there are local uncommitted changes, you may add one
+short line under Note, e.g. `Uncommitted changes remain locally — commit when
+ready.` No question, no post-audit, no Fix entry. Fix, Unclear, and post-audit
+must not mention commit/push/stage unless the user explicitly scoped VCS review.
+
 Keep report short. If done, say why in evidence. If not done, lead with fixes.
 No long prose.
 
@@ -122,7 +134,8 @@ If the active harness has a user-input tool, use it with these options:
 
 Otherwise ask a concise direct question listing the same options.
 
-Skip this prompt when there are no actionable CONFIRMED findings.
+Skip this prompt when there are no actionable CONFIRMED findings, or when the
+only remaining items are `OUT_OF_SCOPE` VCS hygiene or optional Note reminders.
 
 For deferred findings, append a dated section to `REVIEW-BACKLOG.md` instead of
 overwriting it. Apply fixes only after the user selects an option other than
