@@ -1,5 +1,5 @@
 ---
-description: Check changed work plainly without PZA reviewer machinery
+description: Clarify and check whether work is done plainly without PZA reviewer machinery
 argument-hint: "[scope-or-notes]"
 ---
 

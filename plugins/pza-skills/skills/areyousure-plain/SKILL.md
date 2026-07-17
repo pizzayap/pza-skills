@@ -1,17 +1,18 @@
 ---
 name: areyousure-plain
 description: >-
-  Lightweight plan verification in terse plain format. Use when the user asks
-  to verify a plan plainly, without PZA reviewer settings, helper commands,
-  project-owned agent files, or other skill machinery.
+  Help verify a plan when the user is unsure about next steps or wants a plain
+  plan check, without PZA reviewer settings, helper commands, project-owned
+  agent files, or other skill machinery. Clarify fuzzy goals first, then audit.
 user-invocable: true
 argument-hint: '[plan-path|pasted-plan|--report-only]'
 ---
 
 # Are You Sure Plain
 
-Fast plan check. One skill file. No project-owned agent files. No other skills.
-No helper commands. No PZA config. No persistent style change.
+Plan check that helps unclear users clear scope. One skill file. No
+project-owned agent files. No other skills. No helper commands. No PZA config.
+No persistent style change.
 
 Arguments: `$ARGUMENTS`
 
@@ -63,20 +64,25 @@ If a worker or MCP tool is unavailable, mark that lane `skipped` or
 
 ## Process
 
-1. Resolve one plan from arguments, pasted content, latest conversation plan, or
+1. Clarify-first: restate the goal in 2-4 plain sentences. If goal/scope is
+   already concrete, skip Q&A and continue straight into the audit. Only when
+   goal/scope is fuzzy: ask up to 3 concrete questions or offer 2-3 plausible
+   scopes; do not audit until scope is agreed or the user says to proceed
+   anyway. Name the smallest useful next step.
+2. Resolve one plan from arguments, pasted content, latest conversation plan, or
    an explicit user answer.
-2. Split plan into concrete claims: files, commands, APIs, package names,
+3. Split plan into concrete claims: files, commands, APIs, package names,
    expected behavior, tests, docs, rollout.
-3. Check local evidence first: paths, manifests, imports, scripts, configs,
+4. Check local evidence first: paths, manifests, imports, scripts, configs,
    existing conventions, docs.
-4. Check public claims only when current docs may matter. Use embedded MCP lanes
+5. Check public claims only when current docs may matter. Use embedded MCP lanes
    in parallel when available, else run the same lane checks serially yourself.
-5. Classify each issue: `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`,
+6. Classify each issue: `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`,
    `DUPLICATE`, or `OUT_OF_SCOPE`.
-6. Deliver the terse report (Report shape below).
-7. If CONFIRMED findings require plan corrections and `--report-only` was not
+7. Deliver the terse report (Report shape below).
+8. If CONFIRMED findings require plan corrections and `--report-only` was not
    passed, run post-audit decision (below).
-8. Act only on the selected post-audit option.
+9. Act only on the selected post-audit option.
 
 ## Report
 
@@ -84,9 +90,17 @@ Use this shape:
 
 Verdict: pass, fix first, or blocked.
 
+Summary: one plain-English paragraph.
+
+Solid:
+- Thing that already checks out.
+- Next solid point.
+
 Fix:
-- Highest-impact correction.
+- Highest-impact correction — one-line why it matters.
 - Next correction.
+
+Next: one concrete action if stuck.
 
 Evidence:
 - `path` -> fact.
@@ -98,8 +112,9 @@ Lanes:
 Unclear:
 - Claim needing user input or unsafe/unavailable evidence.
 
-Keep report short. If plan passes, say why in evidence. If plan fails, lead with
-fixes. No long prose.
+Keep report short. If plan passes, say why in Summary and Evidence. If plan
+fails, after Solid when anything checks out, lead with the highest-impact issue
+and one-line why it matters. No long prose.
 
 ## Post-audit decision
 
@@ -114,6 +129,8 @@ If `--report-only` was passed, skip this prompt and do not edit.
 If the active harness has a user-input tool, use it with these options:
 
 - Apply corrections.
+- Clarify plan with me.
+- Simplify to MVP.
 - Report only.
 
 Otherwise ask a concise direct question listing the same options.
@@ -126,5 +143,12 @@ When the user chooses apply corrections:
   plan source, local evidence checked, confidence, and findings applied.
 - Conversation-backed plan: return replacement plan text in chat with verification
   notes; do not write conversation-backed plans into the repository.
+
+When the user chooses clarify plan with me: ask focused questions and rewrite
+the plan collaboratively in chat; do not edit files until they later choose apply.
+
+When the user chooses simplify to MVP: return a smaller scoped plan that keeps
+only the smallest useful next step; apply to a file-backed plan only if they
+confirm, otherwise keep it in chat.
 
 When the user chooses report only, stop without edits.

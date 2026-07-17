@@ -192,17 +192,19 @@ post-audit prompt is separate from second-opinion sandbox approval.
 
 ### `/arewedone-plain`
 
-Plain completion review in one skill file. It checks changed work directly
-against local repo evidence, embedded read-only review lanes, safe proof
-commands, and safe public documentation checks, then reports in terse format. It
-reviews code only — git commit state is used for scope, not as a finding; when
-the review passes, it may add an optional passive note to commit locally. It
-is independent of PZA reviewer settings, helper commands, hooks, runtime, local
-config, other skills, external agent files, and delegated reviewer machinery.
-When worker spawning is unavailable, it runs the same embedded lanes serially.
-After the report and proof commands, if CONFIRMED fixes remain, it prompts via a
-harness user-input tool (or a direct question) to fix all, fix critical and
-warning only, or skip and record findings in `REVIEW-BACKLOG.md`.
+Plain completion review in one skill file. It clarifies fuzzy scope first, then
+checks changed work against local repo evidence, embedded read-only review
+lanes, safe proof commands, and safe public documentation checks. Reports stay
+compact with Summary, Solid, Fix, and Next sections. It reviews code only —
+git commit state is used for scope, not as a finding; when the review passes,
+it may add an optional passive note to commit locally. It is independent of PZA
+reviewer settings, helper commands, hooks, runtime, local config, other skills,
+external agent files, and delegated reviewer machinery. When worker spawning is
+unavailable, it runs the same embedded lanes serially. After the report and
+proof commands, if CONFIRMED fixes remain, it prompts via a harness user-input
+tool (or a direct question) to fix all, fix critical and warning only, explain
+what is left in plain English, or skip and record findings in
+`REVIEW-BACKLOG.md`.
 
 **Usage:** `/arewedone-plain`, `/arewedone-plain path/to/file`
 
@@ -294,34 +296,37 @@ Works a GitHub issue from `#123`, `owner/repo#123`, an issue URL, or the next be
 
 ### `/areyousure`
 
-Subagent-first native plus external plan verification. Verifies either a plan
-file or the latest conversation-backed plan against repository files, checked-in
-guidance, manifests, lockfiles, safe read-only local commands, and bounded
-online evidence when Context7, DeepWiki, Exa, or equivalent web tools are
-available. Native verification runs through the `plan-verifier` subagent when
-available, with native verification marked blocked when no read-only subagent
-facility exists; configured non-native `/pza-settings` reviewers then run as
-plan-review second opinions through `run-reviewer plan`. Claims that local and
-safely queried online evidence cannot prove are reported as unverifiable, and
-reviewer findings are adjudicated before the final report. After the report, if
-CONFIRMED plan corrections remain and `--report-only` was not passed, the skill
-prompts via a harness user-input tool (or a direct question) to apply
-corrections or stop at report only. That post-audit prompt is separate from
-second-opinion sandbox approval.
+Subagent-first native plus external plan verification. Triggers on explicit
+plan-verify phrases such as "are you sure about the plan", "double-check the
+plan", "verify plan", or `/areyousure` — not bare conversational "are you sure?".
+Verifies either a plan file or the latest conversation-backed plan against
+repository files, checked-in guidance, manifests, lockfiles, safe read-only
+local commands, and bounded online evidence when Context7, DeepWiki, Exa, or
+equivalent web tools are available. Native verification runs through the
+`plan-verifier` subagent when available, with native verification marked blocked
+when no read-only subagent facility exists; configured non-native
+`/pza-settings` reviewers then run as plan-review second opinions through
+`run-reviewer plan`. Claims that local and safely queried online evidence cannot
+prove are reported as unverifiable, and reviewer findings are adjudicated before
+the final report. After the report, if CONFIRMED plan corrections remain and
+`--report-only` was not passed, the skill prompts via a harness user-input tool
+(or a direct question) to apply corrections or stop at report only. That
+post-audit prompt is separate from second-opinion sandbox approval.
 
 **Flags:** `--report-only`
 
 ### `/areyousure-plain`
 
-Plain plan verification in one skill file. It checks the resolved plan directly
-against local repo evidence and safe public documentation checks, then reports
-in terse format. It may use generic read-only worker agents for embedded
-Context7, DeepWiki, and Exa lanes when available, with serial fallback. It is
-independent of PZA reviewer settings, helper commands, local config, other
-skills, project-owned agent files, and PZA delegated review lanes. After the
-report, if CONFIRMED plan corrections remain and `--report-only` was not passed,
-it prompts via a harness user-input tool (or a direct question) to apply
-corrections or stop at report only.
+Plain plan verification in one skill file. It clarifies fuzzy goals first, then
+checks the resolved plan against local repo evidence and safe public
+documentation checks. Reports stay compact with Summary, Solid, Fix, and Next
+sections. It may use generic read-only worker agents for embedded Context7,
+DeepWiki, and Exa lanes when available, with serial fallback. It is independent
+of PZA reviewer settings, helper commands, local config, other skills,
+project-owned agent files, and PZA delegated review lanes. After the report, if
+CONFIRMED plan corrections remain and `--report-only` was not passed, it prompts
+via a harness user-input tool (or a direct question) to apply corrections,
+clarify the plan, simplify to MVP, or stop at report only.
 
 **Usage:** `/areyousure-plain`, `/areyousure-plain path/to/plan.md`, `/areyousure-plain --report-only`
 

@@ -1,12 +1,13 @@
 ---
 name: areyousure
 description: >-
-  Run when the user says "are you sure", "are you sure about the plan",
-  "double-check the plan", "verify plan", "deep check the plan", or "validate
-  the plan". Re-validates the current implementation plan against local repo
-  evidence plus bounded online documentation, repository, and web evidence when
-  tools are available, adjudicates findings, then applies or returns
-  corrections.
+  Run when the user says "are you sure about the plan", "double-check the
+  plan", "verify plan", "deep check the plan", or "validate the plan", or when
+  they invoke /areyousure. Re-validates the current implementation plan against
+  local repo evidence plus bounded online documentation, repository, and web
+  evidence when tools are available, adjudicates findings, then applies or
+  returns corrections. Do not run on bare conversational doubt such as "are you
+  sure?" alone.
 user-invocable: true
 argument-hint: '[--report-only]'
 ---
@@ -24,6 +25,12 @@ available. When second-opinion policy allows it, configured non-native reviewer
 backends may also receive bounded, redacted plan context as external plan-review
 second opinions. Claims that local and safely queried online evidence cannot
 prove are reported as unverifiable.
+
+Conversational doubt is not this skill. If the user asks "are you sure?" without
+asking to verify a plan, answer with evidence-backed confidence in normal prose
+and only offer `/areyousure` or `/areyousure-plain` when they want a formal gate.
+When contradicting a prior claim, cite evidence and distinguish wrong vs
+unverified vs risky but acceptable — never a stock overstated dismissal.
 
 Arguments: `$ARGUMENTS`
 

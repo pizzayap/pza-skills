@@ -1,5 +1,5 @@
 ---
-description: Verify a plan plainly without PZA reviewer machinery
+description: Clarify and verify a plan plainly without PZA reviewer machinery
 agent: plan
 ---
 

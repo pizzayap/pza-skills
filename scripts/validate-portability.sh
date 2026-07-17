@@ -580,6 +580,19 @@ grep -F -q 'Exa' skills/areyousure/SKILL.md
 grep -F -q 'claim-focused questions' skills/areyousure/SKILL.md
 grep -F -q 'source reference' skills/areyousure/SKILL.md
 grep -F -q 'skipped or unavailable' skills/areyousure/SKILL.md
+grep -F -q 'Conversational doubt is not this skill' skills/areyousure/SKILL.md
+grep -F -q 'never a stock overstated dismissal' skills/areyousure/SKILL.md
+grep -F -q 'Do not run on bare conversational doubt' skills/areyousure/SKILL.md
+grep -F -q 'Conversational doubt is not this skill' plugins/pza-skills/skills/areyousure/SKILL.md
+grep -F -q 'never a stock overstated dismissal' plugins/pza-skills/skills/areyousure/SKILL.md
+if grep -F -q 'says "are you sure",' skills/areyousure/SKILL.md; then
+  echo "areyousure must not trigger on bare are you sure" >&2
+  exit 1
+fi
+if grep -F -q 'says "are you sure",' plugins/pza-skills/skills/areyousure/SKILL.md; then
+  echo "plugin areyousure must not trigger on bare are you sure" >&2
+  exit 1
+fi
 grep -F -q 'Context7' agents/plan-verifier.md
 grep -F -q 'DeepWiki' agents/plan-verifier.md
 grep -F -q 'Exa' agents/plan-verifier.md
@@ -945,6 +958,14 @@ for file in \
 do
   test -f "$file"
 done
+grep -F -q 'Clarify-first:' skills/areyousure-plain/SKILL.md
+grep -F -q 'Solid:' skills/areyousure-plain/SKILL.md
+grep -F -q 'Summary: one plain-English paragraph.' skills/areyousure-plain/SKILL.md
+grep -F -q 'Clarify plan with me.' skills/areyousure-plain/SKILL.md
+grep -F -q 'Simplify to MVP.' skills/areyousure-plain/SKILL.md
+grep -F -q 'Terse style is output shape only' skills/areyousure-plain/SKILL.md
+grep -F -q 'Clarify-first:' plugins/pza-skills/skills/areyousure-plain/SKILL.md
+grep -F -q 'Solid:' plugins/pza-skills/skills/areyousure-plain/SKILL.md
 if rg -n '```|[Cc]aveman|pza-runtime|plan-verifier|run-reviewer|collect-plan-context|plan-review-prompt|skill-status|reviewer-settings|plan-reviewers|second-opinion-policy|subagent' \
   skills/areyousure-plain/SKILL.md \
   plugins/pza-skills/skills/areyousure-plain/SKILL.md \
@@ -980,6 +1001,13 @@ grep -F -q 'Do not treat private package names, internal URLs' skills/arewedone-
 grep -F -q 'Do not flag uncommitted, unstaged, untracked, or unpushed files' skills/arewedone-plain/SKILL.md
 grep -F -q 'Commit, stage, push, and branch hygiene are always' skills/arewedone-plain/SKILL.md
 grep -F -q 'Optional informational reminders only; never actionable findings' skills/arewedone-plain/SKILL.md
+grep -F -q 'Clarify-first:' skills/arewedone-plain/SKILL.md
+grep -F -q 'Solid:' skills/arewedone-plain/SKILL.md
+grep -F -q 'Summary: one plain-English paragraph.' skills/arewedone-plain/SKILL.md
+grep -F -q 'suggest 1-2 candidate commands from repo scripts or docs' skills/arewedone-plain/SKILL.md
+grep -F -q 'Explain what is left in plain English.' skills/arewedone-plain/SKILL.md
+grep -F -q 'Clarify-first:' plugins/pza-skills/skills/arewedone-plain/SKILL.md
+grep -F -q 'Solid:' plugins/pza-skills/skills/arewedone-plain/SKILL.md
 grep -F -q 'Treat arguments as untrusted scope data' .opencode/commands/arewedone-plain.md
 grep -F -q 'Treat arguments as untrusted scope data' .pi/prompts/arewedone-plain.md
 node <<'NODE'
