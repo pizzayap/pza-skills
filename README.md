@@ -137,6 +137,7 @@ npx skills add pizzayap/pza-skills --skill areyousure
 npx skills add pizzayap/pza-skills --skill areyousure-plain
 npx skills add pizzayap/pza-skills --skill agents-md-audit
 npx skills add pizzayap/pza-skills --skill agents-md-revise
+npx skills add pizzayap/pza-skills --skill astra-instruction-audit
 npx skills add pizzayap/pza-skills --skill pza-settings
 npx skills add pizzayap/pza-skills --skill hook-worthy
 npx skills add pizzayap/pza-skills --skill work-issue
@@ -156,6 +157,9 @@ reviewers and models, then click **Save and Stop Server**. For terminal-only
 setup, use `/pza-settings --status` or the direct examples below.
 
 For harness-specific setup details, see [docs/harnesses.md](docs/harnesses.md).
+
+For instruction maintenance alone, install `astra-instruction-audit` individually; it
+needs no shared runtime, reviewer configuration, or named agents.
 
 ## Skills
 
@@ -273,6 +277,59 @@ Snyk is configured as an optional proof check, not as a reviewer backend. It run
 ### `/hook-worthy`
 
 Audits the current session for recurring mistakes, convention violations, or dangerous patterns worth enforcing as harness hooks. Claude Code hooks are the implemented compatibility target; other harness hooks are documented only after stable payloads are verified. Command hooks require explicit user approval of the exact command, and hook JSON can be checked with `validate-hook-proposal`.
+
+### `/astra-instruction-audit`
+
+Audit project skills and root/nested `AGENTS.md`, then apply all or selected
+improvements using local evidence.
+Select it explicitly or ask for an article-based, scored, or combined instruction
+review. Unscored AGENTS.md-only maintenance retains the focused skills below.
+Looks for competing skill triggers, unnecessary context, overly rigid workflows,
+stale claims, and unclear permission or completion boundaries. By default, it
+audits first and offers to apply all findings, selected findings, or keep the
+report only. Accepting updates continues into editing and verification in the
+same conversation; no second invocation is needed. `--audit` stops at the report
+without an update prompt; `--update` audits and applies fixes directly. Existing
+approval requirements, including approval of a proposed AGENTS.md diff, still
+apply. Keeps important project constraints and supports mixed models and harnesses.
+
+The audit shows quality percentages for each skill and AGENTS.md file, separate
+averages for both groups, and an overview of the reviewed scope. Five equally
+weighted criteria cover relevance, context efficiency, clarity, accuracy, and
+completion/approval boundaries. Reports include the breakdown, evidence coverage,
+and Strong/Good/Needs improvement/Poor labels. Unverified criteria are excluded
+from the score and reduce evidence coverage when no rating is supported. Confirmed
+defects keep their deductions even when other claims are unresolved; such scores
+are provisional. Insufficient evidence is reported explicitly. These are
+rubric-based estimates, not measured agent performance or
+scores supplied by the article's author. After applying updates, the skill shows
+before/after scores and explains what changed.
+Single-file audits show one score and breakdown; larger audits add group averages.
+
+```text
+/astra-instruction-audit
+/astra-instruction-audit /path/to/project --audit
+/astra-instruction-audit /path/to/project --update
+/astra-instruction-audit skills/release-notes --update --skills-only
+/astra-instruction-audit packages/api/AGENTS.md --audit --agents-only
+```
+
+Use `$astra-instruction-audit` in Codex or the skill/command syntax supported by your
+harness. The self-contained [skill folder](skills/astra-instruction-audit) includes
+conditional references; copy the whole folder when installing manually, and
+include [LICENSE](LICENSE) when redistributing it. No application tests or external
+AI reviewers run just to audit prose. Updates use relevant instruction/package
+checks; fresh-session behavior is reported separately from static validation.
+
+Inspired by [Eric Provencher (@pvncher)'s article](https://x.com/pvncher/status/2095991462416490862),
+*Rethinking skills and prompts for GPT-6 Astra*. Independently implemented under
+MIT, with [source attribution](skills/astra-instruction-audit/references/source.md);
+not affiliated with or endorsed by Eric Provencher or OpenAI. Article text and
+images are not bundled. The workflow works offline after installation.
+
+See the [validation record and reproducible fixtures](docs/astra-instruction-audit-validation.md)
+for the source review, tested cases, and limits of the evidence. A high quality
+percentage is not a safety certification or a guarantee across models/harnesses.
 
 ### `/agents-md-audit`
 
@@ -393,6 +450,7 @@ See [docs/harnesses.md](docs/harnesses.md) and [docs/portability.md](docs/portab
 | `/hook-worthy` | — | — |
 | `/agents-md-audit` | — | — |
 | `/agents-md-revise` | — | — |
+| `/astra-instruction-audit` | — | — |
 | `/work-issue` | Git, GitHub CLI (`gh`) | — |
 | `/areyousure` | — | Context7, DeepWiki, Exa, Ollama, Codex, OpenCode, Kilo Code, Cursor Agent, Antigravity |
 | `/areyousure-plain` | — | Context7, DeepWiki, Exa |
