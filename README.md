@@ -210,6 +210,11 @@ tool (or a direct question) to fix all, fix critical and warning only, explain
 what is left in plain English, or skip and record findings in
 `REVIEW-BACKLOG.md`.
 
+Untracked content is read only for established task files allowed by its privacy
+rules. Findings include severity and evidence; after selected fixes it reruns
+affected checks and updates the verdict. Missing required proof blocks a `done`
+verdict; optional checks and VCS hygiene do not.
+
 **Usage:** `/arewedone-plain`, `/arewedone-plain path/to/file`
 
 ### `/pza-settings`
@@ -341,6 +346,11 @@ Read-only terse quality audit for `AGENTS.md` and nested `AGENTS.md` files. Chec
 
 Captures durable session learnings and current repo evidence, then proposes a focused diff or full rewrite for `AGENTS.md` before editing. Plain skill: no runtime helpers or other skills required.
 
+Scope rules are contained in the skill. Creation stays within the requested
+scope and requires approval of the complete proposed file. It edits approved
+`AGENTS.md` targets only, preserves intervening changes, verifies the result,
+and reports README, manifest, adapter, or install follow-up separately.
+
 **Usage:** `/agents-md-revise`, `/agents-md-revise --root-only`, `/agents-md-revise --all`, `/agents-md-revise path/to/docs`
 
 ### `/work-issue`
@@ -384,6 +394,12 @@ project-owned agent files, and PZA delegated review lanes. After the report, if
 CONFIRMED plan corrections remain and `--report-only` was not passed, it prompts
 via a harness user-input tool (or a direct question) to apply corrections,
 clarify the plan, simplify to MVP, or stop at report only.
+
+Arguments are guarded before interpolation. Checked-in metadata alone does not
+prove an identifier is public; online checks use only obviously public claims.
+Equivalent official-source lookups can replace unavailable MCP tools. Selected
+corrections are rechecked without implementing the plan, and `--report-only`
+suppresses both edits and the update prompt.
 
 **Usage:** `/areyousure-plain`, `/areyousure-plain path/to/plan.md`, `/areyousure-plain --report-only`
 
