@@ -1,0 +1,4 @@
+interface:
+  display_name: "Browser Website Design Clone"
+  short_description: "Map website layouts, routes, and interactions"
+  default_prompt: "Use $browser-website-design-clone to analyze this website's distinct layouts and navigation and create a practical DESIGN.md with a route coverage inventory."
