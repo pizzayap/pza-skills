@@ -1,12 +1,27 @@
-# Migrate from the reviewer framework
+# Migrate skill names and reviewer installations
 
 The collection now distributes five independent skill folders. The last framework
 revision remains in Git history at `e4ad25f`; the active tree does not carry a
 second legacy copy.
 
+## Standalone skill rename
+
+| Previous name | Current name |
+|---|---|
+| `arewedone-plain` | `arewedone` |
+| `areyousure-plain` | `areyousure` |
+
+Use the current names for installation and invocation. The standalone workflows
+and invocation options are preserved; the old `-plain` aliases are not shipped.
+If the previous names are installed, install the renamed skills through the same
+skill manager or copy the complete folders, then remove obsolete `-plain` copies
+after checking ownership and local modifications. Repository updates do not
+automatically migrate installed names.
+
 ## Retired features
 
-- `arewedone`, `areyousure`, `pza-settings`, `hook-worthy`, and `work-issue`.
+- Framework implementations of `arewedone` and `areyousure`, plus `pza-settings`,
+  `hook-worthy`, and `work-issue`.
 - Codex/Claude plugin manifests and marketplace bundles.
 - OpenCode command/agent adapters and Pi prompt aliases.
 - Shared runtime, reviewer-provider configuration and settings UI, external
@@ -14,10 +29,10 @@ second legacy copy.
 - Automatic session tracking, review markers, and review-reminder hooks.
 - Repository-local Impeccable hook bindings containing personal absolute paths.
 
-Use `arewedone-plain` for completion review and `areyousure-plain` for plan
-verification. Their names are unchanged. Provider/model flags and settings from
-the retired commands have no equivalent in these skills. `hook-worthy` and
-`work-issue` have no replacements in this collection.
+Use the standalone `arewedone` for completion review and `areyousure` for plan
+verification. These reuse the retired framework's names. Provider/model flags
+and settings from the retired commands have no equivalent in these skills.
+`hook-worthy` and `work-issue` have no replacements in this collection.
 
 ## Install the retained skills
 

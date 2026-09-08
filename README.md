@@ -17,7 +17,7 @@ npx skills add pizzayap/pza-skills
 Install one skill or list the catalog first:
 
 ```bash
-npx skills add pizzayap/pza-skills --skill arewedone-plain
+npx skills add pizzayap/pza-skills --skill arewedone
 npx skills add pizzayap/pza-skills --list
 ```
 
@@ -40,13 +40,13 @@ ask it to use the installed skill. See the official documentation for
 
 | Skill | Use it for | Requirements |
 |---|---|---|
-| [arewedone-plain](skills/arewedone-plain/SKILL.md) | Check requested changes for completeness, correctness, and missing verification | Repository access; relevant project tools for proof |
-| [areyousure-plain](skills/areyousure-plain/SKILL.md) | Check an implementation plan against local evidence and relevant public documentation | Repository or supplied plan; web/MCP optional |
+| [arewedone](skills/arewedone/SKILL.md) | Check requested changes for completeness, correctness, and missing verification | Repository access; relevant project tools for proof |
+| [areyousure](skills/areyousure/SKILL.md) | Check an implementation plan against local evidence and relevant public documentation | Repository or supplied plan; web/MCP optional |
 | [agents-md-audit](skills/agents-md-audit/SKILL.md) | A focused, read-only AGENTS.md review | Local file access |
 | [agents-md-revise](skills/agents-md-revise/SKILL.md) | Capture durable project guidance in AGENTS.md through an approved diff | Local file access; approval before guidance edits |
 | [astra-instruction-audit](skills/astra-instruction-audit/SKILL.md) | Article-based, scored, or combined skills/AGENTS.md audits and authorized updates | Local file access; web optional |
 
-The plain reviewers operate directly in the current harness. They can use native
+The reviewers operate directly in the current harness. They can use native
 read-only workers when useful and available, and work serially otherwise. They
 do not configure models or invoke external model CLIs. Missing optional tools
 are disclosed; missing evidence is not silently treated as success.
@@ -57,7 +57,7 @@ agent performance. The Astra skill credits
 [Eric Provencher's article](https://x.com/pvncher/status/2095991462416490862);
 it is an independent implementation, not an official or endorsed skill.
 
-For existing plugin/runtime installations, read the
+For renamed skills or existing plugin/runtime installations, read the
 [migration note](docs/migration.md). Repository updates do not uninstall old
 machine-local copies or settings.
 

@@ -1,5 +1,5 @@
 ---
-name: arewedone-plain
+name: arewedone
 description: >-
   Review requested changes for completeness, correctness, and missing verification
   when the user asks whether the work is done.
@@ -7,7 +7,7 @@ user-invocable: true
 argument-hint: '[scope-or-notes]'
 ---
 
-# Are We Done Plain
+# Are We Done
 
 Check whether the requested changes are complete and supported by evidence.
 Keep this workflow and its embedded review lanes in one skill file.

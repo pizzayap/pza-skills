@@ -1,5 +1,5 @@
 ---
-name: areyousure-plain
+name: areyousure
 description: >-
   Verify an implementation plan against repository evidence and relevant public
   documentation when the user asks to check or validate the plan.
@@ -7,7 +7,7 @@ user-invocable: true
 argument-hint: '[plan-path|pasted-plan|--report-only]'
 ---
 
-# Are You Sure Plain
+# Are You Sure
 
 Verify one plan against local evidence and relevant public documentation. Keep
 this workflow in one skill file.
@@ -78,18 +78,22 @@ adequate evidence remain `UNVERIFIABLE`.
    anyway. Name the smallest useful next step.
 2. Resolve one plan from arguments, pasted content, latest conversation plan, or
    an explicit user answer.
-3. Split plan into concrete claims: files, commands, APIs, package names,
+3. Compare the user's requested outcomes and constraints with the planned work
+   and validation. Identify missing required behavior or checks, even when every
+   listed claim is accurate. Keep optional improvements separate from required
+   corrections.
+4. Split plan into concrete claims: files, commands, APIs, package names,
    expected behavior, tests, docs, rollout.
-4. Check local evidence first: paths, manifests, imports, scripts, configs,
+5. Check local evidence first: paths, manifests, imports, scripts, configs,
    existing conventions, docs. Read tracked files or explicitly supplied safe
    plan files; discover paths before bodies. Without Git, inspect the scoped
    files directly and disclose the missing VCS evidence.
-5. Check public claims only when current docs may matter, directly or with
+6. Check public claims only when current docs may matter, directly or with
    optional native workers. Confirm findings from evidence, not worker agreement.
-6. Classify each issue: `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`,
+7. Classify each issue: `CONFIRMED`, `FALSE_POSITIVE`, `UNVERIFIABLE`,
    `DUPLICATE`, or `OUT_OF_SCOPE`.
-7. Deliver the terse report (Report shape below).
-8. Follow the post-audit decision for actionable CONFIRMED corrections. After
+8. Deliver the terse report (Report shape below).
+9. Follow the post-audit decision for actionable CONFIRMED corrections. After
    authorized edits, recheck affected claims and report the final result.
 
 ## Report

@@ -39,10 +39,14 @@ Use the user's invocation text as arguments. If the harness expands
 
 Resolve scope from arguments:
 
-- No argument: root AGENTS.md plus nested */AGENTS.md in repo.
-- Path argument: that file or directory only.
-- --root-only: root AGENTS.md only.
-- --all: all nested AGENTS.md files.
+- No argument: repository root AGENTS.md plus nested AGENTS.md files.
+- File path: that AGENTS.md only; flags never broaden a file target.
+- Directory path: AGENTS.md files within that directory only.
+- `--root-only`: root AGENTS.md of the selected directory, or repository root
+  without a path.
+- `--all`: all AGENTS.md files within the selected directory, or repository
+  without a path.
+- Conflicting flags or a non-AGENTS.md file path: resolve before auditing.
 
 Discover paths before bodies with tracked-file inventory and file search.
 Include tracked dot-directories; exclude dependencies, generated output, Git
