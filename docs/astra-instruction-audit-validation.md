@@ -5,7 +5,12 @@ model will behave identically. The source is Eric Provencher's
 [article](https://x.com/pvncher/status/2095991462416490862), re-read September 7, 2026.
 The scoring rubric and test protocol are this project's implementation choices.
 
-## What the review changed
+## Historical review — September 7, 2026
+
+The following results describe the pre-simplification package and resource hash,
+not a fresh behavioral validation of the current collection.
+
+### What the review changed
 
 | Finding | Evidence in the previous version | Change |
 |---|---|---|
@@ -108,11 +113,12 @@ and scope behavior, rather than optimizing the fixture to obtain a high score.
 
 ## Validation boundaries
 
-`scripts/validate-portability.sh` checks packaging, referenced resources, mirrors,
-discovery and argument boundaries. YAML parsing and scoped whitespace checks cover
-the edited metadata/text. These checks do not establish model behavior.
+`ruby scripts/validate-skills.rb` now checks canonical skill metadata, resource
+links, catalog entries, accidental framework/personal dependencies, and fixture
+paths. It does not enforce exact report wording or prove permission handling.
+Review changed boundaries and use relevant behavioral trials for that evidence.
 
-The named quick skill validator was unavailable in this environment because its
+During the September 7 trial, the named quick skill validator was unavailable because its
 PyYAML dependency was missing; metadata was parsed with the available Ruby YAML
 library instead, including this repository's invocation fields.
 

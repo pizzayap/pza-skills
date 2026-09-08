@@ -9,3 +9,5 @@ node_modules/
 .antigravitycli/
 .pza-skills/
 Thumbs.db
+.codex/hooks.json
+.cursor/hooks.json
