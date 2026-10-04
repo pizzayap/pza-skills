@@ -3,8 +3,8 @@
 [![skills.sh](https://skills.sh/b/pizzayap/pza-skills)](https://skills.sh/pizzayap/pza-skills)
 
 Independent skills for reviewing changes, checking plans, maintaining project
-guidance, and recreating website designs. Each skill lives in `skills/<name>/` with a
-`SKILL.md` entrypoint and any references it needs.
+guidance, reviewing Mac storage, and recreating website designs. Each skill lives
+in `skills/<name>/` with a `SKILL.md` entrypoint and any references it needs.
 
 ## Install
 
@@ -46,6 +46,7 @@ ask it to use the installed skill. See the official documentation for
 | [agents-md-revise](skills/agents-md-revise/SKILL.md) | Capture durable project guidance in AGENTS.md through an approved diff | Local file access; approval before guidance edits |
 | [astra-instruction-audit](skills/astra-instruction-audit/SKILL.md) | Article-based, scored, or combined skills/AGENTS.md audits and authorized updates | Local file access; web optional |
 | [browser-website-design-clone](skills/browser-website-design-clone/SKILL.md) | Map a website's distinct layouts, routes, and interactions; produce design specifications or a working clone. Website coverage is the default; explicit page-only requests stay scoped | Live browser; local file access; project tools for implementation; authorized source assets or capable generation tools when replacement media is needed |
+| [mac-space-cleanup](skills/mac-space-cleanup/SKILL.md) | Scan Mac storage, explain cleanup opportunities, and guide manual cleanup before optional approved AI assistance | Local macOS shell for measurements; built-in tools; owning apps/tools optional; approval for specific cleanup actions |
 
 The reviewers operate directly in the current harness. They can use native
 read-only workers when useful and available, and work serially otherwise. They
