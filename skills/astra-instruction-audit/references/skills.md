@@ -11,6 +11,12 @@ task the skill owns, a concrete activation condition, and enough differentiation
 from neighboring skills. Remove promotional claims, exhaustive keyword lists,
 and commands to activate whenever a loosely related technology appears.
 
+Keep descriptions concise and put distinguishing activation conditions early.
+If the harness exposes shortened descriptions, check whether the visible portion
+still identifies the intended task and trigger. Otherwise, report truncation as
+a possible selection risk, not an observed failure; do not assume a fixed character
+limit or require global configuration access to assess it.
+
 Example: a release-note skill should match a request to prepare release notes.
 It should not demand activation for every commit or documentation edit. Test both
 requests against its description and neighboring skills. Narrow accidental

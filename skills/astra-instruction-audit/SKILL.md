@@ -1,6 +1,6 @@
 ---
 name: astra-instruction-audit
-description: Audit and update skills and AGENTS.md with quality scores. Use for an Astra/pvncher-style audit, a scored instruction review, or a combined skills-and-guidance review.
+description: Audit skills and AGENTS.md for scored, article-based, or combined reviews; apply authorized updates.
 user-invocable: true
 argument-hint: '[path] [--audit|--update] [--skills-only|--agents-only]'
 license: MIT
@@ -9,7 +9,7 @@ license: MIT
 # Astra Instruction Audit
 
 Improve the decisions instructions produce, using local evidence and
-[Eric Provencher's article](https://x.com/pvncher/status/2095991462416490862).
+[Eric Provencher's article](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
 The name credits that context; it does not require a particular model.
 [Source and attribution](references/source.md) explains provenance; read it when
 discussing the source, not as a prerequisite to each audit.
