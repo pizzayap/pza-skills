@@ -67,7 +67,7 @@ Dropped: Quantity (renders one item), Language (English-only product)
 
 ### 3. Build the page
 
-Create `/lab/edge-case/<component>` per [lab-page.md](references/lab-page.md). One scenario on stage at a time, a label pill naming it, `‹` `›` to step, and a Before and After toggle that stays disabled until the first fix lands.
+Create `/lab/edge-case/<component>` per [lab-page.md](references/lab-page.md), from the copied lab kit. One scenario on stage at a time, a label pill naming it, `‹` `›` to step, and a Before and After toggle that stays disabled until the first fix lands.
 
 ### 4. Look at every scenario
 

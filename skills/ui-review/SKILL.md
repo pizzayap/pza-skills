@@ -44,7 +44,7 @@ Restate the component in one sentence. Find the design tokens, type scale, spaci
 
 ### 2. Build the page
 
-Create `/lab/ui-review/<component>` per [lab-page.md](references/lab-page.md). Render the real component with realistic mock data, at its production width, on the stage. Add the callout layer described in [callouts.md](references/callouts.md). The Before and After toggle stays disabled until fixes land.
+Create `/lab/ui-review/<component>` per [lab-page.md](references/lab-page.md). Render the real component with realistic mock data, at its production width, on the stage. Add the callout layer described in [callouts.md](references/callouts.md), at most 4 findings per view. The Before and After toggle stays disabled until fixes land.
 
 ### 3. Inspect and measure
 

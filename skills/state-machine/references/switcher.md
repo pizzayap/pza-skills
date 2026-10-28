@@ -1,13 +1,18 @@
 # State switcher spec
 
-The switcher is a tool, not part of the design. Build it to this spec and leave it alone.
+The switcher is a tool, not part of the design. Copy [state-lab.tsx](../assets/state-lab/state-lab.tsx) and [state-lab.css](../assets/state-lab/state-lab.css) into the lab folder unchanged and render the component through `StateLab`. Do not restyle it or rebuild it by hand. The kit is React 18+ with no other dependencies; on another stack, port it and keep the values below.
 
 ## Look
 
-- A dark neutral panel (`#1c1c1e` background, `#f5f5f7` text, `rgba(255,255,255,0.08)` active row) docked to the left of the component, 240px wide, 12px radius, 8px inner padding. A dark panel stays visibly separate from the component whether the app is in light or dark mode.
-- System font stack (`system-ui, -apple-system, "Segoe UI", sans-serif`), 14px rows, 36px row height, 13px muted group headings with a small arrow icon.
+- A dark panel (`#262626`, `#f5f5f5` text, `rgba(255,255,255,0.12)` active row) to the left of the component, 264px wide, 18px radius, 8px padding, with a small notch pointing at the component. It stays visibly separate from the component in light and dark mode.
+- System font stack (`system-ui, -apple-system, "Segoe UI", sans-serif`), 15px rows, 44px row height, 14px muted group headings with a small arrow icon.
+- The component sits 40px to the right, vertically centred, at its production width, on a `#fafafa` page. Only the panel sets a font; the component keeps the app's own.
 - No project tokens, fonts, colors or theme switching. It looks the same on every project.
 - Below 720px viewport width, the panel collapses into a native `<select>` above the component, with `<optgroup>` per group. Render both and toggle with a media or container query so the active state survives a resize.
+
+## Screenshots
+
+Capture the panel and component together, never the component alone: `deviceScaleFactor: 2`, clipped to `[data-lab-stage]` with 48px around it.
 
 ## Behavior
 

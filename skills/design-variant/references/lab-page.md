@@ -2,19 +2,24 @@
 
 The lab page is a throwaway dev page that holds one component and a small control tray. The tray is a tool, not part of the design. Build it to this spec and leave it alone.
 
+## The kit
+
+Copy [lab-kit.tsx](../assets/lab-kit/lab-kit.tsx) and [lab-kit.css](../assets/lab-kit/lab-kit.css) into the lab folder unchanged and build the page from `LabStage`, `CaseBar`, `BeforeAfter` and `Segmented`. Do not restyle the kit or rebuild it by hand: a hand-built tray drifts from this look on every run. The kit is React 18+ with no other dependencies. On another stack, port it and keep the values below.
+
 ## Layout
 
-- A white stage (`#ffffff`, 1px `#e8e8e8` border, 24px radius) centered on a `#fafafa` page, with the component in the middle at its production width.
-- A tray pinned to the bottom of the stage: `#fafafa` background, 1px `#e8e8e8` top border, 16px radius, 16px padding. Controls sit centered in it.
-- An optional label pill top left of the component ("Default", "Long text") and round prev/next buttons top right, 40px each.
-- The tray uses the system font stack (`system-ui, -apple-system, "Segoe UI", sans-serif`) at 15px, neutral greys only, and no project tokens, fonts or theme. It must never be mistaken for the design.
+- A `#fafafa` page with a white stage centred on it: 1px `#e8e8e8` border, 28px radius, 8px padding.
+- The component sits in the middle of the stage at its production width (`width` on `LabStage`), with 64px of space above and below.
+- The tray is an inset box at the bottom of the stage: `#fafafa`, 1px `#e8e8e8` border on all sides, 20px radius, 16px padding, controls centred.
+- An optional label pill at the top left of the component ("Default", "Long text") and round prev and next buttons at the top right, 40px each, aligned to the component's edges.
+- Only the chrome sets a font: the system stack (`system-ui, -apple-system, "Segoe UI", sans-serif`) at 15px, in neutral greys. The component inherits the app's own font, so it renders as it does in the product. The chrome must never be mistaken for the design.
 
 ## Controls
 
 | Control | Look | URL param |
 | --- | --- | --- |
 | Scenario stepper | Label pill plus `‹` `›` round buttons | `?case=<slug>` |
-| Before / After | Two-segment pill with icons: `↺ Before` and `↻ After`. Active segment `#f0f0f0` fill and 1px inner border | `?view=before` or `?view=after` |
+| Before / After | Two-segment pill with icons: `↺ Before` and `↻ After`. Active segment `#f2f2f2` fill and 1px inner border | `?view=before` or `?view=after` |
 | Variant picker | Segmented pill `1 2 3`, 40px square segments | `?v=1` |
 
 The URL is the source of truth, so every view is a shareable link that survives reload.
@@ -36,6 +41,10 @@ Shortcuts only fire on bare key presses outside text entry: skip the event when 
 - Segments are `<button type="button" aria-pressed>`, with visible focus rings.
 - Prev and next buttons carry `aria-label="Previous scenario"` and `aria-label="Next scenario"`.
 - Switching is instant and keeps the scroll position.
+
+## Screenshots
+
+Capture the whole stage, never the bare component: `deviceScaleFactor: 2`, clipped to `[data-lab-stage]` with 48px of the page around it. Press `H` first only when the image must show the component alone.
 
 ## The before snapshot
 

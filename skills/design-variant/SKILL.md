@@ -79,7 +79,7 @@ Axis: Structure
 
 ### 3. Build the page
 
-Create `/lab/design-variant/<component>` per [lab-page.md](references/lab-page.md). Each variant is its own file in the lab folder (`variant-1.tsx`, `variant-2.tsx`, `variant-3.tsx`), rendered on the same stage with the same fixture data. The tray holds the `1 2 3` picker. Variant 1 is the default.
+Create `/lab/design-variant/<component>` per [lab-page.md](references/lab-page.md), from the copied lab kit. Each variant is its own file in the lab folder (`variant-1.tsx`, `variant-2.tsx`, `variant-3.tsx`), rendered on the same stage with the same fixture data. The tray holds the `1 2 3` picker. Variant 1 is the default.
 
 If the component only makes sense in its page (a header, a sidebar), render the variants inside a copy of that page's layout instead of on the stage.
 
