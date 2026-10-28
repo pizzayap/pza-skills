@@ -28,7 +28,7 @@ The URL is the source of truth, so every view is a shareable link that survives 
 | `B` / `A` | Before or After |
 | `H` | Hide or show the tray, for clean screenshots |
 
-Ignore key events with a modifier key, events already `defaultPrevented`, and events from inputs, textareas, selects and contenteditable elements.
+Shortcuts only fire on bare key presses outside text entry: skip the event when Ctrl, Cmd, Alt or Shift is held, when another handler already handled it, or when focus is in a form field or an editable region.
 
 ## Accessibility
 
@@ -59,4 +59,4 @@ Put everything in one folder: the page, fixtures, the tray and any snapshot.
 | Astro | `src/pages/lab/<skill>/<component>.astro` | Redirect to 404 when `import.meta.env.PROD` |
 | Plain HTML | `lab/<skill>/<component>.html` | Not linked; delete before deploy |
 
-In frameworks that split server and client code, the page is client code (`"use client"` in Next.js), or fixtures can silently vanish. If the project already has a sandbox (Storybook, Ladle, a playground route), ask whether to use it instead.
+In frameworks that split server and client code, make the page client code (`"use client"` in Next.js). Otherwise mock data passed across that split may not arrive, and the page renders blank with no error. If the project already has a sandbox (Storybook, Ladle, a playground route), ask whether to use it instead.

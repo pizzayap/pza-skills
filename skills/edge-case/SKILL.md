@@ -36,6 +36,7 @@ Two failure modes, and the first is worse:
 5. **Snapshot before the first fix.** "Before" must be the untouched component. See [lab-page.md](references/lab-page.md#the-before-snapshot).
 6. **Fix in the component, and only with the user's yes.** List the breaks, recommend a fix for each, and wait for approval before editing.
 7. **Fix the system when the system is the cause.** If the break comes from a shared token or primitive (a `Badge` with no `min-width: 0`), say so and fix it there, after flagging every other place that uses it.
+8. **One folder, dev only.** The page, fixtures, snapshot and tray live in one folder behind a dev-only guard, and production never imports from it. Removal is one delete plus any route registration line.
 
 ## The sequence
 

@@ -4,7 +4,7 @@ The switcher is a tool, not part of the design. Build it to this spec and leave 
 
 ## Look
 
-- A dark neutral panel (`#1c1c1e` background, `#f5f5f7` text, `rgba(255,255,255,0.08)` active row) docked to the left of the component, 240px wide, 12px radius, 8px inner padding. Dark reads as tool chrome over both light and dark pages.
+- A dark neutral panel (`#1c1c1e` background, `#f5f5f7` text, `rgba(255,255,255,0.08)` active row) docked to the left of the component, 240px wide, 12px radius, 8px inner padding. A dark panel stays visibly separate from the component whether the app is in light or dark mode.
 - System font stack (`system-ui, -apple-system, "Segoe UI", sans-serif`), 14px rows, 36px row height, 13px muted group headings with a small arrow icon.
 - No project tokens, fonts, colors or theme switching. It looks the same on every project.
 - Below 720px viewport width, the panel collapses into a native `<select>` above the component, with `<optgroup>` per group. Render both and toggle with a media or container query so the active state survives a resize.
@@ -15,7 +15,7 @@ The switcher is a tool, not part of the design. Build it to this spec and leave 
 - The first state in the list is the default when no param is set.
 - `↑`/`↓` and `←`/`→` step through every state in list order, across groups, wrapping at the ends.
 - `H` hides and shows the switcher, for clean screenshots and recordings.
-- Ignore key events with a modifier key, events already `defaultPrevented`, and events from inputs, textareas, selects and contenteditable elements, so the component under test stays usable.
+- Shortcuts only fire on bare key presses outside text entry: skip the event when Ctrl, Cmd, Alt or Shift is held, when another handler already handled it, or when focus is in a form field or an editable region, so the component under test stays usable.
 - Switching is instant (no transition on the component) and keeps the page's scroll position.
 
 ## Accessibility

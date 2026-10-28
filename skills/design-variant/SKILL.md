@@ -36,6 +36,7 @@ Two failure modes, and the first is worse:
 5. **Every variant clears the floor.** See the floor below. If a direction only works by breaking it, drop the direction and say why.
 6. **Production stays untouched until the user picks.** Variants live in the lab folder. Only the chosen one is promoted.
 7. **Iterate one variant at a time.** "Make 2 denser" changes variant 2 only.
+8. **One folder, dev only.** The page, fixtures, variant files and tray live in one folder behind a dev-only guard, and production never imports from it. Removal is one delete plus any route registration line.
 
 ## Axes
 

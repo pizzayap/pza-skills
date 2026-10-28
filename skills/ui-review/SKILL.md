@@ -34,6 +34,7 @@ Two failure modes, and the first is worse:
 5. **Six categories, in a fixed order.** UI, Typography, Layout, Color, Writing, Accessibility. Checks with values are in [checks.md](references/checks.md).
 6. **At most 8 callouts on screen.** If there are more findings, show the 8 most severe and list the rest in the report.
 7. **Fix only after a yes, in the real component, after a snapshot.** See [lab-page.md](references/lab-page.md#the-before-snapshot).
+8. **One folder, dev only.** The page, fixtures, snapshot, callout layer and tray live in one folder behind a dev-only guard, and production never imports from it. Removal is one delete plus any route registration line.
 
 ## The sequence
 

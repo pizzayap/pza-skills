@@ -67,7 +67,7 @@ Missing in code: "Rate limited" (in the design file, no branch exists)
 
 ### 3. Build the page
 
-Create the page at `/lab/states/<component>` using the route table in [switcher.md](references/switcher.md#where-the-page-lives). The page renders the real component once, at its production width, inside the app's normal layout so fonts, theme and providers come for free. In frameworks that split server and client code, mark the page as client code (`"use client"` in Next.js), or fixtures can silently vanish.
+Create the page at `/lab/states/<component>` using the route table in [switcher.md](references/switcher.md#where-the-page-lives). The page renders the real component once, at its production width, inside the app's normal layout so fonts, theme and providers come for free. In frameworks that split server and client code, make the page client code (`"use client"` in Next.js). Otherwise mock data passed across that split may not arrive, and the page renders blank with no error.
 
 ### 4. Feed each state from outside
 
