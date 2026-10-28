@@ -57,7 +57,7 @@ C2 document scrollWidth <= innerWidth at both viewports.
 
 ### 2. Capture the current state
 
-Write a small repeatable script that opens the screen, drives each state, waits for motion to settle and saves the images. Start from [capture-script.md](references/capture-script.md). Load [checks.md](references/checks.md) for the state list and the sweep (dark mode, overflow, focus, safe areas, reduced motion, long content). When you are fixing a defect, this run must show the defect first.
+Write a small repeatable script that opens the screen, drives each state, waits for motion to settle and saves the images. Start from [capture-script.md](references/capture-script.md). Finish with its one-page `report.html`, which puts every before and after pair side by side. Load [checks.md](references/checks.md) for the state list and the sweep (dark mode, overflow, focus, safe areas, reduced motion, long content). When you are fixing a defect, this run must show the defect first.
 
 ### 3. Score, change nothing
 

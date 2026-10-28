@@ -74,6 +74,33 @@ What each part proves:
 - The `OVERFLOW` line proves or disproves sideways scrolling without reading the image.
 - Running `before` and `after` with the same script proves the two captures are comparable.
 
+## One-page report
+
+After both runs, write `report.html` next to the images so the reviewer sees every pair on one page instead of opening files one by one. It links the images by relative path, so it works straight from disk and in the PR.
+
+```js
+// report.mjs: pair before/after captures into one page. Run: node report.mjs docs/verification/<id>
+import { readdirSync, writeFileSync } from 'node:fs';
+const dir = process.argv[2];
+const shots = readdirSync(dir).filter((f) => f.endsWith('.png'));
+const key = (f) => f.replace(/^\d{4}-\d{2}-\d{2}-(before|after)-/, '');
+const rows = [...new Set(shots.map(key))].sort().map((k) => {
+  const cell = (phase) => {
+    const f = shots.find((s) => s.includes(`-${phase}-`) && key(s) === k);
+    return `<figure><span>${phase}</span>${f ? `<img src="${f}" alt="${phase}: ${k}">` : '<em>not captured</em>'}<code>${f ?? ''}</code></figure>`;
+  };
+  return `<section><h2>${k.replace('.png', '')}</h2><div>${cell('before')}${cell('after')}</div></section>`;
+});
+writeFileSync(`${dir}/report.html`, `<!doctype html><meta charset="utf-8"><title>Visual proof</title><style>
+body{margin:0;padding:48px 24px;background:#fafafa;color:#1a1a1a;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+section{max-width:1200px;margin:0 auto 48px}h2{font-size:16px;font-weight:500;margin:0 0 16px}
+section>div{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;background:#fff;border:1px solid #e8e8e8;border-radius:28px}
+figure{margin:0;display:grid;gap:10px;justify-items:center;align-content:start}
+figure span{padding:6px 14px;border:1px solid #e8e8e8;border-radius:999px;text-transform:capitalize}
+img{max-width:100%;max-height:80vh;border:1px solid #e8e8e8;border-radius:16px}
+code{font:12px ui-monospace,Menlo,monospace;color:#8a8a8a}</style>${rows.join('')}`);
+```
+
 ## Recording motion
 
 Add `recordVideo: { dir, size: vp }` to `browser.newContext(...)`. The video is saved when the context closes. Trigger the interaction 2 or 3 times so the recording shows repeat and interruption, then name the file `<date>-<phase>-<WxH>-<state>.webm`.

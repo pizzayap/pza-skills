@@ -1,0 +1,98 @@
+/* Callout layer for ui-review. Copy unchanged. Font and color come from .lab-overlay in lab-kit.css. */
+
+.lab-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lab-leaders {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+}
+
+.lab-leaders path {
+  fill: none;
+  stroke: #c4c4c4;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.lab-leaders circle {
+  fill: #9a9a9a;
+}
+
+.lab-callout {
+  position: absolute;
+  box-sizing: border-box;
+  width: 280px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  pointer-events: auto;
+}
+
+.lab-callout h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #1a1a1a;
+}
+
+.lab-callout p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b6b6b;
+  text-wrap: pretty;
+}
+
+.lab-callout[data-fixed] {
+  opacity: 0.6;
+}
+
+.lab-callout-check {
+  color: #1f9d55;
+}
+
+/* Narrow screens: a numbered list below the component, with matching pins on the targets. */
+.lab-overlay[data-stacked] {
+  position: static;
+  width: 100%;
+  max-width: var(--lab-width, 420px);
+  margin-top: 24px;
+}
+
+.lab-overlay[data-stacked] .lab-callout {
+  position: static;
+  width: auto;
+  margin-bottom: 12px;
+}
+
+.lab-callout-n,
+.lab-pin {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.lab-callout-n {
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+.lab-pin {
+  position: absolute;
+  margin: -10px 0 0 -10px;
+}
