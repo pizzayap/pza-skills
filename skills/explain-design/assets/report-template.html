@@ -1,0 +1,993 @@
+<!doctype html>
+<!-- explain-design report: one sheet, callouts around the design, leader lines to each element.
+     Fill only the report-data block; the renderer below builds and lays out the sheet.
+     Build with scripts/build-report.mjs, or replace the JSON by hand writing every "<" as \u003c. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explain design</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --text: #454545;
+    --muted: #6b6b6b;
+    --faint: #9a9a9a;
+    --hair: #d9d9d6;
+    --soft: #f3f3f1;
+    --paper: #fff;
+    --desk: #f2f2ef;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --col: 236px;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font: 12.5px/1.5 var(--sans);
+    color: var(--text);
+    background: var(--desk);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, p, figure { margin: 0; }
+
+  .caps {
+    font-size: 10.5px;
+    line-height: 1.3;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Sheet: always one screen. */
+  .page { height: 100vh; padding: 16px; display: flex; }
+  .sheet {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 16px;
+    padding: 26px 32px 18px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Head: title left, notes right */
+  .sh-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+    gap: 40px;
+    align-items: start;
+  }
+  .sh-eyebrow { color: var(--faint); }
+  .sh-title {
+    margin-top: 8px;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .sh-notes { display: grid; gap: 6px; }
+  .sh-notes .caps { color: var(--ink); }
+  .sh-url {
+    display: inline-block;
+    max-width: 100%;
+    margin-top: 8px;
+    overflow: hidden;
+    font: 12px/1.3 var(--mono);
+    color: var(--muted);
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sh-url:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .sh-idea { font-size: 14px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
+  .sh-summary { color: var(--muted); text-wrap: pretty; }
+  .sh-audience { color: var(--text); text-wrap: pretty; }
+  .sh-audience .caps { margin-right: 8px; color: var(--faint); }
+
+  /* Body: drawing, then spec column */
+  .sh-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 272px;
+    gap: 36px;
+    min-height: 0;
+  }
+  .sh-body[data-nospec] { grid-template-columns: minmax(0, 1fr); }
+  .sh-body[data-map] { grid-template-columns: auto minmax(0, 1fr) 272px; }
+  .sh-body[data-map][data-nospec],
+  [data-spec="drawer"] .sh-body[data-map] { grid-template-columns: auto minmax(0, 1fr); }
+
+  /* Minimap: the whole page, one band per section. */
+  .sh-map { min-height: 0; height: 100%; }
+  .sh-map-inner { position: relative; height: 100%; width: max-content; }
+  .sh-map-inner img { display: block; height: 100%; width: auto; outline: 1px solid var(--hair); }
+  .sh-band {
+    all: unset;
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 1px 0 rgba(26, 26, 26, 0.35);
+    cursor: pointer;
+    transition: background-color 160ms ease;
+  }
+  .sh-band:hover { background: rgba(255, 255, 255, 0.15); }
+  .sh-band[data-current] { z-index: 1; background: transparent; outline: 1.5px solid var(--ink); outline-offset: -1px; }
+  .sh-band:focus-visible { outline: 2px solid var(--ink); }
+  .sh-band-n { position: absolute; top: 3px; left: 3px; padding: 1px 3px; font: 500 9px/1 var(--mono); color: var(--ink); background: var(--paper); border-radius: 2px; }
+
+  /* Overview storyboard */
+  .sh-board { display: grid; gap: 14px; line-height: normal; }
+  /* Thumbs sit above the leader lines, so a line to an inner thumb passes behind the outer one. */
+  .sh-thumb { all: unset; position: relative; z-index: 1; display: grid; gap: 6px; min-width: 0; background: var(--paper); cursor: pointer; }
+  .sh-thumb-img { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; background: var(--soft); outline: 1px solid var(--hair); border-radius: 3px; transition: outline-color 160ms ease; }
+  .sh-thumb-img img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .sh-thumb:hover .sh-thumb-img,
+  .sh-thumb:focus-visible .sh-thumb-img,
+  .sh-thumb[data-active] .sh-thumb-img { outline: 1.5px solid var(--ink); }
+  .sh-thumb-cap { overflow: hidden; color: var(--muted); white-space: nowrap; text-overflow: ellipsis; }
+  .sh-thumb-cap b { font-weight: 500; color: var(--ink); }
+
+  .sh-figsum { display: block; max-width: 68ch; margin: 4px auto 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); text-align: center; text-wrap: pretty; }
+  .sh-steps { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+  .sh-step {
+    all: unset;
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    font: 13px/1 var(--sans);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .sh-step:hover { color: var(--paper); background: var(--ink); }
+  .sh-step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .sh-step-label { min-width: 210px; white-space: nowrap; }
+
+  .sh-draw {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--col) minmax(0, 1fr) var(--col);
+    gap: 64px;
+    min-height: 0;
+  }
+  [data-spec="drawer"] .sh-body { grid-template-columns: minmax(0, 1fr); }
+  [data-spec="drawer"] .sh-draw { --col: 264px; gap: 40px; }
+  .sh-col { position: relative; min-height: 0; }
+  .sh-fig {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+  }
+  .sh-frame { position: relative; line-height: 0; }
+  .sh-frame > img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    outline: 1px solid var(--hair);
+    outline-offset: 0;
+    border-radius: 2px;
+  }
+  .sh-empty {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 240px;
+    color: var(--faint);
+    border: 1px dashed var(--hair);
+    border-radius: 8px;
+  }
+  .sh-figcap { color: var(--faint); text-align: center; }
+
+  /* Difference blending keeps outlines visible on light and dark designs alike. */
+  .sh-region {
+    position: absolute;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    mix-blend-mode: difference;
+    cursor: pointer;
+    transition: border-color 160ms ease, opacity 160ms ease;
+  }
+  .sh-region[data-active] { border-style: solid; border-color: #fff; }
+  [data-focus] .sh-region:not([data-active]) { opacity: 0.25; }
+  .sh-region .mark { display: none; position: absolute; top: -9px; left: -9px; }
+
+  /* Callouts */
+  .co {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    outline: none;
+    cursor: default;
+    transition: opacity 160ms ease;
+  }
+  .co[data-side="left"] { text-align: right; }
+  .co-head { display: flex; align-items: center; gap: 8px; }
+  .co[data-side="left"] .co-head { flex-direction: row-reverse; }
+  .co-head h3 { min-width: 0; color: var(--ink); }
+  .co-tags { display: flex; align-items: center; gap: 8px; justify-self: start; }
+  .co[data-side="left"] > .co-tags { justify-self: end; flex-direction: row-reverse; }
+  .co-tag { color: var(--faint); white-space: nowrap; }
+  .co-thought { font-size: 12.5px; line-height: 1.4; font-weight: 500; color: var(--ink); text-wrap: pretty; }
+  .co-tag[data-impact="High"] { padding: 1px 5px; color: var(--paper); background: var(--ink); border-radius: 3px; }
+  .co-tag[data-impact="Medium"] { padding: 0 5px; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); border-radius: 3px; }
+  .co-why { font-size: 12px; line-height: 1.45; color: var(--text); text-wrap: pretty; }
+  .co-fix { font-size: 12px; line-height: 1.45; }
+  .co-val { font: 11px/1.5 var(--mono); color: var(--muted); }
+  .co-val s { color: var(--faint); text-decoration-color: var(--faint); }
+  .co-val b { font-weight: 500; color: var(--ink); }
+  .co-fix { color: var(--ink); }
+  .co-fix .caps { margin-right: 6px; color: var(--faint); }
+  [data-focus] .co:not([data-active]) { opacity: 0.3; }
+  .co:focus-visible .co-head h3 { text-decoration: underline; text-underline-offset: 3px; }
+
+  .mark {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font: 500 10.5px/1 var(--mono);
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+  }
+  .mark[data-kind="improve"] { border-radius: 50%; }
+  [data-active] > .co-head .mark,
+  .sh-region[data-active] .mark { color: var(--paper); background: var(--ink); }
+
+  code {
+    padding: 0 4px;
+    font: 0.9em/1.4 var(--mono);
+    color: var(--ink);
+    background: var(--soft);
+    border-radius: 3px;
+  }
+
+  /* Leaders and dimensions */
+  .sh-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .sh-lines .leader { fill: none; stroke: #8f8f8c; stroke-width: 1; transition: stroke 160ms ease, opacity 160ms ease; }
+  .sh-lines .dot { fill: #8f8f8c; transition: fill 160ms ease, opacity 160ms ease; }
+  .sh-lines [data-active] .leader { stroke: var(--ink); }
+  .sh-lines [data-active] .dot { fill: var(--ink); }
+  [data-focus] .sh-lines g.lead:not([data-active]) { opacity: 0.18; }
+  .sh-lines .dim { stroke: var(--ink); stroke-width: 0.75; fill: none; }
+  .sh-lines .ext { stroke: var(--ink); stroke-width: 0.5; opacity: 0.6; }
+  .sh-lines .dim-label {
+    font: 500 10px/1 var(--mono);
+    fill: var(--ink);
+    paint-order: stroke;
+    stroke: var(--paper);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+  [data-focus] .sh-lines g.dims { opacity: 0.25; }
+
+  /* Spec column */
+  .sh-spec { min-height: 0; overflow: auto; scrollbar-width: none; display: grid; align-content: start; gap: 18px; }
+  .sh-spec[data-overflow] { mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent); }
+  .sh-spec::-webkit-scrollbar { display: none; }
+  [data-spec="drawer"] .sh-spec {
+    position: absolute;
+    z-index: 5;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 320px;
+    padding: 26px 28px;
+    background: var(--paper);
+    border-left: 1px solid var(--ink);
+    transform: translateX(100%);
+    visibility: hidden;
+    mask-image: none;
+  }
+  [data-spec="drawer"][data-spec-open] .sh-spec { transform: none; visibility: visible; }
+  /* Slide only when toggled, never when the layout switches modes. */
+  [data-spec="drawer"][data-spec-anim] .sh-spec { transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 240ms; }
+  [data-spec="drawer"][data-spec-anim][data-spec-open] .sh-spec { transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .spec-btn { display: none; }
+  [data-spec="drawer"] .spec-btn { display: inline-flex; }
+  .sp h2 { margin-bottom: 8px; color: var(--ink); }
+  .sp table { width: 100%; border-collapse: collapse; font: 11px/1.4 var(--mono); }
+  .sp th { padding: 4px 6px; text-align: left; font: 500 9.5px/1.3 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .sp td { padding: 4px 6px; color: var(--text); border-top: 1px solid var(--hair); vertical-align: top; }
+  .sp tr:last-child td { border-bottom: 1px solid var(--hair); }
+  .sp td:first-child { color: var(--ink); }
+  .sp .num { text-align: right; white-space: nowrap; }
+  .sp .sw { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
+  .sp .role { font-family: var(--sans); font-size: 11.5px; }
+  .sp ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; counter-reset: n; }
+  .sp ol li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; text-wrap: pretty; counter-increment: n; }
+  .sp ol li::before {
+    content: counter(n);
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    font: 500 9.5px/1 var(--mono);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+  }
+  .mo { display: grid; gap: 8px; }
+  .mo + .mo { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hair); }
+  .mo-head { display: flex; justify-content: space-between; gap: 8px; }
+  .mo-head b { font-weight: 500; color: var(--ink); }
+  .mo-head span { font: 10.5px/1.5 var(--mono); color: var(--faint); text-align: right; }
+  .mo-track { display: grid; grid-template-columns: 72px 1fr; gap: 8px; align-items: center; font: 10.5px/1 var(--mono); color: var(--muted); }
+  .mo-bar { position: relative; height: 4px; background: var(--soft); }
+  .mo-bar i { position: absolute; top: 0; bottom: 0; background: var(--ink); }
+  .mo-ticks { display: flex; justify-content: space-between; margin-left: 80px; font: 9.5px/1 var(--mono); color: var(--faint); }
+
+  /* Foot: legend, filter, title block */
+  .sh-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 32px;
+  }
+  .sh-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; color: var(--muted); }
+  .sh-legend > span { display: inline-flex; align-items: center; gap: 8px; }
+  .sh-legend svg { color: var(--ink); }
+  .seg { display: inline-flex; border: 1px solid var(--ink); border-radius: 4px; overflow: hidden; }
+  .seg button {
+    all: unset;
+    padding: 5px 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+  .seg button + button { border-left: 1px solid var(--ink); }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { color: var(--paper); background: var(--ink); }
+  .seg button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .tb { display: flex; border: 1px solid var(--ink); border-radius: 4px; }
+  .tb div { display: grid; gap: 3px; padding: 6px 12px; min-width: 0; }
+  .tb div + div { border-left: 1px solid var(--ink); }
+  .tb .caps { font-size: 9px; color: var(--faint); }
+  .tb span:last-child { font: 11px/1.3 var(--mono); color: var(--ink); white-space: nowrap; }
+  .tb a { color: inherit; text-decoration: none; }
+  .tb a:hover { text-decoration: underline; }
+
+  /* Fallback when the sheet can't fit one screen: stack and scroll. */
+  [data-layout="stack"] .page { height: auto; min-height: 100vh; }
+  [data-layout="stack"] .sheet { overflow: visible; padding: 22px 20px; }
+  [data-layout="stack"] .sh-head,
+  [data-layout="stack"] .sh-body,
+  [data-layout="stack"] .sh-body[data-map] { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  [data-layout="stack"] .sh-draw { display: flex; flex-direction: column; gap: 24px; }
+  [data-layout="stack"] .sh-fig { order: -1; }
+  [data-layout="stack"] .sh-col { display: grid; gap: 22px; }
+  [data-layout="stack"] .sh-col:empty { display: none; }
+  [data-layout="stack"] .co { position: static; text-align: left; }
+  [data-layout="stack"] .co .co-head { flex-direction: row; }
+  [data-layout="stack"] .sh-lines g.lead { display: none; }
+  [data-layout="stack"] .sh-region .mark { display: inline-grid; }
+  [data-layout="stack"] .sh-spec { overflow: visible; }
+  [data-layout="stack"] .sh-spec { position: static; width: auto; padding: 0; border: 0; transform: none; visibility: visible; }
+  [data-layout="stack"] .spec-btn { display: none; }
+  [data-layout="stack"] .sh-map { display: none; }
+  [data-layout="stack"] .sh-board { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); width: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+  @media print {
+    @page { size: landscape; margin: 0; }
+    body { background: var(--paper); }
+    .seg { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page"><main class="sheet" id="sheet"></main></div>
+
+<script type="application/json" id="report-data">{}</script>
+
+<script>
+(() => {
+  "use strict"
+
+  const root = document.documentElement
+  const sheet = document.getElementById("sheet")
+  let data = {}
+  try {
+    data = JSON.parse(document.getElementById("report-data").textContent || "{}")
+  } catch (error) {
+    sheet.textContent = "The report data is not valid JSON: " + error.message
+    return
+  }
+
+  const SVG = "http://www.w3.org/2000/svg"
+
+  // Builds an element. Strings always become text nodes, never HTML.
+  const h = (tag, props, ...kids) => {
+    const el = document.createElement(tag)
+    for (const [key, value] of Object.entries(props || {})) {
+      if (value == null || value === false) continue
+      if (key === "class") el.className = value
+      else if (key === "style") Object.assign(el.style, value)
+      else if (key.startsWith("on")) el.addEventListener(key.slice(2), value)
+      else el.setAttribute(key, value === true ? "" : String(value))
+    }
+    for (const kid of kids.flat(Infinity)) {
+      if (kid == null || kid === false || kid === "") continue
+      el.append(kid instanceof Node ? kid : String(kid))
+    }
+    return el
+  }
+  const s = (tag, attrs) => {
+    const el = document.createElementNS(SVG, tag)
+    for (const [key, value] of Object.entries(attrs || {})) if (value != null) el.setAttribute(key, String(value))
+    return el
+  }
+
+  // Text with `code` spans.
+  const rich = (text) =>
+    String(text ?? "").split(/`([^`]+)`/).map((part, i) => (i % 2 ? h("code", {}, part) : part))
+
+  const list = (value) => (Array.isArray(value) ? value : [])
+  const num = (value, fallback = 0) => (Number.isFinite(Number(value)) ? Number(value) : fallback)
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, num(n)))
+  const safeHref = (url) => (typeof url === "string" && /^https?:\/\//i.test(url) ? url : null)
+  const safeImage = (src) =>
+    typeof src === "string" && !/^\s*(javascript|vbscript):/i.test(src) && (!/^\s*data:/i.test(src) || /^\s*data:image\//i.test(src))
+      ? src
+      : null
+  const safeColor = (value) =>
+    typeof value === "string" &&
+    /^(#[0-9a-f]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([^;{}()]*\))$/i.test(value.trim())
+      ? value.trim()
+      : null
+
+  const keyed = (v) => [
+    ...list(v.works).map((item, i) => ({ ...item, kind: "works", key: String(i + 1) })),
+    ...list(v.improve).map((item, i) => ({ ...item, kind: "improve", key: String.fromCharCode(65 + i) })),
+  ]
+  const source = data.source || {}
+  if (data.title) document.title = data.title + " · Explain design"
+
+  // Views: one sheet for a single design, or an overview plus one sheet per page section.
+  const sections = list(data.sections)
+  const views = sections.length
+    ? [
+        { kind: "overview", title: "Overview", summary: data.overview, items: keyed(data) },
+        ...sections.map((sec, i) => ({ ...sec, kind: "section", n: i + 1, items: keyed(sec) })),
+      ]
+    : [{ kind: "single", image: data.image, dimensions: data.dimensions, items: keyed(data) }]
+  const pad2 = (n) => String(n).padStart(2, "0")
+
+  const mark = (item) => h("span", { class: "mark", "data-kind": item.kind, "aria-hidden": "true" }, item.key)
+
+  // Head
+  sheet.append(h("header", { class: "sh-head" },
+    h("div", {},
+      h("p", { class: "caps sh-eyebrow" }, "Explain design"),
+      h("h1", { class: "sh-title" }, data.title || "Untitled design"),
+      safeHref(source.href) && h("a", { class: "sh-url", href: safeHref(source.href), target: "_blank", rel: "noopener noreferrer" }, source.href + " ↗"),
+    ),
+    (data.idea || data.summary || data.audience) && h("div", { class: "sh-notes" },
+      h("p", { class: "caps" }, "Notes"),
+      data.idea && h("p", { class: "sh-idea" }, rich(data.idea)),
+      data.audience && h("p", { class: "sh-audience" }, h("span", { class: "caps" }, "Audience"), rich(data.audience)),
+      data.summary && h("p", { class: "sh-summary" }, rich(data.summary)),
+    ),
+  ))
+
+  // Drawing: the figure and callout columns are rebuilt for each view.
+  const draw = h("section", { class: "sh-draw", "aria-label": "Annotated design" })
+  const cols = { left: h("div", { class: "sh-col", "data-side": "left" }), right: h("div", { class: "sh-col", "data-side": "right" }) }
+  const fig = h("figure", { class: "sh-fig" })
+  const frame = h("div", { class: "sh-frame" })
+  const figcap = h("figcaption", { class: "sh-figcap" })
+  const lines = s("svg", { class: "sh-lines", "aria-hidden": "true" })
+  fig.append(frame, figcap)
+  draw.append(cols.left, fig, cols.right, lines)
+  let img = null
+  let board = null
+  let thumbs = []
+
+  // Spec column
+  const system = data.system || {}
+  const motion = list(data.motion)
+  const spec = h("aside", { class: "sh-spec", id: "spec", "aria-label": "Specification" })
+  const table = (head, rows) => h("table", {},
+    h("thead", {}, h("tr", {}, head.map((label, i) => h("th", { class: i === head.length - 1 && head.length > 2 ? "num" : null }, label)))),
+    h("tbody", {}, rows))
+  if (list(system.type).length) {
+    spec.append(h("section", { class: "sp" }, h("h2", { class: "caps" }, "Type"),
+      table(["Role", "Size / LH", "Wt"], list(system.type).map((t) => h("tr", {},
+        h("td", { class: "role" }, t.label || ""),
+        h("td", {}, [t.size && `${t.size}`, t.lineHeight && `/ ${t.lineHeight}`].filter(Boolean).join(" ")),
+        h("td", { class: "num" }, t.weight ?? ""),
+      )))))
+  }
+  if (list(system.colors).length) {
+    spec.append(h("section", { class: "sp" }, h("h2", { class: "caps" }, "Color"),
+      table(["Value", "Role", "Contrast"], list(system.colors).map((c) => {
+        const color = safeColor(c.value)
+        return h("tr", {},
+          h("td", {}, color ? h("span", { class: "sw", style: { background: color } }) : null, c.value || "?"),
+          h("td", { class: "role" }, c.role || ""),
+          h("td", { class: "num" }, c.contrast ? String(c.contrast).replace(/\s+on\s+.*/i, "") : "—"),
+        )
+      }))))
+  }
+  if (list(system.spacing).length) {
+    spec.append(h("section", { class: "sp" }, h("h2", { class: "caps" }, "Spacing"),
+      table(["Px", "Use"], list(system.spacing).map((sp) => h("tr", {},
+        h("td", {}, String(sp.value ?? "")),
+        h("td", { class: "role" }, rich(sp.use)),
+      )))))
+  }
+  for (const m of motion) {
+    const ticks = list(m.ticks).map(Number).filter(Number.isFinite)
+    const total = Math.max(num(m.duration), ...ticks, 1)
+    const states = list(m.states)
+    spec.append(h("section", { class: "sp" }, h("h2", { class: "caps" }, "Motion"),
+      h("div", { class: "mo" },
+        h("div", { class: "mo-head" }, h("b", {}, m.title || "Motion"),
+          h("span", {}, [m.trigger, m.duration && `${m.duration}ms`, m.easing].filter(Boolean).join(" · "))),
+        list(m.tracks).map((track) => h("div", { class: "mo-track" },
+          h("span", {}, track.label || ""),
+          h("span", { class: "mo-bar" }, list(track.segments).map((seg) => {
+            const a = clamp(seg[0], 0, total), b = clamp(seg[1], a, total)
+            return h("i", { style: { left: (a / total) * 100 + "%", width: ((b - a) / total) * 100 + "%" } })
+          })),
+        )),
+        ticks.length ? h("div", { class: "mo-ticks" }, ticks.map((t) => h("span", {}, `${t}`))) : null,
+        states.length >= 2 ? table(["Prop", states[0].label || "From", states[states.length - 1].label || "To"],
+          list(states[0].props).map((p, i) => h("tr", {},
+            h("td", { class: "role" }, p[0]),
+            h("td", {}, p[1]),
+            h("td", { class: "num" }, list(states[states.length - 1].props)[i]?.[1] ?? ""),
+          ))) : null,
+        m.notes && h("p", { class: "role" }, rich(m.notes)),
+      )))
+  }
+  if (list(system.notes).length) {
+    spec.append(h("section", { class: "sp" }, h("h2", { class: "caps" }, "Notes"),
+      h("ol", {}, list(system.notes).map((n) => h("li", {}, h("span", {}, rich(n)))))))
+  }
+  // Minimap: the whole page down the left, one band per section.
+  const pageSrc = sections.length ? safeImage(data.page?.image?.src) : null
+  const map = pageSrc ? h("nav", { class: "sh-map", "aria-label": "Page sections" }) : null
+  const bands = []
+  if (map) {
+    const inner = h("div", { class: "sh-map-inner" }, h("img", { src: pageSrc, alt: "" }))
+    sections.forEach((sec, i) => {
+      const r = list(sec.range)
+      if (r.length !== 2) return
+      const a = clamp(r[0], 0, 100), b = clamp(r[1], a, 100)
+      const band = h("button", {
+        type: "button",
+        class: "sh-band",
+        title: `${pad2(i + 1)} ${sec.title || ""}`,
+        "aria-label": `Section ${i + 1}: ${sec.title || ""}`,
+        style: { top: a + "%", height: b - a + "%" },
+        onclick: () => go(i + 1),
+      }, h("span", { class: "sh-band-n" }, pad2(i + 1)))
+      bands[i + 1] = band
+      inner.append(band)
+    })
+    map.append(inner)
+  }
+
+  const body = h("div", { class: "sh-body" }, draw)
+  if (map) { body.prepend(map); body.setAttribute("data-map", "") }
+  if (spec.children.length) body.append(spec)
+  else body.setAttribute("data-nospec", "")
+  sheet.append(body)
+
+  // Foot
+  const legendIcon = (kind) => {
+    if (kind === "dim") {
+      const svg = s("svg", { width: 26, height: 10, viewBox: "0 0 26 10" })
+      svg.append(s("path", { d: "M1 0v10M25 0v10M1 5h24M1 5l4-2.5M1 5l4 2.5M25 5l-4-2.5M25 5l-4 2.5", fill: "none", stroke: "currentColor", "stroke-width": 1 }))
+      return svg
+    }
+    return mark({ kind, key: kind === "works" ? "1" : "A" })
+  }
+  const seg = h("div", { class: "seg caps", role: "group", "aria-label": "Show" })
+  let filter = "all"
+  for (const [value, label] of [["all", "All"], ["works", "Good design"], ["improve", "Can be improved"]]) {
+    seg.append(h("button", {
+      type: "button",
+      "aria-pressed": value === "all" ? "true" : "false",
+      onclick: (event) => {
+        filter = value
+        for (const b of seg.children) b.setAttribute("aria-pressed", b === event.currentTarget ? "true" : "false")
+        layout()
+      },
+    }, label))
+  }
+  const toggleSpec = (open = !sheet.hasAttribute("data-spec-open")) => {
+    sheet.setAttribute("data-spec-anim", "")
+    if (open) sheet.setAttribute("data-spec-open", "")
+    else sheet.removeAttribute("data-spec-open")
+    specBtn.setAttribute("aria-pressed", open ? "true" : "false")
+  }
+  const specBtn = h("span", { class: "seg caps spec-btn" },
+    h("button", { type: "button", "aria-pressed": "false", "aria-controls": "spec", onclick: () => toggleSpec() }, "Spec  S"))
+
+  // Section stepper: ← and → move between the overview and each section.
+  const stepLabel = h("span", { class: "sh-step-label" })
+  const stepper = views.length > 1 ? h("div", { class: "sh-steps caps" },
+    h("button", { type: "button", class: "sh-step", "aria-label": "Previous section", onclick: () => go(current - 1) }, "←"),
+    stepLabel,
+    h("button", { type: "button", class: "sh-step", "aria-label": "Next section", onclick: () => go(current + 1) }, "→"),
+  ) : null
+  addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.("input, textarea")) return
+    if (e.key === "s" || e.key === "S") toggleSpec()
+    if (e.key === "Escape") toggleSpec(false)
+    if (views.length > 1 && e.key === "ArrowRight") { e.preventDefault(); go(current + 1) }
+    if (views.length > 1 && e.key === "ArrowLeft") { e.preventDefault(); go(current - 1) }
+  })
+  const cell = (label, value) => value ? h("div", {}, h("span", { class: "caps" }, label), h("span", {}, value)) : null
+  const href = safeHref(source.href)
+  const countWorks = h("span", {}), countImprove = h("span", {})
+  const dimLegend = h("span", {}, legendIcon("dim"), "Measured")
+  sheet.append(h("footer", { class: "sh-foot" },
+    h("div", { class: "sh-legend caps" },
+      stepper,
+      h("span", {}, legendIcon("works"), countWorks),
+      h("span", {}, legendIcon("improve"), countImprove),
+      dimLegend,
+      seg,
+      spec.children.length ? specBtn : null,
+    ),
+    h("div", { class: "tb" },
+      cell("Source", source.label ? (href ? h("a", { href, target: "_blank", rel: "noopener noreferrer" }, source.label) : source.label) : null),
+      cell("View", source.viewport),
+      cell("Method", source.measured === false ? "≈ Estimated" : "Measured"),
+      cell("Date", source.date),
+    ),
+  ))
+
+  // Callouts and regions
+  let nodes = new Map()
+  let view = views[0]
+  let current = 0
+  const setFocus = (key) => {
+    if (key) sheet.setAttribute("data-focus", "")
+    else sheet.removeAttribute("data-focus")
+    for (const [k, n] of nodes) {
+      for (const el of [n.callout, n.region, n.lead]) {
+        if (!el) continue
+        if (k === key) el.setAttribute("data-active", "")
+        else el.removeAttribute("data-active")
+      }
+    }
+  }
+  const hover = (key) => ({
+    onmouseenter: () => setFocus(key),
+    onmouseleave: () => setFocus(null),
+    onfocus: () => setFocus(key),
+    onblur: () => setFocus(null),
+  })
+
+  // Builds the figure, regions and callouts for one view.
+  function render(index) {
+    current = index
+    view = views[index]
+    setFocus(null)
+    frame.replaceChildren()
+    frame.className = "sh-frame"
+    cols.left.replaceChildren()
+    cols.right.replaceChildren()
+    nodes = new Map()
+    img = null
+    board = null
+    thumbs = []
+
+    if (view.kind === "overview") {
+      // Storyboard: every section in page order; overview points pin to a section.
+      board = frame
+      frame.className = "sh-frame sh-board"
+      sections.forEach((sec, i) => {
+        const src = safeImage(sec.image?.src)
+        const pic = src ? h("img", { src, alt: "" }) : null
+        // A section wider than the thumb shows whole, letterboxed in its own bottom-edge color.
+        pic?.addEventListener("load", () => {
+          if (pic.naturalWidth / pic.naturalHeight <= 1.6) return
+          pic.style.objectFit = "contain"
+          pic.style.objectPosition = "center"
+          try {
+            const c = document.createElement("canvas")
+            c.width = c.height = 1
+            const ctx = c.getContext("2d")
+            ctx.drawImage(pic, 0, pic.naturalHeight - 2, 1, 1, 0, 0, 1, 1)
+            const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+            pic.parentElement.style.background = `rgb(${r}, ${g}, ${b})`
+          } catch {}
+        }, { once: true })
+        const t = h("button", { type: "button", class: "sh-thumb", onclick: () => go(i + 1) },
+          h("span", { class: "sh-thumb-img" }, pic),
+          h("span", { class: "sh-thumb-cap caps" }, h("b", {}, pad2(i + 1)), " ", sec.title || ""),
+        )
+        thumbs.push(t)
+        frame.append(t)
+      })
+    } else {
+      const src = safeImage(view.image?.src)
+      if (src) {
+        img = h("img", { src, alt: view.image?.alt || view.title || data.title || "The design" })
+        img.addEventListener("load", schedule, { once: true })
+        frame.append(img)
+      } else {
+        frame.append(h("div", { class: "sh-empty caps" }, "No capture attached"))
+      }
+    }
+
+    const fignum = view.kind === "section" ? `Fig. ${view.n}` : view.kind === "overview" ? "Fig. 0" : "Fig. 1"
+    figcap.replaceChildren(
+      h("span", { class: "caps" }, [fignum, view.kind === "single" ? source.kind : view.title, view.kind === "single" ? source.viewport : null].filter(Boolean).join(" · ")),
+      ...(view.summary ? [h("span", { class: "sh-figsum" }, rich(view.summary))] : []),
+    )
+
+    for (const item of view.items) {
+      const evidence = list(item.evidence)
+      const change = item.change && (item.change.from || item.change.to) ? item.change : null
+      const callout = h("article", { class: "co", "data-kind": item.kind, tabindex: 0, ...hover(item.key) },
+        (item.impact || item.principle) && h("div", { class: "co-tags" },
+          item.kind === "improve" && item.impact && h("span", { class: "caps co-tag", "data-impact": item.impact }, item.impact),
+          item.principle && h("span", { class: "caps co-tag" }, item.principle),
+        ),
+        h("div", { class: "co-head" }, mark(item), h("h3", { class: "caps" }, item.title || "")),
+        item.thought && h("p", { class: "co-thought" }, `“${item.thought}”`),
+        item.why && h("p", { class: "co-why" }, rich(item.why)),
+        item.kind === "improve" && item.fix && h("p", { class: "co-fix" }, h("span", { class: "caps" }, "Fix"), rich(item.fix)),
+        change ? h("p", { class: "co-val" }, h("s", {}, change.from || "—"), " → ", h("b", {}, change.to || "—")) : null,
+        evidence.length ? h("p", { class: "co-val" }, evidence.join("  ·  ")) : null,
+      )
+      let region = null
+      let rect = null
+      const r = list(item.region)
+      if (img && r.length === 4) {
+        const x = clamp(r[0], 0, 100), y = clamp(r[1], 0, 100)
+        rect = r
+        region = h("div", {
+          class: "sh-region",
+          style: { left: x + "%", top: y + "%", width: clamp(r[2], 0, 100 - x) + "%", height: clamp(r[3], 0, 100 - y) + "%" },
+          ...hover(item.key),
+          onclick: () => callout.focus(),
+        }, mark(item))
+        frame.append(region)
+      }
+      const thumb = board && Number.isInteger(item.section) ? thumbs[item.section - 1] : null
+      nodes.set(item.key, { item, callout, region: region || thumb, rect, thumb })
+    }
+
+    const w = view.items.filter((i) => i.kind === "works").length
+    countWorks.textContent = `Good design · ${w}`
+    countImprove.textContent = `Can be improved · ${view.items.length - w}`
+    dimLegend.style.display = list(view.dimensions).length ? "" : "none"
+    seg.style.display = view.items.length && (img || board) ? "" : "none"
+    if (stepper) stepLabel.textContent = `${pad2(index)} / ${pad2(views.length - 1)} · ${view.title || ""}`
+    bands.forEach((b, i) => b && (i === index ? b.setAttribute("data-current", "") : b.removeAttribute("data-current")))
+    if (views.length > 1) history.replaceState(null, "", index ? `#${index}` : location.pathname + location.search)
+    layout()
+  }
+
+  function go(index) {
+    if (index < 0 || index >= views.length || index === current) return
+    render(index)
+  }
+
+  // Layout: callouts sit beside the design, level with their target, joined by leader lines.
+  const GAP = 12
+  const fits = () => innerWidth >= 1080 && innerHeight >= 600
+
+  function layout() {
+    const visible = [...nodes.values()].filter((n) => filter === "all" || n.item.kind === filter)
+    for (const n of nodes.values()) n.callout.remove()
+    lines.replaceChildren()
+    for (const n of nodes.values()) {
+      if (n.region && !n.thumb) n.region.style.display = visible.includes(n) ? "" : "none"
+      n.lead = null
+    }
+
+    root.removeAttribute("data-overflow")
+    let stack = !(img || board) || !fits()
+    root.setAttribute("data-layout", stack ? "stack" : "sheet")
+    // Landscape captures need the width, so the spec moves into a panel.
+    const landscape = board ? true : img && img.naturalWidth > img.naturalHeight * 1.1
+    sheet.removeAttribute("data-spec-anim")
+    if (spec.children.length && landscape) sheet.setAttribute("data-spec", "drawer")
+    else sheet.removeAttribute("data-spec")
+
+    if (img) {
+      // Size the image to the space the figure has.
+      img.style.maxHeight = "none"
+      img.style.maxWidth = "100%"
+      if (!stack) {
+        const cap = fig.querySelector("figcaption")
+        img.style.maxHeight = Math.max(160, fig.clientHeight - cap.offsetHeight - 14) + "px"
+      }
+    }
+
+    if (board) {
+      // Fit the storyboard grid to the figure: pick the column count with the largest thumbnails.
+      const n = thumbs.length, gap = 14, capH = 22, ratio = 10 / 16
+      board.style.width = ""
+      board.style.gridTemplateColumns = ""
+      if (!stack && n) {
+        const W = fig.clientWidth, H = fig.clientHeight - figcap.offsetHeight - 14
+        let best = { c: 1, tw: 0 }
+        for (let c = 1; c <= n; c++) {
+          const rows = Math.ceil(n / c)
+          const tw = Math.min((W - (c - 1) * gap) / c, ((H - (rows - 1) * gap) / rows - capH) / ratio)
+          if (tw > best.tw) best = { c, tw }
+        }
+        board.style.gridTemplateColumns = `repeat(${best.c}, ${Math.floor(best.tw)}px)`
+      }
+      // Overview points pin to their section's thumbnail.
+      const f = frame.getBoundingClientRect()
+      for (const node of nodes.values()) {
+        if (!node.thumb || !f.width) continue
+        const t = node.thumb.querySelector(".sh-thumb-img").getBoundingClientRect()
+        node.rect = [((t.left - f.left) / f.width) * 100, ((t.top - f.top) / f.height) * 100, (t.width / f.width) * 100, (t.height / f.height) * 100]
+      }
+    }
+
+    if (!stack) {
+      // Sides: by target position, then balanced; data may pin a side.
+      const placed = visible.filter((n) => n.rect)
+      const side = new Map(placed.map((n) => [n, n.item.side === "left" || n.item.side === "right"
+        ? n.item.side
+        : n.rect[0] + n.rect[2] / 2 < 50 ? "left" : "right"]))
+      const free = placed.filter((n) => !n.item.side)
+      const count = (sd) => [...side.values()].filter((v) => v === sd).length
+      const centre = (n) => Math.abs(n.rect[0] + n.rect[2] / 2 - 50)
+      for (let guard = 0; guard < placed.length; guard++) {
+        const heavy = count("left") > count("right") + 1 ? "left" : count("right") > count("left") + 1 ? "right" : null
+        if (!heavy) break
+        const move = free.filter((n) => side.get(n) === heavy).sort((a, b) => centre(a) - centre(b))[0]
+        if (!move) break
+        side.set(move, heavy === "left" ? "right" : "left")
+      }
+      // Unpinned points (no region) go on the shorter side.
+      for (const n of visible.filter((v) => !v.rect)) side.set(n, count("left") <= count("right") ? "left" : "right")
+
+      const d = draw.getBoundingClientRect()
+      const f = frame.getBoundingClientRect()
+      const box = (n) => n.rect && {
+        x: f.left - d.left + (n.rect[0] / 100) * f.width,
+        y: f.top - d.top + (n.rect[1] / 100) * f.height,
+        w: (n.rect[2] / 100) * f.width,
+        h: (n.rect[3] / 100) * f.height,
+      }
+
+      for (const sd of ["left", "right"]) {
+        const col = cols[sd]
+        const c = col.getBoundingClientRect()
+        const group = visible.filter((n) => side.get(n) === sd)
+          .map((n) => ({ n, b: box(n) }))
+          .sort((a, b) => (a.b ? a.b.y + a.b.h / 2 : 1e9) - (b.b ? b.b.y + b.b.h / 2 : 1e9))
+        for (const g of group) {
+          g.n.callout.setAttribute("data-side", sd)
+          col.append(g.n.callout)
+          g.h = g.n.callout.offsetHeight
+          // The leader meets the mark, below the tag; offsets are relative to the callout.
+          const m = g.n.callout.querySelector(".mark")
+          g.head = m.offsetTop + m.offsetHeight / 2
+          g.top = g.b ? g.b.y + g.b.h / 2 - (c.top - d.top) - g.head : 0
+        }
+        // Push down to clear overlaps, then back up to stay inside the column.
+        let floor = 0
+        for (const g of group) { g.top = Math.max(g.top, floor); floor = g.top + g.h + GAP }
+        let ceiling = col.clientHeight
+        for (const g of [...group].reverse()) { g.top = Math.min(g.top, ceiling - g.h); ceiling = g.top - GAP }
+        // When a side can't fit, record by how much (data-overflow="left:120"), then stack.
+        if (group.length && group[0].top < 0) {
+          stack = true
+          root.setAttribute("data-overflow", `${sd}:${Math.ceil(-group[0].top)}`)
+        }
+        for (const g of group) {
+          g.n.callout.style.top = g.top + "px"
+          if (!g.b) continue
+          // Leader: a short shoulder off the label, then straight to the target's near edge.
+          const y0 = c.top - d.top + g.top + g.head
+          const x0 = sd === "left" ? c.right - d.left + 6 : c.left - d.left - 6
+          const x1 = sd === "left" ? x0 + 12 : x0 - 12
+          const ax = sd === "left" ? g.b.x : g.b.x + g.b.w
+          const ay = Math.min(Math.max(y0, g.b.y + Math.min(4, g.b.h / 2)), g.b.y + g.b.h - Math.min(4, g.b.h / 2))
+          const lead = s("g", { class: "lead" })
+          lead.append(
+            s("path", { class: "leader", d: `M${x0} ${y0}H${x1}L${ax} ${ay}` }),
+            s("circle", { class: "dot", cx: ax, cy: ay, r: 2.25 }),
+          )
+          lines.append(lead)
+          g.n.lead = lead
+        }
+      }
+    }
+
+    if (stack) {
+      root.setAttribute("data-layout", "stack")
+      lines.replaceChildren()
+      if (img) img.style.maxHeight = "70vh"
+      if (board) board.style.gridTemplateColumns = ""
+      for (const n of visible) {
+        n.callout.style.top = ""
+        n.callout.removeAttribute("data-side")
+        cols.left.append(n.callout)
+      }
+    }
+
+    drawDimensions()
+    if (spec.scrollHeight > spec.clientHeight + 1 && root.getAttribute("data-layout") === "sheet") spec.setAttribute("data-overflow", "")
+    else spec.removeAttribute("data-overflow")
+  }
+
+  // Dimension lines with arrowheads and extension ticks, in image percent.
+  function drawDimensions() {
+    const dims = list(view.dimensions)
+    if (!img || !dims.length || filter === "improve") return
+    const d = draw.getBoundingClientRect()
+    const f = frame.getBoundingClientRect()
+    const pt = (p) => [f.left - d.left + (num(list(p)[0]) / 100) * f.width, f.top - d.top + (num(list(p)[1]) / 100) * f.height]
+    const g = s("g", { class: "dims" })
+    for (const dim of dims) {
+      const [x1, y1] = pt(dim.from), [x2, y2] = pt(dim.to)
+      const len = Math.hypot(x2 - x1, y2 - y1)
+      if (len < 4) continue
+      const ux = (x2 - x1) / len, uy = (y2 - y1) / len
+      const nx = -uy, ny = ux
+      const head = Math.min(5, len / 3)
+      const arrow = (x, y, dir) =>
+        `M${x + dir * ux * head + nx * head * 0.45} ${y + dir * uy * head + ny * head * 0.45}L${x} ${y}L${x + dir * ux * head - nx * head * 0.45} ${y + dir * uy * head - ny * head * 0.45}`
+      g.append(
+        s("path", { class: "ext", d: `M${x1 + nx * 5} ${y1 + ny * 5}L${x1 - nx * 5} ${y1 - ny * 5}M${x2 + nx * 5} ${y2 + ny * 5}L${x2 - nx * 5} ${y2 - ny * 5}` }),
+        s("path", { class: "dim", d: `M${x1} ${y1}L${x2} ${y2}${arrow(x1, y1, 1)}${arrow(x2, y2, -1)}` }),
+      )
+      const vertical = Math.abs(uy) > Math.abs(ux)
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2
+      const label = s("text", {
+        class: "dim-label",
+        x: vertical ? mx - 7 : mx,
+        y: vertical ? my : my - 6,
+        "text-anchor": "middle",
+        "dominant-baseline": vertical ? "central" : "auto",
+        transform: vertical ? `rotate(-90 ${mx - 7} ${my})` : null,
+      })
+      label.textContent = String(dim.label ?? "")
+      g.append(label)
+    }
+    lines.append(g)
+  }
+
+  let frameId = 0
+  const schedule = () => { cancelAnimationFrame(frameId); frameId = requestAnimationFrame(layout) }
+  addEventListener("resize", schedule)
+  addEventListener("hashchange", () => go(Math.max(0, Math.min(views.length - 1, parseInt(location.hash.slice(1), 10) || 0))))
+  if (document.fonts?.ready) document.fonts.ready.then(schedule)
+  render(Math.max(0, Math.min(views.length - 1, parseInt(location.hash.slice(1), 10) || 0)))
+})()
+</script>
+</body>
+</html>

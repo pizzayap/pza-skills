@@ -100,6 +100,7 @@ The core loop: `write-plan`, `areyousure`, implement, `arewedone`, fix,
 
 | Skill | Use it for | Requirements |
 |---|---|---|
+| [explain-design](skills/explain-design/SKILL.md) | Explain what works in a design and why, plus only the improvements worth making, as one HTML spec sheet with callouts around the design, or section by section for a whole page | A URL, Figma frame, running app or screenshot; a browser tool for measured values; Node 18+ to build the report |
 | [taste-file](skills/taste-file/SKILL.md) | Write your design taste into a portable `taste.md` | Your likes or saves export with images |
 | [art-direction-loop](skills/art-direction-loop/SKILL.md) | Style bible, concept images, checklist review, human verdict, build brief | An image generation tool; a style bible |
 | [browser-website-design-clone](skills/browser-website-design-clone/SKILL.md) | Map a website's distinct layouts, routes, and interactions; produce design specifications or a working clone. Website coverage is the default; explicit page-only requests stay scoped | Live browser; local file access; project tools for implementation; authorized source assets or capable generation tools when replacement media is needed |
