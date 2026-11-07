@@ -179,6 +179,8 @@ const scenes = story.scenes.map((raw, i) => {
   }
   rules[d.type](d, at)
   if (!["title", "end"].includes(d.type) && !ACT_IDS.includes(d.act)) problems.push(`${at}.act must be one of ${ACT_IDS.join(", ")}`)
+  // A one-item ask may carry its line on the item, as video.md documents; speak it as the scene's line.
+  if (d.type === "ask" && d.items?.length === 1 && !isText(d.say) && isText(d.items[0].say)) d.say = d.items[0].say
   const perItem = d.type === "ask" && d.items?.length > 1 && d.items.every((it) => isText(it.say))
   const says = d.type === "zoom" ? (d.beats ?? []).map((b) => b.say) : d.type === "walk" ? (d.steps ?? []).map((s) => s.say) : perItem ? d.items.map((it) => it.say) : [d.say]
   says.forEach((s, k) => {
