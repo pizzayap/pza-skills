@@ -74,9 +74,17 @@ async function kokoro(skillDir, voice) {
     const path = createRequire(join(skillDir, "noop.js")).resolve("kokoro-js")
     mod = await import(pathToFileURL(path).href)
   } catch {
-    throw new Error(`The free local voice needs kokoro-js (about 400 MB with its runtime, plus a 90 MB model on first use). Install it once:\n  npm install --prefix "${skillDir}" --no-save ${KOKORO.pkg}`)
+    throw new Error(`The free local voice is not installed (about 400 MB, plus a 90 MB model). Install it once with:\n  node "${join(skillDir, "scripts", "setup.mjs")}" --voice local`)
   }
-  const tts = await mod.KokoroTTS.from_pretrained(KOKORO.model, { dtype: "q8", device: "cpu" })
+  let tts
+  try {
+    tts = await mod.KokoroTTS.from_pretrained(KOKORO.model, { dtype: "q8", device: "cpu" })
+  } catch (e) {
+    const cause = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`
+    if (/fetch failed|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|network/i.test(cause))
+      throw new Error(`Could not download the Kokoro voice model from huggingface.co. This happens once, on first use (about 90 MB). Allow network access for this command (in the Codex app, approve the request), or run setup with --voice local, then try again.\n(${cause})`)
+    throw new Error(`The Kokoro voice model did not load: ${cause}`)
+  }
   if (!tts.voices?.[voice]) throw new Error(`Kokoro has no voice "${voice}". Try af_heart, af_bella, am_michael, bf_emma or bm_george.`)
   return async (text, file) => {
     const audio = await tts.generate(text, { voice, speed: KOKORO.speed })

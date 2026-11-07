@@ -317,11 +317,25 @@ writeFileSync(join(outDir, "props.json"), JSON.stringify(props, null, 2))
 for (const w of warnings) console.warn(`warn: ${w}`)
 
 // ---- render with Remotion
-const { bundle } = await import("@remotion/bundler").catch(() => fail(`Remotion is not installed. Run this once:\n  npm install --prefix "${SKILL_DIR}"`))
+const { bundle } = await import("@remotion/bundler").catch(() => fail(`Remotion is not installed. Run setup once:\n  node "${join(SKILL_DIR, "scripts", "setup.mjs")}"`))
 const { openBrowser, renderMedia, renderStill, selectComposition } = await import("@remotion/renderer")
 const t0 = Date.now()
 const serveUrl = await bundle({ entryPoint: join(SKILL_DIR, "video", "index.jsx"), publicDir, onProgress: () => {} })
-const browser = await openBrowser("chrome")
+let browser
+// Remotion keeps its headless Chrome in node_modules/.remotion beside the nearest package.json of the
+// current folder. Open it from the skill folder, so setup's copy is used and nothing lands in the project.
+const projectDir = process.cwd()
+try {
+  process.chdir(SKILL_DIR)
+  browser = await openBrowser("chrome")
+} catch (e) {
+  const cause = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`
+  if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|fetch failed|download/i.test(cause))
+    fail(`Remotion could not download its headless Chrome from remotion.media (first render only, about 170 MB). Allow network access for this command (in the Codex app, approve the request), or run scripts/setup.mjs, then try again.\n(${cause.split("\n")[0]})`)
+  fail(`Remotion's browser could not start. In a sandbox such as the Codex app, approve the request to run it, then try again.\n(${cause.split("\n")[0]})`)
+} finally {
+  process.chdir(projectDir)
+}
 const composition = await selectComposition({ serveUrl, id: "Handoff", inputProps: props, puppeteerInstance: browser })
 
 if (sheetOnly || sheetScene != null) {

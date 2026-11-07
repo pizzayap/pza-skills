@@ -3,8 +3,8 @@
 // Usage: node build-deck.mjs <handoff.json> [--shots <manifest.json>] [--out <deck.html>] [--check]
 //   --shots  the manifest capture.mjs wrote (default: shots/manifest.json beside handoff.json)
 //   --out    default: deck.html beside handoff.json
-//   --check  also render every slide to slides/ and a contact sheet, and report overflow
-//            (needs playwright-core, Chrome and ffmpeg; the build itself needs only Node 18+)
+//   --check  also render every slide to slides/ and a contact sheet; exits 2 if any slide overflows
+//            (needs playwright-core, Chrome and ffmpeg; the build itself needs only Node 20+)
 // Data format: references/handoff-data.md.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, extname, join, relative, resolve } from "node:path"
@@ -79,6 +79,8 @@ if (!data.screens?.length) problems.push("screens needs at least one screen")
 
 // Every state group must say what happens when empty, loading and failing, even if the answer is "not needed".
 const STATUSES = ["built", "mock", "missing", "na"]
+const allKinds = new Set((data.states ?? []).flatMap((g) => (g.states ?? []).map((s) => s.kind)))
+if (allKinds.size > 8) problems.push(`states use ${allKinds.size} kinds; the coverage table fits 8 columns, so merge kinds (for example every trip moment as "moment")`)
 if (!data.states?.length) warnings.push("no states listed; the deck will have no state slides")
 ;(data.states ?? []).forEach((g, i) => {
   if (!isText(g.group)) problems.push(`states[${i}].group is required`)
@@ -209,8 +211,13 @@ if (check) {
     console.log(`Slides: ${dir} (${count})`)
     if (ff.status === 0) console.log(`Sheet: ${sheet}`)
     else console.warn("warn: ffmpeg could not tile the contact sheet; open the slide images instead")
-    if (errors.length) console.warn(`warn: page errors: ${errors.join("; ")}`)
-    for (const o of overflow) console.warn(`warn: ${o}`)
+    // An overflowing slide or a script error is a broken deck: fail, so it is fixed before handover.
+    if (errors.length) console.error(`FAIL: page errors: ${errors.join("; ")}`)
+    for (const o of overflow) console.error(`FAIL: ${o}`)
+    if (overflow.length || errors.length) {
+      console.error(`FAIL: ${overflow.length} slide(s) overflow, ${errors.length} page error(s). Shorten the text or split the section in handoff.json, then rebuild.`)
+      process.exitCode = 2
+    }
   } finally {
     await browser.close()
   }

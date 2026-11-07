@@ -241,17 +241,29 @@ body.overview #help, body.capture #help { display: none; }
   if (groups.length) {
     const kinds = []
     groups.forEach((g) => (g.states || []).forEach((st) => { if (st.kind && !kinds.includes(st.kind)) kinds.push(st.kind) }))
-    const s = slide("Every state")
-    add(s, el("p", "lede", "Each cell shows whether the prototype covers that state. Engineers build from the captures on the next slides."))
-    const t = put(s, el("table", "matrix"))
-    const head = put(t, el("tr")); add(head, el("th", "", "Group"), kinds.map((k) => el("th", "", k)))
-    groups.forEach((g) => {
-      const r = put(t, el("tr")); add(r, el("td", "", g.group))
-      kinds.forEach((k) => {
-        const td = put(r, el("td"))
-        const found = (g.states || []).filter((st) => st.kind === k)
-        if (!found.length) td.appendChild(el("span", "small", "—"))
-        else found.forEach((st, i) => { if (i) td.appendChild(document.createTextNode(" ")); td.appendChild(chip(st.status)) })
+    // 8 groups per slide keeps every row clear of the footer; a cell with several states
+    // of one status shows one chip with a count ("Built ×5") instead of a row of chips.
+    const tables = chunk(groups, Math.ceil(groups.length / Math.ceil(groups.length / 8)))
+    tables.forEach((rows, p) => {
+      const s = slide(paged("Every state", p, tables.length))
+      add(s, el("p", "lede", "Each cell shows whether the prototype covers that state. Engineers build from the captures on the next slides."))
+      const t = put(s, el("table", "matrix"))
+      const head = put(t, el("tr")); add(head, el("th", "", "Group"), kinds.map((k) => el("th", "", k)))
+      rows.forEach((g) => {
+        const r = put(t, el("tr")); add(r, el("td", "", g.group))
+        kinds.forEach((k) => {
+          const td = put(r, el("td"))
+          const found = (g.states || []).filter((st) => st.kind === k)
+          if (!found.length) { td.appendChild(el("span", "small", "—")); return }
+          const counts = new Map()
+          found.forEach((st) => counts.set(st.status, (counts.get(st.status) || 0) + 1))
+          ;[...counts].forEach(([status, n], i) => {
+            if (i) td.appendChild(document.createTextNode(" "))
+            const c = chip(status)
+            if (n > 1) c.textContent += " ×" + n
+            td.appendChild(c)
+          })
+        })
       })
     })
     groups.forEach((g) => {

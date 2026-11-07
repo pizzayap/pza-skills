@@ -80,7 +80,7 @@ Ask the user which narration they want before rendering. Each option times the v
 | `record` | The designer reads the script; the video fits their recording | A microphone. Run `--script` first |
 | `elevenlabs` | ElevenLabs text to speech | `ELEVENLABS_API_KEY`; optional `ELEVENLABS_VOICE_ID` or `--voice-id` |
 | `fish` | Fish Audio text to speech | `FISH_API_KEY`; optional `FISH_VOICE_ID` or `--voice-id` (the id in a voice's fish.audio URL) |
-| `local` | Kokoro-82M, a free open voice that runs on the computer (Apache-2.0) | A one-time install of about 400 MB: `npm install --prefix <skill-dir> --no-save kokoro-js@1.2.1`, then a 90 MB model download on first use. Rerunning the setup install removes it; install it again then |
+| `local` | Kokoro-82M, a free open voice that runs on the computer (Apache-2.0) | `node <skill-dir>/scripts/setup.mjs --voice local` once: about 400 MB of packages and a 90 MB model |
 | `none` (default) | Captions only | Nothing |
 
 - **Keys** come from the environment or from a `.env` file the user creates in the project folder, with a line such as `FISH_API_KEY=...`. The script reads only those names, never prints them, and warns when `.env` is not in `.gitignore`. Never write a key into `handoff.json`, the deck, a command line you show, or a commit.
@@ -112,4 +112,4 @@ node <skill-dir>/scripts/make-video.mjs handoff/<date>/handoff.json --voice loca
 
 Look at `video/sheet.png` for clipped or overlapping text, focus boxes off their element, a cursor that misses its target, and captions that cover what the scene is about. The sheet is timed from word counts; a voice changes the timing a little. After rendering, pull frames from the MP4 (`ffmpeg -ss 30 -i video.mp4 -frames:v 1 f.png`) and look at them, and read `captions.srt` against the pictures. The script warns when the total is outside 45 to 90 seconds; shorten lines before cutting scenes.
 
-The first render downloads Remotion's headless Chrome (about 170 MB) once. After that, an 85-second video with the local voice took about 40 seconds on an Apple Silicon Mac in testing. Outputs, all in `handoff/<date>/video/`: `<output>.mp4`, `captions.srt`, `script.md`, `sheet.png`, `voice.m4a` when there is a voice, and the working folders `public/` (capture copies) and `voice/` (the line cache).
+Setup downloads Remotion's headless Chrome (about 170 MB) into the skill folder, where every render uses it; without setup, the first render downloads it there. After that, an 85-second video with the local voice took about 40 seconds on an Apple Silicon Mac in testing. Outputs, all in `handoff/<date>/video/`: `<output>.mp4`, `captions.srt`, `script.md`, `sheet.png`, `voice.m4a` when there is a voice, and the working folders `public/` (capture copies) and `voice/` (the line cache).

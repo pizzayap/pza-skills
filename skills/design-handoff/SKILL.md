@@ -36,7 +36,7 @@ Two failure modes, and the first is worse:
 
 ## Hard rules
 
-1. **Read-only on the project.** Write only inside `handoff/<yyyy-mm-dd>/` in the project (today's date), or the folder given with `--out`; the commands below use `handoff/<date>/` for whichever it is. Never edit source to reach a state. Do not commit, push or upload anything, apart from narration text sent to the voice service the user picked (rule 8).
+1. **Read-only on the project.** Write only inside `handoff/<yyyy-mm-dd>/` in the project (today's date), or the folder given with `--out`; the commands below use `handoff/<date>/` for whichever it is. The one exception is `setup.mjs --project`, which installs the prototype's locked packages with `npm ci` (it never rewrites project files). Never edit source to reach a state. Do not commit, push or upload anything, apart from narration text sent to the voice service the user picked (rule 8).
 2. **Every image comes from the running prototype.** A state the code cannot reach gets status `missing` and an empty placeholder. Never draw it. A capture reached with mocked requests or injected test content is labeled as such.
 3. **Every state group answers empty, loading and error.** Each gets a row with status `built`, `mock`, `missing` or `na` (not needed, with the reason).
 4. **Values come from files.** Tokens, sizes and durations are read from DESIGN.md, the tokens file or the CSS, with the file named. Anything unconfirmed is marked ⚠️.
@@ -47,7 +47,17 @@ Two failure modes, and the first is worse:
 
 ## Setup (once per machine)
 
-The scripts need Node 20 or later, ffmpeg and Google Chrome. Run `npm install --prefix <skill-dir>` once (`<skill-dir>` is the folder that holds this file). It installs `playwright-core` for captures and Remotion for the video, about 200 MB. The first video render downloads Remotion's headless Chrome (about 170 MB). In the Codex app, approve the network requests when asked. Without Chrome for captures, run `node <skill-dir>/node_modules/playwright-core/cli.js install chromium`; the scripts print the exact command when no browser is found. The free local voice is a separate install, described in [video.md](references/video.md#voice).
+The scripts need Node 20 or later, ffmpeg and Google Chrome already on the computer; if one is missing, setup stops and says which, and the designer installs it. Everything else the skill downloads happens in one setup command, so the designer approves it once instead of mid-task. Before running it, tell the designer in plain words:
+
+> Setup downloads about 370 MB once: the packages that capture the prototype and render the video (about 200 MB, from npm) and the browser the video renders in (about 170 MB, from remotion.media). With the free voice, add about 490 MB (the Kokoro voice and its model, from npm and huggingface.co). Once unpacked, it takes about 1 GB of disk, or 1.5 GB with the free voice, including a render cache. Codex will ask you to approve this one command, because it needs the network and writes into the skill's folder and npm's download cache.
+
+```bash
+node <skill-dir>/scripts/setup.mjs [--voice local] [--project .]
+```
+
+`<skill-dir>` is the folder that holds this file. Add `--voice local` when the designer may want the free voice (ask before setup, or add it later by running setup again), and `--project .` when the prototype's own packages are not installed yet (it uses `npm ci` when the project has a `package-lock.json`; otherwise it asks the designer to run the project's own install). Setup skips anything already there, keeps the free voice once it is installed, and fails within seconds when the network or a folder is blocked. It prints what to do in each case.
+
+Later steps also start local programs: the prototype's dev server opens a local port, the capture, deck check and video render each start a browser, and the render writes a cache of about 200 MB into the skill's folder. In the Codex app each of these asks for approval the first time. Tell the designer this is expected. If Codex offers to approve similar commands for the rest of the session, accepting saves repeated prompts. When a script says Chrome is installed but could not start, the sandbox blocked it: approve and rerun, and never install a second browser.
 
 Remotion is free for individuals and for companies of up to three people; larger companies need a Remotion Company License (remotion.dev/license).
 
@@ -96,7 +106,7 @@ Write `handoff/<date>/handoff.json` following [handoff-data.md](references/hando
 node <skill-dir>/scripts/build-deck.mjs handoff/<date>/handoff.json --check
 ```
 
-[build-deck.mjs](scripts/build-deck.mjs) embeds the captures, so `deck.html` is one file that opens by double click and can be sent as an attachment. `--check` renders every slide and writes `deck-sheet.png`. Look at the sheet and at each slide it warns about, fix the data and rebuild until no slide overflows, within the two rounds in rule 7. Treat each `warn:` line as a question to answer, not noise.
+[build-deck.mjs](scripts/build-deck.mjs) embeds the captures, so `deck.html` is one file that opens by double click and can be sent as an attachment. `--check` renders every slide and writes `deck-sheet.png`. It exits with an error and a `FAIL:` line for every slide that runs into the footer or off the slide; a deck that fails the check is not ready to hand over. Look at the sheet and at each failing slide, fix the data (shorter text, fewer kinds) and rebuild, within the two rounds in rule 7. Treat each `warn:` line as a question to answer, not noise.
 
 ### 6. Make the video
 

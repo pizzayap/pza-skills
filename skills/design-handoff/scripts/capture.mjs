@@ -189,8 +189,12 @@ try {
       const notes = [entry.mocked && "mocked", entry.injected && "injected", entry.overflowX && "scrolls sideways", pageErrors.length && `${pageErrors.length} page errors`].filter(Boolean)
       console.log(`ok   ${shot.id} -> ${file}${notes.length ? `  (${notes.join(", ")})` : ""}`)
     } catch (error) {
-      failed.push(`${shot.id}: ${String(error.message).split("\n")[0]}`)
-      console.log(`FAIL ${shot.id}: ${String(error.message).split("\n")[0]}`)
+      // Keep the first line and the locator Playwright was waiting for, so a bad selector is obvious.
+      const lines = String(error.message).split("\n")
+      const waiting = lines.find((l) => /waiting for|locator resolved/i.test(l))?.trim()
+      const why = waiting ? `${lines[0]} (${waiting.replace(/^-\s*/, "")})` : lines[0]
+      failed.push(`${shot.id}: ${why}`)
+      console.log(`FAIL ${shot.id}: ${why}`)
     } finally {
       await context.close()
     }
