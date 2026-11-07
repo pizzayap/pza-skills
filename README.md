@@ -100,6 +100,8 @@ The core loop: `write-plan`, `areyousure`, implement, `arewedone`, fix,
 
 | Skill | Use it for | Requirements |
 |---|---|---|
+| [design-directions](skills/design-directions/SKILL.md) | Several different directions for one screen or flow, one subagent each, on a comparison board that opens by double click; you pick | Local file access; subagents optional (runs one after another without them); Node 18+ to build the board; a browser tool to check |
+| [persona-walkthrough](skills/persona-walkthrough/SKILL.md) | A first-time, power and screen-reader user each walk one flow in parallel, merged into a report of where they got stuck, with evidence and fixes | A running app or live page; a browser automation tool; subagents optional; Node 18+ to build the report |
 | [explain-design](skills/explain-design/SKILL.md) | Explain what works in a design and why, plus only the improvements worth making, as one HTML spec sheet with callouts around the design, or section by section for a whole page | A URL, Figma frame, running app or screenshot; a browser tool for measured values; Node 18+ to build the report |
 | [taste-file](skills/taste-file/SKILL.md) | Write your design taste into a portable `taste.md` | Your likes or saves export with images |
 | [art-direction-loop](skills/art-direction-loop/SKILL.md) | Style bible, concept images, checklist review, human verdict, build brief | An image generation tool; a style bible |
