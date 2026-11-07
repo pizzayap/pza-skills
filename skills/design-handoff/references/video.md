@@ -73,7 +73,7 @@ Top level: `scenes`, `output` (file name without `.mp4`), `accent` (one hex colo
 
 ## Voice
 
-Ask the user which narration they want before rendering. Each option times the video to the voice, so scenes never cut off a sentence.
+Ask the user which narration they want before rendering; the first time in a project, ask what they have (SKILL.md step 6) and save the choice in `handoff/voice.json`. Each option times the video to the voice, so scenes never cut off a sentence.
 
 | `--voice` | What it is | Needs |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ Ask the user which narration they want before rendering. Each option times the v
 
 - **Keys** come from the environment or from a `.env` file the user creates in the project folder, with a line such as `FISH_API_KEY=...`. The script reads only those names, never prints them, and warns when `.env` is not in `.gitignore`. Never write a key into `handoff.json`, the deck, a command line you show, or a commit.
 - **Privacy:** with `elevenlabs` or `fish`, the narration lines are sent to that company. Use them only when the user picked them.
-- **Cost:** each line is cached in `video/voice/` by voice, model and text, so re-rendering after a visual fix does not pay again. Fish Audio's default model is `s2.1-pro`; `--model s2.1-pro-free` uses its free model, tested and working on 2026-11-08. ElevenLabs uses `eleven_multilingual_v2` by default. Without `--voice-id` it uses George if the account has him, or else the account's first voice. A `402` answer means the account has no credit for that model.
+- **Cost:** each line is cached in `video/voice/` by voice, model and text, so re-rendering after a visual fix does not pay again. Fish Audio's default here is its free model `s2.1-pro-free` (tested 2026-11-08); `--model s2.1-pro` uses the paid one. Fish says the free model is the same model as the paid one, with no uptime guarantee, free under a fair-use policy through 30 November 2026 at least, and that free requests may be used to train its models (checked 2026-11-08 at fish.audio/blog/s2-1-pro-free-api). Accounts get 5 requests at once; the script sends one at a time and retries a 429. ElevenLabs uses `eleven_multilingual_v2` by default. Without `--voice-id` it uses George if the account has him, or else the account's first voice. A `402` answer means the account has no credit for that model.
 - **Kokoro voices:** `af_heart` (default), `af_bella`, `am_michael`, `bf_emma`, `bm_george`; pass one with `--voice-id`.
 
 ### Recording it yourself

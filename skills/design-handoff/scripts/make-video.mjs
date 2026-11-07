@@ -3,7 +3,7 @@
 // Usage: node make-video.mjs <handoff.json> [options]
 //   --voice none|local|elevenlabs|fish|record   narration (default none: captions only)
 //   --voice-id <id>     Kokoro voice name, ElevenLabs voice_id, or Fish Audio reference_id
-//   --model <id>        ElevenLabs model_id or Fish Audio model (default eleven_multilingual_v2, s2.1-pro)
+//   --model <id>        ElevenLabs model_id or Fish Audio model (default eleven_multilingual_v2, s2.1-pro-free)
 //   --audio <file>      with --voice record: your recording of script.md
 //   --script            write script.md (lines to record, with timings) and stop
 //   --sheet-only        render a contact sheet (3 stills per scene), no MP4

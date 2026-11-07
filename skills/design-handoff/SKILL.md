@@ -118,12 +118,21 @@ node <skill-dir>/scripts/make-video.mjs handoff/<date>/handoff.json --sheet-only
 
 Look at `video/sheet.png` and fix clipped text, wrong focus boxes and missed clicks.
 
-Then ask the user how to narrate, unless `--voice` already says:
+Then pick the narration, unless `--voice` already says. If `handoff/voice.json` exists, use its `voice` and say which one you used. Otherwise, the first time in a project, ask the user what they have, all that apply:
 
-- **Record it yourself:** run with `--script`, give them `video/script.md`, and render with `--voice record --audio <their file>` once they send the take.
-- **ElevenLabs** or **Fish Audio:** they need their own key in the environment or in `.env` (names in video.md). If the key is missing, tell them how to add it, hand over what is finished, and render the video once they say the key is set; never ask them to paste it into the chat.
-- **The free local voice** (Kokoro).
-- **Captions only.**
+- a microphone and a quiet minute to read the script
+- a Fish Audio key (its free model is the default, so no credit is needed)
+- an ElevenLabs key with credit
+- none of these
+
+Then suggest the best of what they have, in this order, and let them choose:
+
+1. **Record it yourself:** run with `--script`, give them `video/script.md`, and render with `--voice record --audio <their file>` once they send the take. Their own voice suits a stakeholder update best.
+2. **Fish Audio** (free model) or **ElevenLabs:** they need their own key in the environment or in `.env` (names in video.md). If the key is missing, tell them how to add it, hand over what is finished, and render the video once they say the key is set; never ask them to paste it into the chat.
+3. **The free local voice** (Kokoro), when they have neither a microphone nor a key.
+4. **Captions only.**
+
+Save the choice as `handoff/voice.json`, such as `{ "voice": "fish" }` (add `"voiceId"` if they picked a voice), so later handoffs use it without asking. It holds no key. If they ask for a different voice later, update it.
 
 If you cannot ask, render with captions only and say how to add a voice.
 

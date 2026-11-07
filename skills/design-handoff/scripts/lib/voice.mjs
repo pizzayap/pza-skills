@@ -20,7 +20,7 @@ export const KOKORO = { pkg: "kokoro-js@1.2.1", model: "onnx-community/Kokoro-82
 // account, so without --voice-id the script asks the account for its voices and takes George
 // if it is there, else the first one. Fish Audio's "Energetic Male" is the docs' example voice.
 export const ELEVEN = { model: "eleven_multilingual_v2", prefer: "George", keys: ["ELEVENLABS_API_KEY"], voiceKeys: ["ELEVENLABS_VOICE_ID"] }
-export const FISH = { model: "s2.1-pro", voice: "9a9cf47702da476aa4629e2506d4a857", keys: ["FISH_API_KEY", "FISH_AUDIO_API_KEY"], voiceKeys: ["FISH_VOICE_ID"] }
+export const FISH = { model: "s2.1-pro-free", models: ["s2.1-pro-free", "s2.1-pro", "s2-pro", "drama-3"], voice: "9a9cf47702da476aa4629e2506d4a857", keys: ["FISH_API_KEY", "FISH_AUDIO_API_KEY"], voiceKeys: ["FISH_VOICE_ID"] }
 
 export function probeSeconds(file) {
   const r = spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], { encoding: "utf8" })
@@ -54,6 +54,8 @@ export async function synthLines(provider, lines, { dir, voiceId, model, skillDi
     const key = needKey(FISH.keys, "Fish Audio")
     voice ??= readKey(FISH.voiceKeys)?.value ?? FISH.voice
     variant = model ?? FISH.model
+    // Fish bills an unknown model name as the paid s2.1-pro, so refuse it here.
+    if (!FISH.models.includes(variant)) throw new Error(`Fish Audio has no model "${variant}". Use one of ${FISH.models.join(", ")}.`)
     speak = fish(key, voice, variant)
   } else throw new Error(`unknown voice provider ${provider}`)
   console.log(`  voice: ${voice}`)
@@ -104,12 +106,19 @@ function needKey(keys, label) {
 }
 
 async function fetchAudio(url, init, label, file) {
-  const res = await fetch(url, init)
+  // 429 (too many requests at once, sent without Retry-After) and 5xx are worth retrying.
+  let res
+  for (let wait = 1000; ; wait *= 2) {
+    res = await fetch(url, init)
+    if (res.ok || !(res.status === 429 || res.status >= 500) || wait > 8000) break
+    await new Promise((r) => setTimeout(r, wait))
+  }
   if (!res.ok) {
     const body = (await res.text()).slice(0, 300).replace(/\s+/g, " ")
     const hint =
       res.status === 401 ? " The key was refused; check it." :
-      res.status === 402 ? " The account has no credit for this model. Add credit, or for Fish Audio try --model s2.1-pro-free." :
+      res.status === 402 ? " The account has no credit for this model. Add credit, or for Fish Audio leave out --model to use the free s2.1-pro-free." :
+      res.status === 429 ? " Too many requests at once, even after waiting; try again in a minute." :
       res.status === 404 ? " The voice was not found; check --voice-id." : ""
     throw new Error(`${label} answered ${res.status}.${hint} ${body}`)
   }
