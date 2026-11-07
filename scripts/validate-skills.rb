@@ -81,6 +81,7 @@ skill_files.each do |file|
   end
 
   directory.glob('**/*.md').sort.each do |resource|
+    next if resource.each_filename.include?('node_modules') # installed dependencies, never committed
     content = read_package_file.call(resource, directory)
     next unless content
     check_links.call(resource, content, directory)
