@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handoff deck</title>
+<style>
+:root {
+  --page: #ecebe7;
+  --slide: #fbfaf8;
+  --ink: #16161a;
+  --muted: #5d5d66;
+  --faint: #8b8b93;
+  --line: #dddcd6;
+  --soft: #f1f0ec;
+  --accent: #1f56c9;
+  --built: #17703f;
+  --built-bg: #e3f2e8;
+  --mock: #8a5200;
+  --mock-bg: #fbefd9;
+  --missing: #b0281c;
+  --missing-bg: #fbe4e1;
+  --na: #5d5d66;
+  --na-bg: #ecebe7;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--page); color: var(--ink); font: 22px/1.4 var(--sans); -webkit-font-smoothing: antialiased; overflow: hidden; }
+#stage { position: fixed; inset: 0; display: grid; place-items: center; }
+.slide { width: 1600px; height: 900px; background: var(--slide); position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%; padding: 64px 80px 72px; display: none; flex-direction: column; box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); overflow: hidden; }
+.slide.on { display: flex; }
+.slide > h2 { font-size: 44px; line-height: 1.15; font-weight: 650; margin: 0 0 28px; letter-spacing: -0.01em; max-width: 1300px; }
+.slide .lede { font-size: 24px; color: var(--muted); margin: -12px 0 28px; max-width: 1200px; }
+.foot { position: absolute; left: 80px; right: 80px; bottom: 28px; display: flex; justify-content: space-between; font-size: 15px; color: var(--faint); }
+.body { flex: 1; min-height: 0; display: flex; gap: 48px; }
+.col { flex: 1; min-width: 0; }
+h3 { font-size: 22px; font-weight: 650; margin: 0 0 12px; }
+ul.plain { margin: 0; padding: 0; list-style: none; }
+ul.plain li { padding: 10px 0; border-top: 1px solid var(--line); }
+ul.plain li:last-child { border-bottom: 1px solid var(--line); }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+.code { font-family: var(--mono); font-size: 18px; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; white-space: pre-wrap; }
+.small { font-size: 17px; color: var(--muted); }
+.chip { display: inline-block; font-size: 14px; font-weight: 600; line-height: 1; padding: 6px 9px; border-radius: 6px; white-space: nowrap; vertical-align: middle; }
+.chip.built { color: var(--built); background: var(--built-bg); }
+.chip.mock { color: var(--mock); background: var(--mock-bg); }
+.chip.missing { color: var(--missing); background: var(--missing-bg); }
+.chip.na { color: var(--na); background: var(--na-bg); }
+.chip.kind { color: var(--muted); background: var(--soft); font-weight: 500; }
+
+/* cover */
+.cover { justify-content: center; }
+.cover h1 { font-size: 76px; line-height: 1.04; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 20px; max-width: 1300px; }
+.cover .title { font-size: 34px; color: var(--muted); margin: 0 0 40px; max-width: 1200px; }
+.cover .summary { font-size: 26px; max-width: 1100px; margin: 0 0 48px; }
+.meta { display: flex; flex-wrap: wrap; gap: 12px 40px; font-size: 18px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* figures */
+.shot { position: relative; display: inline-block; max-width: 100%; max-height: 100%; line-height: 0; }
+.shot img { display: block; max-width: 100%; max-height: 100%; border: 1px solid var(--line); border-radius: 6px; }
+.figure { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: center; min-height: 0; }
+.figure .shot img { max-height: 680px; max-width: 920px; }
+.pin { position: absolute; border: 2px solid var(--accent); border-radius: 4px; }
+.pin span { position: absolute; left: -2px; top: -2px; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; font: 600 16px/30px var(--sans); text-align: center; }
+ol.notes { margin: 0; padding: 0; list-style: none; counter-reset: n; }
+ol.notes li { position: relative; padding: 0 0 10px 44px; font-size: 19px; }
+ol.notes li::before { counter-increment: n; content: counter(n); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; font: 600 16px/30px var(--sans); text-align: center; }
+ul.checks { margin: 0; padding: 0; list-style: none; }
+ul.checks li { position: relative; padding: 0 0 8px 30px; font-size: 18px; }
+ul.checks li::before { content: ""; position: absolute; left: 0; top: 6px; width: 16px; height: 16px; border: 2px solid var(--muted); border-radius: 3px; }
+.side { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; gap: 16px; }
+.route { font-family: var(--mono); font-size: 17px; color: var(--muted); }
+
+/* grids */
+.grid { display: grid; gap: 24px; flex: 1; min-height: 0; align-content: start; }
+.card { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.thumb { aspect-ratio: 16 / 9; background: var(--soft); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.thumb.empty { border: 2px dashed var(--line); color: var(--faint); font-size: 17px; text-align: center; padding: 16px; }
+.card .name { font-size: 19px; font-weight: 600; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.card .note { font-size: 16px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: 18px; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 15px; padding: 0 16px 10px 0; border-bottom: 2px solid var(--ink); }
+td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.thumbcell { width: 340px; }
+td.thumbcell .thumb { width: 320px; }
+.matrix td, .matrix th { text-align: center; }
+.matrix td:first-child, .matrix th:first-child { text-align: left; }
+
+/* tokens */
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 24px; }
+.swatch { display: flex; gap: 14px; align-items: center; min-width: 0; }
+/* Each swatch sits half on white and half on near-black, so colors with alpha read honestly. */
+.swatch i { flex: 0 0 56px; height: 56px; border-radius: 8px; border: 1px solid var(--line); background: #fff; position: relative; overflow: hidden; }
+.swatch i::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 50%; background: #16161a; }
+.swatch i b { position: absolute; inset: 0; z-index: 1; }
+.swatch div { min-width: 0; font-size: 15px; line-height: 1.3; }
+.swatch .tok { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.swatch .use { color: var(--muted); }
+
+/* questions */
+ol.qs { margin: 0; padding: 0; list-style: none; counter-reset: q; display: flex; flex-direction: column; gap: 20px; }
+ol.qs li { position: relative; padding-left: 56px; }
+ol.qs li::before { counter-increment: q; content: "Q" counter(q); position: absolute; left: 0; top: 2px; font: 650 20px/1 var(--sans); color: var(--accent); }
+ol.qs .q { font-size: 23px; font-weight: 600; }
+ol.qs .rec { font-size: 18px; color: var(--muted); margin-top: 4px; }
+
+/* overview */
+body.overview { overflow: auto; }
+body.overview #stage { position: static; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px; padding: 24px; }
+body.overview .slide { display: flex; position: relative; left: auto; top: auto; transform: scale(0.2); transform-origin: 0 0; margin: 0 0 -720px 0; cursor: pointer; }
+body.overview .cell { width: 320px; height: 180px; position: relative; outline: 1px solid var(--line); }
+#zoom { position: fixed; inset: 0; background: rgb(15 15 18 / 0.9); display: none; align-items: center; justify-content: center; z-index: 10; cursor: zoom-out; }
+#zoom.on { display: flex; }
+#zoom img { max-width: 96vw; max-height: 94vh; }
+.slide img { cursor: zoom-in; }
+#help { position: fixed; right: 16px; bottom: 12px; font-size: 13px; color: var(--faint); }
+body.overview #help, body.capture #help { display: none; }
+
+@media print {
+  @page { size: 1600px 900px; margin: 0; }
+  html, body { height: auto; overflow: visible; background: none; }
+  #stage { position: static; display: block; }
+  .slide { display: flex !important; position: relative; left: 0; top: 0; transform: none !important; box-shadow: none; page-break-after: always; break-after: page; }
+  #help { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="stage" aria-live="polite"></div>
+<div id="zoom"><img alt=""></div>
+<div id="help">← → to move · G for all slides · click a capture to enlarge · P to print</div>
+<script type="application/json" id="handoff-data">{}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById("handoff-data").textContent)
+  const images = data.__images || {}
+  const P = data.project || {}
+  const stage = document.getElementById("stage")
+  document.title = (P.name ? P.name + " · " : "") + "Handoff"
+
+  // Every string goes in as text. Nothing from the data is parsed as HTML.
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag)
+    if (cls) n.className = cls
+    if (text !== undefined && text !== null) n.textContent = String(text)
+    return n
+  }
+  const add = (parent, ...kids) => { kids.flat().filter(Boolean).forEach((k) => parent.appendChild(k)); return parent }
+  const put = (parent, child) => { parent.appendChild(child); return child }
+  // `code` in prose renders as a mono span.
+  const rich = (tag, cls, text) => {
+    const n = el(tag, cls)
+    String(text ?? "").split(/(`[^`]+`)/).forEach((part) => {
+      if (/^`[^`]+`$/.test(part)) n.appendChild(el("code", "", part.slice(1, -1)))
+      else if (part) n.appendChild(document.createTextNode(part))
+    })
+    return n
+  }
+  const chunk = (list, size) => { const out = []; for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size)); return out.length ? out : [[]] }
+  const img = (ref) => (ref && images[ref]) || null
+  const STATUS = { built: "Built", mock: "Mock data", missing: "Not in prototype", na: "Not needed" }
+  const chip = (status) => el("span", "chip " + (STATUS[status] ? status : "na"), STATUS[status] || status || "Unknown")
+
+  const slides = []
+  const slide = (title, cls) => {
+    const s = el("section", "slide" + (cls ? " " + cls : ""))
+    if (title) s.appendChild(el("h2", "", title))
+    slides.push(s)
+    return s
+  }
+  const paged = (title, i, n) => (n > 1 ? `${title} (${i + 1} of ${n})` : title)
+  const thumb = (ref, missingText) => {
+    const t = el("div", "thumb")
+    const src = img(ref)
+    if (src) { const i = el("img"); i.src = src; i.alt = ""; t.appendChild(i) }
+    else { t.classList.add("empty"); t.textContent = missingText || "No capture" }
+    return t
+  }
+
+  // 1. Cover
+  {
+    const s = slide(null, "cover")
+    add(s, el("h1", "", P.name || "Untitled prototype"))
+    if (P.title) add(s, el("p", "title", P.title))
+    if (P.summary) add(s, rich("p", "summary", P.summary))
+    const meta = el("div", "meta")
+    const pair = (k, v) => { if (!v) return null; const d = el("div"); add(d, el("b", "", k + " "), document.createTextNode(v)); return d }
+    add(meta, pair("Designer", P.author), pair("Date", P.date), pair("Branch", P.branch), pair("Prototype", P.url), pair("Design rules", P.designDoc))
+    add(s, meta)
+  }
+
+  // 2. What's built
+  if (data.built?.length || data.notBuilt?.length || P.run?.length) {
+    const s = slide("What's built")
+    const body = put(s, el("div", "body"))
+    if (data.built?.length) { const c = put(body, el("div", "col")); add(c, el("h3", "", "Built in the prototype")); add(c, add(el("ul", "plain"), data.built.map((t) => rich("li", "", t)))) }
+    if (data.notBuilt?.length) { const c = put(body, el("div", "col")); add(c, el("h3", "", "Not built yet")); add(c, add(el("ul", "plain"), data.notBuilt.map((t) => rich("li", "", t)))) }
+    if (P.run?.length) { const c = put(body, el("div", "col")); add(c, el("h3", "", "Run it")); add(c, el("div", "code", P.run.join("\n"))); if (P.repo) add(c, rich("p", "small", "Folder: `" + P.repo + "`")) }
+  }
+
+  // 3. Screens overview, then one slide per screen
+  const screens = data.screens || []
+  if (screens.length > 1) {
+    const pages = chunk(screens, 8)
+    pages.forEach((page, i) => {
+      const s = slide(paged("Screens", i, pages.length))
+      const g = put(s, el("div", "grid")); g.style.gridTemplateColumns = "repeat(4, 1fr)"
+      page.forEach((sc) => { const c = put(g, el("div", "card")); add(c, thumb(sc.shot), el("div", "name", sc.title), el("div", "route", sc.route || "")) })
+    })
+  }
+  screens.forEach((sc) => {
+    const s = slide(sc.title)
+    const body = put(s, el("div", "body"))
+    const fig = put(body, el("div", "figure"))
+    const src = img(sc.shot)
+    if (src) {
+      const box = put(fig, el("div", "shot"))
+      const i = el("img"); i.src = src; i.alt = sc.title; box.appendChild(i)
+      ;(sc.notes || []).forEach((n, k) => {
+        if (!Array.isArray(n.region)) return
+        const p = el("div", "pin"); const [x, y, w, h] = n.region
+        Object.assign(p.style, { left: x + "%", top: y + "%", width: w + "%", height: h + "%" })
+        add(p, el("span", "", k + 1)); box.appendChild(p)
+      })
+    } else add(fig, thumb(null, "No capture"))
+    const side = put(body, el("div", "side"))
+    if (sc.route) add(side, el("div", "route", sc.route))
+    if (sc.summary) add(side, rich("p", "", sc.summary))
+    if (sc.notes?.length) add(side, add(el("ol", "notes"), sc.notes.map((n) => rich("li", "", n.text))))
+    if (sc.done?.length) { add(side, el("h3", "", "Done when")); add(side, add(el("ul", "checks"), sc.done.map((t) => rich("li", "", t)))) }
+  })
+
+  // 4. States: a coverage table, then the captures for each group
+  const groups = data.states || []
+  if (groups.length) {
+    const kinds = []
+    groups.forEach((g) => (g.states || []).forEach((st) => { if (st.kind && !kinds.includes(st.kind)) kinds.push(st.kind) }))
+    const s = slide("Every state")
+    add(s, el("p", "lede", "Each cell shows whether the prototype covers that state. Engineers build from the captures on the next slides."))
+    const t = put(s, el("table", "matrix"))
+    const head = put(t, el("tr")); add(head, el("th", "", "Group"), kinds.map((k) => el("th", "", k)))
+    groups.forEach((g) => {
+      const r = put(t, el("tr")); add(r, el("td", "", g.group))
+      kinds.forEach((k) => {
+        const td = put(r, el("td"))
+        const found = (g.states || []).filter((st) => st.kind === k)
+        if (!found.length) td.appendChild(el("span", "small", "—"))
+        else found.forEach((st, i) => { if (i) td.appendChild(document.createTextNode(" ")); td.appendChild(chip(st.status)) })
+      })
+    })
+    groups.forEach((g) => {
+      const pages = chunk(g.states || [], 8)
+      pages.forEach((page, i) => {
+        const s = slide(paged(g.group, i, pages.length))
+        if (g.source) add(s, rich("p", "lede", "From `" + g.source + "`"))
+        const grid = put(s, el("div", "grid")); grid.style.gridTemplateColumns = "repeat(4, 1fr)"
+        page.forEach((st) => {
+          const c = put(grid, el("div", "card"))
+          add(c, thumb(st.shot, st.status === "missing" ? "Not in the prototype yet" : "No capture"))
+          const name = put(c, el("div", "name", st.name)); add(name, el("span", "chip kind", st.kind || "state"), chip(st.status))
+          if (st.note) add(c, rich("div", "note", st.note))
+        })
+      })
+    })
+  }
+
+  // 5. Edge cases
+  const edges = data.edgeCases || []
+  chunk(edges, 3).forEach((page, i, all) => {
+    if (!edges.length) return
+    const s = slide(paged("Edge cases", i, all.length))
+    const t = put(s, el("table"))
+    add(t, add(el("tr"), el("th", "", "Capture"), el("th", "", "Scenario"), el("th", "", "What happens"), el("th", "", "Result")))
+    const RESULT = { handled: "built", breaks: "missing", untested: "na" }
+    const LABEL = { handled: "Handled", breaks: "Breaks", untested: "Untested" }
+    page.forEach((e) => {
+      const r = put(t, el("tr"))
+      const c = put(r, el("td", "thumbcell")); add(c, thumb(e.shot, "No capture"))
+      add(r, rich("td", "", e.scenario), rich("td", "", e.note || ""))
+      const res = put(r, el("td")); res.appendChild(el("span", "chip " + (RESULT[e.result] || "na"), LABEL[e.result] || e.result || "Untested"))
+    })
+  })
+
+  // 6. Tokens
+  const T = data.tokens || {}
+  if (T.colors?.length) {
+    chunk(T.colors, 16).forEach((page, i, all) => {
+      const s = slide(paged("Color tokens", i, all.length))
+      if (T.source) add(s, rich("p", "lede", "From `" + T.source + "`"))
+      const g = put(s, el("div", "swatches"))
+      page.forEach((c) => {
+        const w = put(g, el("div", "swatch"))
+        const sw = put(w, el("i")); const fill = el("b"); fill.style.background = c.value; sw.appendChild(fill)
+        const d = put(w, el("div")); add(d, el("div", "tok", c.name), el("div", "tok", c.value), c.use ? el("div", "use", c.use) : null)
+      })
+    })
+  }
+  const scales = [["type", "Type"], ["spacing", "Spacing"], ["radii", "Radii"], ["motion", "Motion"]].filter(([k]) => T[k]?.length)
+  if (scales.length) {
+    const s = slide("Type, spacing and motion")
+    if (T.source && !T.colors?.length) add(s, rich("p", "lede", "From `" + T.source + "`"))
+    const body = put(s, el("div", "body"))
+    scales.forEach(([k, label]) => {
+      const c = put(body, el("div", "col")); add(c, el("h3", "", label))
+      const t = put(c, el("table"))
+      T[k].slice(0, 12).forEach((row) => {
+        const r = put(t, el("tr"))
+        if (k === "type") add(r, el("td", "", row.name), el("td", "mono", [row.size && row.size + "px", row.weight, row.lineHeight].filter(Boolean).join(" / ")))
+        else add(r, el("td", "mono", row.name), el("td", "mono", row.value), row.use ? el("td", "small", row.use) : null)
+      })
+    })
+    if (T.notes?.length) add(s, add(el("ul", "plain"), T.notes.map((n) => rich("li", "small", n))))
+  }
+
+  // 7. Components, interactions, mock data
+  const table = (title, rows, cols, size) => {
+    if (!rows?.length) return
+    chunk(rows, size).forEach((page, i, all) => {
+      const s = slide(paged(title, i, all.length))
+      const t = put(s, el("table"))
+      add(t, add(el("tr"), cols.map(([, h]) => el("th", "", h))))
+      page.forEach((row) => {
+        const r = put(t, el("tr"))
+        cols.forEach(([key]) => {
+          const v = row[key]
+          if (key === "status" && v) { const td = put(r, el("td")); td.appendChild(el("span", "chip " + ({ new: "built", changed: "mock", existing: "na" }[v] || "na"), v[0].toUpperCase() + v.slice(1))) }
+          else if (key === "blocking") { const td = put(r, el("td")); td.appendChild(v ? el("span", "chip missing", "Blocking") : el("span", "chip na", "Not blocking")) }
+          else add(r, rich("td", key === "file" || key === "where" ? "mono" : "", v ?? ""))
+        })
+      })
+    })
+  }
+  table("Components", data.components, [["name", "Component"], ["status", "Status"], ["file", "File"], ["note", "Notes"]], 8)
+  table("Interactions and motion", data.interactions, [["trigger", "When"], ["result", "What happens"], ["timing", "Timing"]], 8)
+  table("What's mocked", data.mocks, [["what", "Mocked in the prototype"], ["where", "Where"], ["replaceWith", "Needs in production"]], 7)
+  table("What's left", data.left, [["item", "Item"], ["detail", "Detail"], ["blocking", "Blocks launch"]], 7)
+
+  // 8. Open questions
+  const qs = data.questions || []
+  chunk(qs, 4).forEach((page, i, all) => {
+    if (!qs.length) return
+    const s = slide(paged("Open questions", i, all.length))
+    const ol = put(s, el("ol", "qs")); ol.style.counterReset = "q " + i * 4
+    page.forEach((q) => {
+      const li = put(ol, el("li"))
+      add(li, rich("div", "q", q.question))
+      const rec = [q.recommendation && "Recommended: " + q.recommendation, q.owner && "Decides: " + q.owner].filter(Boolean).join(" · ")
+      if (rec) add(li, rich("div", "rec", rec))
+    })
+  })
+
+  // 9. Files
+  table("Where things are", data.files, [["path", "Path"], ["note", "What it holds"]], 9)
+
+  // Footers and numbering
+  slides.forEach((s, i) => {
+    const f = el("div", "foot"); add(f, el("span", "", [P.name, P.date].filter(Boolean).join(" · ")), el("span", "", `${i + 1} / ${slides.length}`))
+    s.appendChild(f); s.dataset.index = i; stage.appendChild(s)
+  })
+
+  // Viewer
+  let current = 0
+  const fit = () => {
+    const k = Math.min(innerWidth / 1600, innerHeight / 900) * 0.96
+    slides.forEach((s) => { s.style.transform = document.body.classList.contains("overview") ? "" : `translate(-50%, -50%) scale(${k})` })
+  }
+  const go = (i) => {
+    current = Math.max(0, Math.min(slides.length - 1, i))
+    slides.forEach((s, k) => s.classList.toggle("on", k === current))
+    if (location.hash !== "#" + (current + 1)) history.replaceState(null, "", "#" + (current + 1))
+  }
+  const overview = (on) => {
+    document.body.classList.toggle("overview", on)
+    if (on) slides.forEach((s) => { if (!s.parentElement.classList.contains("cell")) { const c = el("div", "cell"); stage.insertBefore(c, s); c.appendChild(s) } })
+    else slides.forEach((s) => { const c = s.parentElement; if (c.classList.contains("cell")) { stage.insertBefore(s, c); c.remove() } })
+    fit()
+    if (!on) go(current)
+  }
+  // Click any capture to see it at full size; click again or press Esc to close.
+  const zoom = document.getElementById("zoom")
+  const closeZoom = () => zoom.classList.remove("on")
+  zoom.addEventListener("click", closeZoom)
+  stage.addEventListener("click", (e) => {
+    if (document.body.classList.contains("overview")) return
+    const pic = e.target.closest(".slide img")
+    if (pic) { zoom.querySelector("img").src = pic.src; zoom.classList.add("on") }
+  })
+  stage.addEventListener("click", (e) => { const s = e.target.closest(".slide"); if (document.body.classList.contains("overview") && s) { current = +s.dataset.index; overview(false) } })
+  addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    if (zoom.classList.contains("on")) { if (e.key === "Escape") closeZoom(); return }
+    if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(e.key)) { e.preventDefault(); go(current + 1) }
+    else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); go(current - 1) }
+    else if (e.key === "Home") go(0)
+    else if (e.key === "End") go(slides.length - 1)
+    else if (e.key === "g" || e.key === "G" || (e.key === "Escape" && document.body.classList.contains("overview"))) overview(!document.body.classList.contains("overview"))
+    else if (e.key === "p" || e.key === "P") print()
+  })
+  addEventListener("resize", fit)
+  addEventListener("hashchange", () => go((parseInt(location.hash.slice(1), 10) || 1) - 1))
+  fit()
+  go((parseInt(location.hash.slice(1), 10) || 1) - 1)
+  window.__deck = { count: slides.length, go, titles: slides.map((s) => s.querySelector("h2, h1")?.textContent || "") }
+})()
+</script>
+</body>
+</html>

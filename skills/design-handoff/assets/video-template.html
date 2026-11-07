@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handoff video</title>
+<style>
+:root {
+  --paper: #f4f3ef;
+  --ink: #16161a;
+  --muted: #5d5d66;
+  --line: #d9d8d2;
+  --accent: #1f56c9;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #0f0f12; overflow: hidden; }
+#frame { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 50% 50%; background: var(--paper); color: var(--ink); font-family: var(--sans); overflow: hidden; -webkit-font-smoothing: antialiased; }
+.scene { position: absolute; inset: 0; opacity: 0; }
+.center { position: absolute; inset: 0 160px 200px; display: flex; flex-direction: column; justify-content: center; }
+.headline { font-size: 120px; line-height: 1.04; font-weight: 700; letter-spacing: -0.025em; margin: 0; max-width: 1500px; }
+.sub { font-size: 44px; line-height: 1.25; color: var(--muted); margin: 36px 0 0; max-width: 1400px; }
+.meta { font-size: 30px; color: var(--muted); margin-top: 64px; }
+.statement { font-size: 84px; line-height: 1.12; font-weight: 650; letter-spacing: -0.02em; max-width: 1500px; margin: 0; }
+em { font-style: normal; color: var(--accent); }
+
+/* a screenshot in a plain window */
+.window { position: absolute; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 6px rgb(0 0 0 / 0.08); }
+.window .bar { height: 44px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 18px; background: #fbfaf8; }
+.window .bar i { width: 13px; height: 13px; border-radius: 50%; background: #d4d3cd; }
+.window .bar span { margin-left: 18px; font: 20px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.window .view { position: relative; overflow: hidden; }
+.window .cam { position: absolute; inset: 0; transform-origin: 0 0; }
+.window .cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.box { position: absolute; border: 4px solid var(--accent); border-radius: 8px; opacity: 0; }
+.cursor { position: absolute; width: 34px; height: 48px; opacity: 0; z-index: 3; }
+.ring { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 4px solid var(--accent); border-radius: 50%; opacity: 0; z-index: 2; }
+.tag { position: absolute; font: 600 28px/1 var(--sans); padding: 12px 18px; border-radius: 8px; background: var(--ink); color: #fff; z-index: 2; }
+.wipe { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--ink); z-index: 2; }
+
+/* states grid */
+.grid { position: absolute; left: 120px; right: 120px; top: 150px; bottom: 210px; display: grid; gap: 28px 32px; }
+.grid h2, .listing h2 { position: absolute; top: -110px; left: 0; margin: 0; font-size: 56px; font-weight: 700; letter-spacing: -0.015em; }
+.cell { display: flex; flex-direction: column; gap: 14px; min-height: 0; opacity: 0; }
+.cell .pic { flex: 1; min-height: 0; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+.cell .pic img { width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; }
+.cell .pic.none { border-style: dashed; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 26px; background: transparent; }
+.cell .label { font-size: 30px; font-weight: 600; }
+
+/* list */
+.listing { position: absolute; left: 160px; right: 160px; top: 260px; }
+.listing ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 34px; }
+.listing li { display: flex; gap: 32px; align-items: baseline; font-size: 52px; line-height: 1.2; font-weight: 550; opacity: 0; }
+.listing li b { flex: 0 0 64px; font: 700 40px/1 var(--mono); color: var(--accent); }
+
+/* captions */
+#cap { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); max-width: 1500px; background: rgb(22 22 26 / 0.92); color: #fff; font-size: 36px; line-height: 1.3; font-weight: 500; padding: 16px 28px; border-radius: 12px; text-align: center; opacity: 0; z-index: 10; }
+#hud { position: fixed; left: 12px; bottom: 10px; color: #8b8b93; font: 13px var(--sans); }
+body.render #hud { display: none; }
+</style>
+</head>
+<body>
+<div id="frame"><div id="cap"></div></div>
+<div id="hud">space play/pause · ← → step 1 s · R restart</div>
+<script type="application/json" id="story">{}</script>
+<script>
+(() => {
+  const S = JSON.parse(document.getElementById("story").textContent)
+  const img = (ref) => (S.__images || {})[ref] || ""
+  const frame = document.getElementById("frame")
+  const cap = document.getElementById("cap")
+  if (S.accent) frame.style.setProperty("--accent", S.accent)
+  const FADE = 0.4
+
+  // ---- helpers (all pure functions of time; rendering seeks to arbitrary frames)
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v))
+  const prog = (t, a, b) => clamp((t - a) / (b - a))
+  const out3 = (x) => 1 - Math.pow(1 - x, 3)
+  const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n }
+  // **word** is the one emphasized word, rendered in the accent color. Everything else is text.
+  const rich = (tag, cls, text) => {
+    const n = el(tag, cls)
+    String(text || "").split(/(\*\*[^*]+\*\*)/).forEach((p) => {
+      if (/^\*\*[^*]+\*\*$/.test(p)) n.appendChild(el("em", "", p.slice(2, -2)))
+      else if (p) n.appendChild(document.createTextNode(p))
+    })
+    return n
+  }
+  const rise = (node, t, at, dist = 28, dur = 0.6) => { const k = out3(prog(t, at, at + dur)); node.style.opacity = k; node.style.transform = `translateY(${(1 - k) * dist}px)` }
+  const CURSOR = '<svg viewBox="0 0 24 34" width="34" height="48"><path d="M2 2 L2 27 L8.5 21 L13 31.5 L17 29.8 L12.6 19.6 L21 19.6 Z" fill="#16161a" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>'
+
+  // A window with a screenshot. Returns parts and a camera setter.
+  const makeWindow = (root, ref, url, rect) => {
+    const w = el("div", "window")
+    Object.assign(w.style, { left: rect.x + "px", top: rect.y + "px", width: rect.w + "px" })
+    const bar = el("div", "bar"); bar.append(el("i"), el("i"), el("i")); if (url) bar.appendChild(el("span", "", url))
+    const view = el("div", "view"); view.style.height = rect.h + "px"
+    const cam = el("div", "cam"); view.appendChild(cam)
+    const pic = el("img"); pic.src = img(ref); cam.appendChild(pic)
+    w.append(bar, view); root.appendChild(w)
+    const camera = (scale, fx, fy) => { cam.style.transform = `translate(${fx * rect.w * (1 - scale)}px, ${fy * rect.h * (1 - scale)}px) scale(${scale})` }
+    const point = (px, py, scale = 1, fx = 0, fy = 0) => ({
+      x: fx * rect.w * (1 - scale) + (px / 100) * rect.w * scale,
+      y: fy * rect.h * (1 - scale) + (py / 100) * rect.h * scale,
+    })
+    return { w, view, cam, pic, camera, point }
+  }
+  // Fit a window of the shot's aspect ratio into the area above the caption.
+  const fitRect = (aspect, maxW = 1700, maxH = 830, top = 32) => {
+    let w = maxW, h = w / aspect
+    if (h > maxH) { h = maxH; w = h * aspect }
+    return { x: (1920 - w) / 2, y: top + (maxH - h) / 2, w, h }
+  }
+
+  // ---- scenes. Each builder returns render(localTime, duration).
+  const B = {}
+  B.title = (root, d) => {
+    const c = el("div", "center"); root.appendChild(c)
+    const h = rich("h1", "headline", d.headline); const s = d.sub ? rich("p", "sub", d.sub) : null; const m = d.meta ? el("div", "meta", d.meta) : null
+    c.append(...[h, s, m].filter(Boolean))
+    return (t) => { rise(h, t, 0.1); if (s) rise(s, t, 0.45); if (m) rise(m, t, 0.8, 12) }
+  }
+  B.statement = (root, d) => {
+    const c = el("div", "center"); root.appendChild(c)
+    const h = rich("p", "statement", d.text); c.appendChild(h)
+    const s = d.sub ? rich("p", "sub", d.sub) : null; if (s) c.appendChild(s)
+    return (t) => { rise(h, t, 0.1, 36, 0.7); if (s) rise(s, t, 0.7) }
+  }
+  B.screen = (root, d) => {
+    const win = makeWindow(root, d.image, d.url, fitRect(d.aspect || 1.6))
+    const focus = d.focus
+    const box = el("div", "box"); win.view.appendChild(box)
+    // Zoom in, but never so far that the focus box leaves the window (6% margin).
+    const M = 0.06
+    let zoom = d.zoom ?? (focus ? 1.35 : 1.06)
+    if (focus) zoom = Math.max(1, Math.min(zoom, (1 - 2 * M) / (focus[2] / 100), (1 - 2 * M) / (focus[3] / 100)))
+    // The anchor stays fixed while scaling; pick one that keeps [lo, hi] inside the view.
+    const anchor = (lo, hi, s) => {
+      const c = (lo + hi) / 2
+      if (s - 1 < 1e-4) return c
+      const min = (hi * s - 1 + M) / (s - 1), max = (lo * s - M) / (s - 1)
+      return clamp(clamp(c, Math.min(min, max), Math.max(min, max)))
+    }
+    return (t, dur) => {
+      rise(win.w, t, 0, 20, 0.5)
+      const k = inOut(prog(t, 0.6, dur - 0.3))
+      const sc = 1 + (zoom - 1) * k
+      const fx = focus ? anchor(focus[0] / 100, (focus[0] + focus[2]) / 100, sc) : 0.5
+      const fy = focus ? anchor(focus[1] / 100, (focus[1] + focus[3]) / 100, sc) : 0.4
+      win.camera(sc, fx, fy)
+      if (focus) {
+        const a = win.point(focus[0], focus[1], sc, fx, fy), b = win.point(focus[0] + focus[2], focus[1] + focus[3], sc, fx, fy)
+        Object.assign(box.style, { left: a.x - 8 + "px", top: a.y - 8 + "px", width: b.x - a.x + 16 + "px", height: b.y - a.y + 16 + "px" })
+        box.style.opacity = out3(prog(t, dur * 0.45, dur * 0.45 + 0.35))
+      }
+    }
+  }
+  B.walk = (root, d) => {
+    const steps = d.steps || []
+    const rect = fitRect(d.aspect || 1.6)
+    const wins = steps.map((s) => makeWindow(root, s.image, s.url || d.url, rect))
+    const cur = el("div", "cursor"); cur.innerHTML = CURSOR; root.appendChild(cur)
+    const ring = el("div", "ring"); root.appendChild(ring)
+    const starts = []; let acc = 0
+    steps.forEach((s) => { starts.push(acc); acc += s.dur })
+    const centerOf = (s, w) => { const c = s.click; const p = w.point(c[0] + c[2] / 2, c[1] + c[3] / 2); return { x: rect.x + p.x, y: rect.y + 44 + p.y } }
+    return (t) => {
+      let i = starts.findIndex((st, k) => t >= st && (k === steps.length - 1 || t < starts[k + 1])); if (i < 0) i = 0
+      const local = t - starts[i], sd = steps[i].dur
+      wins.forEach((w, k) => { w.camera(1, 0, 0); w.w.style.opacity = k === i ? 1 : (k === i - 1 ? 1 - prog(local, 0, 0.3) : 0); w.w.style.zIndex = k === i ? 1 : 0 })
+      if (i === 0) rise(wins[0].w, t, 0, 20, 0.5)
+      const s = steps[i]
+      if (s.click) {
+        const to = centerOf(s, wins[i])
+        const prevStep = steps[i - 1]
+        const from = prevStep?.click ? centerOf(prevStep, wins[i - 1]) : { x: to.x + 260, y: to.y + 180 }
+        const move = inOut(prog(local, sd * 0.25, sd * 0.7))
+        const x = from.x + (to.x - from.x) * move, y = from.y + (to.y - from.y) * move
+        const press = prog(local, sd * 0.74, sd * 0.95)
+        cur.style.opacity = Math.min(prog(local, 0, 0.3) + (i > 0 ? 1 : 0), 1)
+        cur.style.transform = `translate(${x - 4}px, ${y - 2}px) scale(${1 - 0.12 * Math.sin(Math.PI * press)})`
+        ring.style.left = to.x + "px"; ring.style.top = to.y + "px"
+        ring.style.opacity = press > 0 ? 1 - press : 0
+        ring.style.transform = `scale(${0.4 + press * 0.9})`
+      } else {
+        ring.style.opacity = 0
+        cur.style.opacity = i > 0 && steps[i - 1].click ? 1 - prog(local, 0.2, 0.6) : 0
+      }
+      // the step's own caption replaces the scene caption
+      root.dataset.caption = s.say || d.say || ""
+    }
+  }
+  B.compare = (root, d) => {
+    const rect = fitRect(d.aspect || 1.6)
+    const before = makeWindow(root, d.before, d.url, rect)
+    const after = makeWindow(root, d.after, d.url, rect)
+    const line = el("div", "wipe"); root.appendChild(line)
+    const tb = el("div", "tag", d.beforeLabel || "Before"), ta = el("div", "tag", d.afterLabel || "After")
+    const tagTop = rect.y + 45 + rect.h - 72
+    Object.assign(tb.style, { left: rect.x + 24 + "px", top: tagTop + "px" }); Object.assign(ta.style, { right: 1920 - rect.x - rect.w + 24 + "px", top: tagTop + "px" })
+    root.append(tb, ta)
+    return (t, dur) => {
+      rise(before.w, t, 0, 20, 0.5)
+      const k = inOut(prog(t, dur * 0.3, dur * 0.65))
+      const cut = rect.w * (1 - k)
+      after.w.style.clipPath = `inset(0 0 0 ${cut}px)`
+      line.style.left = rect.x + cut - 2 + "px"; line.style.top = rect.y + 45 + "px"; line.style.height = rect.h + "px"
+      line.style.opacity = k > 0 && k < 1 ? 1 : 0
+      tb.style.opacity = prog(t, 0.4, 0.8) * (1 - prog(t, dur * 0.55, dur * 0.65)); ta.style.opacity = prog(t, dur * 0.4, dur * 0.6)
+    }
+  }
+  B.states = (root, d) => {
+    const items = (d.items || []).slice(0, 8)
+    const g = el("div", "grid"); root.appendChild(g)
+    const cols = items.length <= 3 ? items.length : items.length === 4 ? 2 : items.length <= 6 ? 3 : 4
+    g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
+    if (d.title) g.appendChild(rich("h2", "", d.title))
+    const cells = items.map((it) => {
+      const c = el("div", "cell"); const p = el("div", "pic" + (it.image ? "" : " none"))
+      if (it.image) { const i = el("img"); i.src = img(it.image); p.appendChild(i) } else p.textContent = it.missing || "Not in the prototype yet"
+      c.append(p, el("div", "label", it.label)); g.appendChild(c); return { c, p }
+    })
+    return (t, dur) => {
+      const h = g.querySelector("h2"); if (h) rise(h, t, 0, 20, 0.5)
+      cells.forEach(({ c }, k) => rise(c, t, 0.3 + k * 0.18, 24, 0.5))
+      const span = Math.max(0.1, dur - 1.6 - 0.18 * cells.length)
+      const lit = Math.floor(prog(t, 1.2 + 0.18 * cells.length, 1.2 + 0.18 * cells.length + span) * cells.length - 1e-6)
+      cells.forEach(({ p }, k) => { if (!p.classList.contains("none")) p.style.borderColor = k === lit ? "var(--accent)" : "" })
+    }
+  }
+  B.list = (root, d) => {
+    const box = el("div", "listing"); root.appendChild(box)
+    if (d.title) box.appendChild(rich("h2", "", d.title))
+    const ol = el("ol"); box.appendChild(ol)
+    const lis = (d.items || []).slice(0, 4).map((text, k) => { const li = el("li"); li.append(el("b", "", String(k + 1).padStart(2, "0")), rich("span", "", text)); ol.appendChild(li); return li })
+    return (t, dur) => {
+      const h = box.querySelector("h2"); if (h) rise(h, t, 0, 20, 0.5)
+      const gap = Math.min(1.6, (dur - 1.2) / Math.max(1, lis.length))
+      lis.forEach((li, k) => rise(li, t, 0.5 + k * gap, 24, 0.5))
+    }
+  }
+  B.end = B.title
+
+  // ---- timeline: durations come from make-video.mjs, so preview and render agree
+  const scenes = []
+  let at = 0
+  for (const d of S.scenes || []) {
+    const root = el("div", "scene"); frame.insertBefore(root, cap)
+    const build = B[d.type]
+    if (!build) throw new Error("unknown scene type " + d.type)
+    const render = build(root, d)
+    scenes.push({ d, root, render, start: at, dur: d.dur })
+    at += d.dur
+  }
+  const duration = at
+
+  const seek = (t) => {
+    t = clamp(t, 0, duration - 1e-4)
+    let caption = "", capAlpha = 0
+    scenes.forEach((s, i) => {
+      const local = t - s.start
+      const visible = local >= -FADE && local < s.dur
+      if (!visible) { s.root.style.opacity = 0; return }
+      const fadeIn = i === 0 ? 1 : clamp((local + FADE) / FADE)
+      s.root.style.opacity = fadeIn
+      s.root.style.zIndex = i
+      s.render(Math.max(0, local), s.dur)
+      if (local >= 0) {
+        caption = s.root.dataset.caption ?? s.d.say ?? ""
+        capAlpha = Math.min(prog(local, 0.15, 0.45), 1 - prog(local, s.dur - 0.25, s.dur))
+        if (i < scenes.length - 1 && scenes[i + 1].d.say === s.d.say) capAlpha = prog(local, 0.15, 0.45)
+      }
+    })
+    if (cap.textContent !== caption) cap.textContent = caption
+    cap.style.opacity = caption && S.captions !== false ? capAlpha : 0
+  }
+
+  const fit = () => { const k = Math.min(innerWidth / 1920, innerHeight / 1080); frame.style.transform = `translate(-50%, -50%) scale(${k})` }
+  addEventListener("resize", fit); fit()
+
+  window.__duration = duration
+  window.__scenes = scenes.map((s) => ({ type: s.d.type, start: +s.start.toFixed(2), dur: +s.dur.toFixed(2) }))
+  window.__seek = seek
+
+  const waitImages = Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => { i.onload = i.onerror = r }))))
+  waitImages.then(() => {
+    seek(0)
+    window.__ready = true
+    if (location.search.includes("render")) { document.body.classList.add("render"); return }
+    let playing = true, t0 = performance.now(), base = 0
+    const tick = (now) => { if (playing) { const t = base + (now - t0) / 1000; seek(t % duration) } requestAnimationFrame(tick) }
+    requestAnimationFrame(tick)
+    const now = () => (playing ? base + (performance.now() - t0) / 1000 : base) % duration
+    addEventListener("keydown", (e) => {
+      if (e.key === " ") { e.preventDefault(); base = now(); t0 = performance.now(); playing = !playing; if (!playing) seek(base) }
+      else if (e.key === "ArrowRight" || e.key === "ArrowLeft") { base = clamp(now() + (e.key === "ArrowRight" ? 1 : -1), 0, duration); t0 = performance.now(); seek(base) }
+      else if (e.key === "r" || e.key === "R") { base = 0; t0 = performance.now(); seek(0) }
+    })
+  })
+})()
+</script>
+</body>
+</html>

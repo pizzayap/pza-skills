@@ -1,0 +1,10 @@
+{
+  "name": "design-handoff",
+  "private": true,
+  "type": "module",
+  "description": "Scripts for the design-handoff skill: capture a running prototype, build the developer deck, render the stakeholder video.",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "playwright-core": "1.64.1"
+  }
+}
