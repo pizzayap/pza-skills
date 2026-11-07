@@ -92,7 +92,7 @@ Write `handoff/<date>/shots.json` and run the capture script. The format, the wa
 node <skill-dir>/scripts/capture.mjs handoff/<date>/shots.json
 ```
 
-Open every image. When the script prints `same a = b`, two states render identically: check that the state is really reached, or record in the deck that nothing changes, which is often a finding in itself. Fix failed shots before going on.
+Open every image. A shot fails when a click or key press changes nothing, or when a step's `expect` selector does not match; that is a finding about the selector or the prototype, never something to hide by dropping the step. When the script prints `same a = b`, two states render identically: check that the state is really reached, or record in the deck that nothing changes, which is often a finding in itself. Fix failed shots before going on.
 
 With `--video-only`, still capture, but write only `project` and `video` in step 4 and skip step 5.
 
@@ -106,7 +106,7 @@ Write `handoff/<date>/handoff.json` following [handoff-data.md](references/hando
 node <skill-dir>/scripts/build-deck.mjs handoff/<date>/handoff.json --check
 ```
 
-[build-deck.mjs](scripts/build-deck.mjs) embeds the captures, so `deck.html` is one file that opens by double click and can be sent as an attachment. `--check` renders every slide and writes `deck-sheet.png`. It exits with an error and a `FAIL:` line for every slide that runs into the footer or off the slide; a deck that fails the check is not ready to hand over. Look at the sheet and at each failing slide, fix the data (shorter text, fewer kinds) and rebuild, within the two rounds in rule 7. Treat each `warn:` line as a question to answer, not noise.
+[build-deck.mjs](scripts/build-deck.mjs) embeds the captures, so `deck.html` is one file that opens by double click and can be sent as an attachment. `--check` renders every slide and writes `deck-sheet.png`. It exits with an error and a `FAIL:` line for every slide that runs into the footer or off the slide, and for any text that is cut off; a deck that fails the check is not ready to hand over. Look at the sheet and at each failing slide, fix the data (shorter text, fewer kinds) and rebuild, within the two rounds in rule 7. Treat each `warn:` line as a question to answer, not noise.
 
 ### 6. Make the video
 

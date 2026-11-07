@@ -4,6 +4,7 @@
 //   --shots  the manifest capture.mjs wrote (default: shots/manifest.json beside handoff.json)
 //   --out    default: deck.html beside handoff.json
 //   --check  also render every slide to slides/ and a contact sheet; exits 2 if any slide overflows
+//            or any text is cut off (clipped, line-clamped or ellipsized)
 //            (needs playwright-core, Chrome and ffmpeg; the build itself needs only Node 20+)
 // Data format: references/handoff-data.md.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
@@ -187,9 +188,19 @@ if (check) {
           const r = n.getBoundingClientRect()
           return r.width && (r.bottom > box.bottom - 60 || r.right > box.right + 1)
         })
-        return { title: window.__deck.titles[i], overflow: out.length }
+        // Text a reader cannot see: clipped by overflow, line-clamp or an ellipsis, though the box fits.
+        const cut = [...s.querySelectorAll("*")].filter((n) => {
+          if (n.closest(".foot") || !n.textContent.trim()) return false
+          const cs = getComputedStyle(n)
+          const hides = /hidden|clip/.test(cs.overflowX + cs.overflowY) || cs.textOverflow === "ellipsis" || (cs.webkitLineClamp && cs.webkitLineClamp !== "none")
+          return hides && (n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1)
+        })
+        // Report the innermost clipping element only, so one cut note is one line.
+        const inner = cut.filter((n) => !cut.some((m) => m !== n && n.contains(m)))
+        return { title: window.__deck.titles[i], overflow: out.length, cut: inner.map((n) => n.textContent.trim().replace(/\s+/g, " ").slice(0, 70)) }
       }, i)
       if (info.overflow) overflow.push(`slide ${i + 1} "${info.title}": ${info.overflow} elements run into the footer or off the slide`)
+      for (const t of info.cut) overflow.push(`slide ${i + 1} "${info.title}": text is cut off: "${t}…"`)
       const file = join(dir, `slide-${String(i + 1).padStart(2, "0")}.png`)
       await page.screenshot({ path: file })
       files.push(file)
@@ -215,7 +226,7 @@ if (check) {
     if (errors.length) console.error(`FAIL: page errors: ${errors.join("; ")}`)
     for (const o of overflow) console.error(`FAIL: ${o}`)
     if (overflow.length || errors.length) {
-      console.error(`FAIL: ${overflow.length} slide(s) overflow, ${errors.length} page error(s). Shorten the text or split the section in handoff.json, then rebuild.`)
+      console.error(`FAIL: ${overflow.length} overflow or cut-off problem(s), ${errors.length} page error(s). Shorten the text or split the section in handoff.json, then rebuild.`)
       process.exitCode = 2
     }
   } finally {

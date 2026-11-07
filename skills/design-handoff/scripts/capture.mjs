@@ -43,6 +43,31 @@ for (const shot of spec.shots ?? []) {
 
 const pct = (v, total) => Math.round((v / total) * 1000) / 10
 
+// A cheap fingerprint of what a step can change: URL, scroll, form values, the DOM and, for keys,
+// focus. Runs in the page. CSS-only effects (hover, focus rings after a click) are not counted.
+function fingerprint(withFocus) {
+  const forms = [...document.querySelectorAll("input, select, textarea")].map((e) => `${e.checked}|${e.value}|${e.selectedIndex ?? ""}`).join(",")
+  const a = document.activeElement
+  const focus = withFocus && a ? `${a.tagName}#${a.id}.${a.getAttribute("name") ?? ""}:${(a.textContent ?? "").slice(0, 40)}` : ""
+  const html = (document.body?.outerHTML ?? "").replace(/ style=""/g, "")
+  const text = `${location.href}\n${scrollX},${scrollY}\n${forms}\n${focus}\n${html}`
+  let h = 0
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0
+  return `${h}:${text.length}`
+}
+
+// Did the step change the page? Waits up to 2 s for a late change (a fetch, a transition).
+// Pages that draw on a canvas (maps, charts) are also compared by pixels.
+async function changed(page, before, withFocus) {
+  for (let waited = 0; ; waited += 250) {
+    if ((await page.evaluate(fingerprint, withFocus)) !== before.fp) return true
+    if (waited >= 2000) break
+    await page.waitForTimeout(250)
+  }
+  if (before.pixels) return !(await page.screenshot({ type: "png" })).equals(before.pixels)
+  return false
+}
+
 async function settle(page, ms) {
   await page.evaluate(() => document.fonts?.ready)
   await page
@@ -132,7 +157,15 @@ try {
       if (width !== vp.width) throw new Error(`viewport is ${width} wide, expected ${vp.width}`)
 
       let lastImage = null // the name of the last saved step image, for clicks[].after
-      for (const step of shot.steps ?? []) {
+      for (const [n, step] of (shot.steps ?? []).entries()) {
+        // Clicks and key presses are meant to change something; check that they did.
+        const verify = (step.click || step.press) && step.changes !== false
+        const look = async () => ({
+          fp: await page.evaluate(fingerprint, Boolean(step.press)),
+          pixels: (await page.evaluate(() => Boolean(document.querySelector("canvas")))) ? await page.screenshot({ type: "png" }) : null,
+        })
+        let before = verify && step.press ? await look() : null
+        let hit = "" // what the click landed on, for the failure message
         if (step.shot) {
           entry.images.push({ name: step.shot, file: await snap(page, shot, step.shot, vp) })
           lastImage = step.shot
@@ -143,6 +176,14 @@ try {
           const loc = page.locator(sel).first()
           await loc.scrollIntoViewIfNeeded()
           const box = await loc.boundingBox()
+          // Scroll, hover and drop the previous focus first, so only the click itself counts as a change.
+          if (verify) {
+            await loc.hover({ force: Boolean(step.force), timeout: 10000 }).catch(() => {})
+            await page.evaluate(() => document.activeElement?.blur?.())
+            await page.waitForTimeout(150)
+            before = await look()
+            hit = await loc.evaluate((e) => `<${e.tagName.toLowerCase()}> "${e.textContent.trim().replace(/\s+/g, " ").slice(0, 60)}"`).catch(() => "")
+          }
           if (box && step.click)
             entry.clicks.push({
               after: lastImage,
@@ -163,6 +204,13 @@ try {
           await page.waitForTimeout(step.wait)
         }
         await settle(page, step.settle ?? defaults.wait)
+        const what = `step ${n + 1} (${Object.keys(step).find((k) => ["click", "hover", "fill", "press", "waitFor", "scroll", "wait"].includes(k))} ${JSON.stringify(step.click ?? step.hover ?? step.fill ?? step.press ?? step.waitFor ?? "")})`
+        if (verify && !(await changed(page, before, Boolean(step.press))))
+          throw new Error(`${what} changed nothing on the page (no DOM, URL, form, scroll${before.pixels ? " or canvas" : ""} change)${hit ? `; it clicked ${hit}` : ""}. The intended state was not reached: record it as a finding, or fix the selector. If nothing should change, add "changes": false to the step.`)
+        if (step.expect)
+          await page.locator(step.expect).first().waitFor({ state: "attached", timeout: 5000 }).catch(() => {
+            throw new Error(`${what} did not reach the expected state: nothing matches ${step.expect}`)
+          })
       }
       if (shot.script) {
         await page.evaluate(shot.script)
