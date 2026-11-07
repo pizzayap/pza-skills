@@ -65,7 +65,7 @@ Walkers need a browser:
 
 ### 4. Check every walk
 
-Before accepting a walk, open its `walk.json` and a few screenshots. Check that the steps follow the persona's way of moving, that every stuck or slowed step has an element, evidence and a fix, and that the screenshots show what the step says. Send a weak walk back to its subagent once with the specific gap. If it is still weak, drop the unsupported steps and say so.
+Before accepting a walk, open its `walk.json` and a few screenshots. Check that the steps follow the persona's way of moving, that every stuck or slowed step has an element, evidence and a fix, that the screenshots show what the step says, and that they are jpg as the brief asks (png walks push the report past 15 MB). Send a weak walk back to its subagent once with the specific gap. If it is still weak, drop the unsupported steps and say so.
 
 ### 5. Merge
 
