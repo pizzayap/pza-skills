@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design directions</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --text: #1b1b19;
+    --muted: #5b5b56;
+    --line: #dcdcd7;
+    --strong: #1b1b19;
+    --on-strong: #ffffff;
+    --warn-bg: #fff4e5;
+    --warn-text: #7a4100;
+    --focus: #0b57d0;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --surface: #1d1d1b;
+      --text: #ededea;
+      --muted: #a8a8a2;
+      --line: #34342f;
+      --strong: #ededea;
+      --on-strong: #141413;
+      --warn-bg: #3a2a12;
+      --warn-text: #ffd59a;
+      --focus: #8ab4f8;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding-bottom: 120px;
+  }
+  button, textarea, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  header.top { padding: 28px 24px 16px; max-width: 1600px; margin: 0 auto; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; }
+  .brief { margin: 0 0 6px; font-size: 17px; max-width: 70ch; }
+  .meta { margin: 0; color: var(--muted); font-size: 14px; }
+  .bar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    padding: 10px 24px; background: var(--bg); border-bottom: 1px solid var(--line);
+  }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    border: 0; background: var(--surface); padding: 7px 12px; min-height: 36px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg[hidden] { display: none; }
+  .seg button[aria-pressed="true"] { background: var(--strong); color: var(--on-strong); }
+  .keys { color: var(--muted); font-size: 13px; margin-left: auto; }
+  main { max-width: 1600px; margin: 0 auto; padding: 20px 24px; }
+  .grid { display: grid; gap: 20px; }
+  .col { min-width: 0; }
+  .col h2 { font-size: 17px; margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; }
+  .num {
+    display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none;
+    border: 1px solid var(--line); border-radius: 6px; font-size: 14px; background: var(--surface);
+  }
+  .frame {
+    position: relative; overflow: hidden; border: 1px solid var(--line);
+    border-radius: var(--radius); background: var(--surface);
+  }
+  .frame iframe, .frame img { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: #fff; }
+  .frame img { width: 100%; height: auto; }
+  .open-link { font-size: 13px; color: var(--muted); }
+  dl { margin: 12px 0 0; }
+  dt { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  dd { margin: 2px 0 0; }
+  .issues { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-text); font-size: 14px; }
+  .issues ul, .changes ul { margin: 4px 0 0; padding-left: 18px; }
+  .changes { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  .single { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .single { grid-template-columns: 1fr; } }
+  .pick {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 10px 24px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+  }
+  .pick fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+  .pick legend { float: left; margin-right: 8px; font-weight: 600; }
+  .pick label { display: inline-flex; gap: 6px; align-items: center; min-height: 32px; cursor: pointer; }
+  .pick input[type="radio"] { width: 18px; height: 18px; margin: 0; }
+  .pick textarea {
+    flex: 1 1 260px; min-height: 40px; height: 40px; resize: vertical; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+  }
+  .copy {
+    border: 0; border-radius: 8px; background: var(--strong); color: var(--on-strong);
+    padding: 9px 14px; min-height: 40px; cursor: pointer; font-weight: 600;
+  }
+  .status { font-size: 13px; color: var(--muted); min-width: 9ch; }
+  .note { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  @media (max-width: 640px) {
+    header.top, .bar, main, .pick { padding-left: 16px; padding-right: 16px; }
+    .keys { display: none; }
+    body { padding-bottom: 0; }
+    .pick { position: static; padding-top: 16px; padding-bottom: 24px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 id="title"></h1>
+  <p class="brief" id="brief"></p>
+  <p class="meta" id="meta"></p>
+</header>
+<div class="bar" role="toolbar" aria-label="Board view">
+  <div class="seg" id="view-seg" aria-label="Layout"></div>
+  <div class="seg" id="width-seg" aria-label="Width"></div>
+  <div class="seg" id="dir-seg" aria-label="Direction"></div>
+  <span class="keys">Keys (click outside a page first): 1–5 one direction · S side by side · W width</span>
+</div>
+<main id="main"></main>
+<form class="pick" id="pick" onsubmit="return false">
+  <fieldset id="pick-options"><legend>Your pick</legend></fieldset>
+  <label class="sr" for="pick-notes" style="position:absolute;left:-9999px">Notes for the next round</label>
+  <textarea id="pick-notes" placeholder="What to keep, mix or change (optional)"></textarea>
+  <button type="button" class="copy" id="copy">Copy reply</button>
+  <span class="status" id="status" role="status" aria-live="polite"></span>
+</form>
+<script id="board-data" type="application/json">__BOARD_DATA__</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById("board-data").textContent)
+  const dirs = data.directions
+  const sizes = { desktop: [1440, 900, "Desktop 1440"], phone: [390, 844, "Phone 390"] }
+  const storeKey = "design-directions:" + data.title + ":" + data.date
+  const store = {
+    get() { try { return JSON.parse(localStorage.getItem(storeKey) || "{}") } catch { return {} } },
+    set(v) { try { localStorage.setItem(storeKey, JSON.stringify(v)) } catch {} }
+  }
+  const saved = store.get()
+  const state = { view: saved.view || "side", width: saved.width || "desktop", current: saved.current || dirs[0].number }
+
+  const el = (tag, props = {}, ...kids) => {
+    const node = document.createElement(tag)
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") node.className = v
+      else if (k.startsWith("on")) node.addEventListener(k.slice(2), v)
+      else node.setAttribute(k, v)
+    }
+    for (const kid of kids.flat()) if (kid != null) node.append(kid)
+    return node
+  }
+
+  document.title = data.title + ": design directions"
+  document.getElementById("title").textContent = data.title
+  document.getElementById("brief").textContent = data.brief
+  const date = new Date(data.date + "T12:00:00")
+  const when = isNaN(date) ? data.date : date.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+  document.getElementById("meta").textContent = [
+    data.audience ? "For " + data.audience : null,
+    "Axis: " + data.axis,
+    dirs.length + " directions",
+    data.mode === "subagents" ? "Built by subagents in parallel" : "Built one after another",
+    when
+  ].filter(Boolean).join(" · ")
+
+  function segment(host, options, active, onPick) {
+    host.replaceChildren(...options.map(([value, label, title]) =>
+      el("button", { type: "button", "aria-pressed": String(value === active), title: title || label, onclick: () => onPick(value) }, label)))
+  }
+
+  function frameFor(dir, available) {
+    const [w, h] = sizes[state.width]
+    const scale = Math.min(1, available / w)
+    const box = el("div", { class: "frame" })
+    box.style.height = Math.round(h * scale) + "px"
+    box.style.width = Math.round(w * scale) + "px"
+    box.style.maxWidth = "100%"
+    const iframe = el("iframe", { title: "Direction " + dir.number + ": " + dir.name, sandbox: "allow-scripts", loading: "lazy" })
+    iframe.srcdoc = dir.html
+    iframe.style.width = w + "px"
+    iframe.style.height = h + "px"
+    iframe.style.transform = "scale(" + scale + ")"
+    box.append(iframe)
+    return box
+  }
+
+  function todayFrame(available) {
+    const box = el("div", { class: "frame" })
+    const img = el("img", { src: data.today, alt: "Today's screen" })
+    img.style.position = "static"
+    box.append(img)
+    box.style.maxWidth = Math.min(available, 1440) + "px"
+    return box
+  }
+
+  function notes(dir) {
+    const list = el("dl", {},
+      el("dt", {}, "The bet"), el("dd", {}, dir.bet),
+      el("dt", {}, "What it costs"), el("dd", {}, dir.tradeoff),
+      dir.steal ? [el("dt", {}, "Worth stealing"), el("dd", {}, dir.steal)] : null,
+      dir.needs ? [el("dt", {}, "Would add to the system"), el("dd", {}, dir.needs)] : null)
+    const out = [list]
+    if (dir.issues && dir.issues.length) out.push(el("div", { class: "issues" }, el("strong", {}, "Open problems"), el("ul", {}, dir.issues.map((t) => el("li", {}, t)))))
+    if (dir.changes && dir.changes.length) out.push(el("div", { class: "changes" }, "Changes", el("ul", {}, dir.changes.map((t) => el("li", {}, t)))))
+    out.push(el("p", { class: "open-link" }, "Opens on its own: directions/" + dir.folder + "/index.html"))
+    return out
+  }
+
+  function render() {
+    const focused = document.activeElement && document.activeElement.closest(".seg") ? [document.activeElement.parentElement.id, document.activeElement.textContent] : null
+    store.set({ ...store.get(), view: state.view, width: state.width, current: state.current })
+    segment(document.getElementById("view-seg"), [["side", "Side by side"], ["single", "One at a time"]], state.view, (v) => { state.view = v; render() })
+    segment(document.getElementById("width-seg"), Object.entries(sizes).map(([k, v]) => [k, v[2]]), state.width, (v) => { state.width = v; render() })
+    const dirOptions = dirs.map((d) => [d.number, String(d.number), d.name])
+    if (data.today) dirOptions.push(["today", "Today", "Today's screen"])
+    const dirSeg = document.getElementById("dir-seg")
+    dirSeg.hidden = state.view !== "single"
+    segment(dirSeg, dirOptions, state.current, (v) => { state.current = v; render() })
+
+    const main = document.getElementById("main")
+    main.replaceChildren()
+    const width = main.clientWidth - 48
+    if (state.view === "side") {
+      const cols = state.width === "phone" ? dirs.length : Math.min(dirs.length, width > 1200 ? 3 : width > 760 ? 2 : 1)
+      const grid = el("div", { class: "grid" })
+      grid.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, 1fr))"
+      main.append(grid)
+      const colWidth = (width - 20 * (cols - 1)) / cols
+      for (const dir of dirs) {
+        grid.append(el("section", { class: "col", "aria-labelledby": "h-" + dir.number },
+          el("h2", { id: "h-" + dir.number }, el("span", { class: "num" }, String(dir.number)), dir.name),
+          frameFor(dir, colWidth), notes(dir)))
+      }
+      if (data.today) {
+        main.append(el("section", { class: "col", style: "margin-top:28px" }, el("h2", {}, "Today"), el("p", { class: "note" }, "The current screen, for reference."), todayFrame(width)))
+      }
+    } else {
+      const dir = dirs.find((d) => d.number === state.current)
+      if (!dir) {
+        main.append(el("section", { class: "col" }, el("h2", {}, "Today"), todayFrame(width)))
+        restoreFocus(focused)
+        return
+      }
+      const panel = el("div", { class: "single" })
+      const left = el("div", {})
+      panel.append(left, el("aside", {}, el("h2", {}, el("span", { class: "num" }, String(dir.number)), dir.name), notes(dir)))
+      main.append(panel)
+      left.append(frameFor(dir, Math.max(320, left.clientWidth || width - 324)))
+    }
+    restoreFocus(focused)
+  }
+
+  // Rendering replaces the toolbar buttons; put keyboard focus back on the same one.
+  function restoreFocus(focused) {
+    if (!focused) return
+    const again = [...document.querySelectorAll("#" + focused[0] + " button")].find((b) => b.textContent === focused[1])
+    if (again) again.focus()
+  }
+
+  const options = document.getElementById("pick-options")
+  for (const dir of dirs) {
+    const input = el("input", { type: "radio", name: "pick", value: String(dir.number) })
+    if (String(saved.pick) === String(dir.number)) input.checked = true
+    options.append(el("label", {}, input, dir.number + " " + dir.name))
+  }
+  const notesBox = document.getElementById("pick-notes")
+  notesBox.value = saved.notes || ""
+  const persist = () => {
+    const picked = document.querySelector('input[name="pick"]:checked')
+    store.set({ ...store.get(), pick: picked ? picked.value : null, notes: notesBox.value })
+  }
+  options.addEventListener("change", persist)
+  notesBox.addEventListener("input", persist)
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    const picked = document.querySelector('input[name="pick"]:checked')
+    const status = document.getElementById("status")
+    if (!picked && !notesBox.value.trim()) { status.textContent = "Pick one or add a note first."; return }
+    const dir = picked && dirs.find((d) => String(d.number) === picked.value)
+    const lines = [
+      dir ? "Design directions for " + data.title + ": I pick " + dir.number + " (" + dir.name + ")." : "Design directions for " + data.title + ": no pick yet.",
+      notesBox.value.trim() ? "Notes: " + notesBox.value.trim() : null
+    ].filter(Boolean)
+    const text = lines.join("\n")
+    try { await navigator.clipboard.writeText(text); status.textContent = "Copied. Paste it in the chat." }
+    catch {
+      const area = el("textarea")
+      area.value = text
+      document.body.append(area)
+      area.select()
+      const ok = document.execCommand && document.execCommand("copy")
+      area.remove()
+      status.textContent = ok ? "Copied. Paste it in the chat." : text
+    }
+  })
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.closest("textarea, input") || e.metaKey || e.ctrlKey || e.altKey) return
+    const n = Number(e.key)
+    if (n && dirs.some((d) => d.number === n)) { state.view = "single"; state.current = n; render() }
+    else if (e.key === "s" || e.key === "S") { state.view = "side"; render() }
+    else if (e.key === "w" || e.key === "W") { state.width = state.width === "desktop" ? "phone" : "desktop"; render() }
+  })
+  let timer
+  window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(render, 150) })
+  render()
+})()
+</script>
+</body>
+</html>

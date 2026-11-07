@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persona walkthrough</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --text: #1b1b19;
+    --muted: #5b5b56;
+    --line: #dcdcd7;
+    --stuck-bg: #fde8e7;
+    --stuck-text: #8a1c14;
+    --slow-bg: #fff2dc;
+    --slow-text: #6e4200;
+    --ok-bg: #e6f2ea;
+    --ok-text: #1d5b32;
+    --focus: #0b57d0;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --surface: #1d1d1b;
+      --text: #ededea;
+      --muted: #a8a8a2;
+      --line: #34342f;
+      --stuck-bg: #43201d;
+      --stuck-text: #ffb4ab;
+      --slow-bg: #3a2a12;
+      --slow-text: #ffd59a;
+      --ok-bg: #1c3324;
+      --ok-text: #a6dcb4;
+      --focus: #8ab4f8;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 24px 64px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 20px; margin: 40px 0 12px; }
+  h3 { font-size: 16px; margin: 0; }
+  .goal { font-size: 17px; margin: 0 0 6px; max-width: 75ch; }
+  .meta, .method { color: var(--muted); font-size: 14px; margin: 0; }
+  .method { margin-top: 10px; max-width: 80ch; }
+  .people { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .card p { margin: 6px 0 0; }
+  .who { color: var(--muted); font-size: 14px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .tag::before { font-weight: 700; }
+  .t-stuck { background: var(--stuck-bg); color: var(--stuck-text); }
+  .t-stuck::before { content: "✕"; }
+  .t-slow { background: var(--slow-bg); color: var(--slow-text); }
+  .t-slow::before { content: "!"; }
+  .t-ok { background: var(--ok-bg); color: var(--ok-text); }
+  .t-ok::before { content: "✓"; }
+  .t-stop { background: var(--line); color: var(--text); }
+  .t-stop::before { content: "■"; }
+  .counts { font-size: 14px; color: var(--muted); }
+  ol.issues { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .issue { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 4px 12px; }
+  .issue .n { font-weight: 700; font-size: 18px; color: var(--muted); }
+  .issue .head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .issue dl { grid-column: 2; margin: 6px 0 0; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 12px; }
+  .issue dt { color: var(--muted); font-size: 14px; }
+  .issue dd { margin: 0; }
+  .chip { display: inline-block; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; font-size: 13px; margin-right: 4px; }
+  a { color: inherit; }
+  .lane { margin-top: 24px; }
+  .lane-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; margin-bottom: 8px; }
+  .steps { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x proximity; }
+  .step { flex: 0 0 280px; scroll-snap-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; }
+  .step.stuck { border: 2px solid var(--stuck-text); }
+  .step.slowed { border: 2px dashed var(--slow-text); }
+  .step-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .shot { display: block; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); cursor: zoom-in; overflow: hidden; }
+  .shot img { display: block; width: 100%; height: 150px; object-fit: cover; object-position: top left; }
+  .step p { margin: 6px 0 0; }
+  .label { color: var(--muted); }
+  .heard { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: var(--bg); border-radius: 6px; padding: 6px 8px; margin-top: 6px; }
+  .fix { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  dialog { border: 0; padding: 0; max-width: min(1400px, 96vw); background: var(--surface); color: var(--text); border-radius: var(--radius); }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+  dialog img { display: block; max-width: 100%; max-height: 82vh; }
+  .dialog-bar { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 14px; }
+  .dialog-bar button { min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer; font: inherit; }
+  @media (max-width: 640px) {
+    .wrap { padding: 20px 16px 48px; }
+    .issue dl { grid-template-columns: 1fr; }
+    .step { flex-basis: 84vw; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title"></h1>
+    <p class="goal" id="goal"></p>
+    <p class="meta" id="meta"></p>
+    <p class="method" id="method"></p>
+  </header>
+  <div class="people" id="people"></div>
+  <h2 id="issues-h">Where people got stuck</h2>
+  <ol class="issues" id="issues" aria-labelledby="issues-h"></ol>
+  <div id="notes"></div>
+  <h2>Each walk, step by step</h2>
+  <div id="lanes"></div>
+</div>
+<dialog id="zoom" aria-label="Screenshot">
+  <div class="dialog-bar"><span id="zoom-caption"></span><button type="button" id="zoom-close">Close</button></div>
+  <img id="zoom-img" alt="">
+</dialog>
+<script id="report-data" type="application/json">__REPORT_DATA__</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById("report-data").textContent)
+  const el = (tag, props = {}, ...kids) => {
+    const node = document.createElement(tag)
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") node.className = v
+      else if (k.startsWith("on")) node.addEventListener(k.slice(2), v)
+      else node.setAttribute(k, v)
+    }
+    for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) node.append(kid)
+    return node
+  }
+  const outcomeTag = (o) => {
+    const map = { "completed": "t-ok", "completed with trouble": "t-slow", "gave up": "t-stuck", "stopped before a real action": "t-stop" }
+    return el("span", { class: "tag " + (map[o] || "t-stop") }, o.charAt(0).toUpperCase() + o.slice(1))
+  }
+  const frictionTag = (f) => f === "stuck" ? el("span", { class: "tag t-stuck" }, "Stuck") : f === "slowed" ? el("span", { class: "tag t-slow" }, "Slowed") : null
+  const severityTag = (s) => el("span", { class: "tag " + (s === "Blocks" ? "t-stuck" : s === "Slows" ? "t-slow" : "t-stop") }, s)
+
+  document.title = data.title + ": persona walkthrough"
+  document.getElementById("title").textContent = data.title
+  document.getElementById("goal").textContent = data.goal
+  const date = new Date(data.date + "T12:00:00")
+  const when = isNaN(date) ? data.date : date.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+  document.getElementById("meta").textContent = [data.app, "Starts at " + data.start, when,
+    data.mode === "subagents" ? "Walked by one subagent per persona" : "Walked one persona after another"].filter(Boolean).join(" · ")
+  document.getElementById("method").textContent = "Each persona is an agent following a written profile through the real app. Treat this as a map of where to look, and check the findings with real people before deciding."
+  if (data.notes.length) document.getElementById("notes").append(el("h2", {}, "Not walked or not verified"), el("ul", {}, data.notes.map((t) => el("li", {}, t))))
+
+  const people = document.getElementById("people")
+  for (const w of data.walks) {
+    const stuck = w.steps.filter((s) => s.friction === "stuck").length
+    const slowed = w.steps.filter((s) => s.friction === "slowed").length
+    people.append(el("section", { class: "card", "aria-labelledby": "p-" + w.number },
+      el("h3", { id: "p-" + w.number }, w.number + " " + w.persona),
+      el("p", { class: "who" }, w.who),
+      el("p", {}, outcomeTag(w.outcome)),
+      el("p", {}, w.summary),
+      el("p", { class: "counts" }, w.steps.length + " steps · " + stuck + " stuck · " + slowed + " slowed · " + w.moves)))
+  }
+
+  const nameOf = (n) => (data.walks.find((w) => w.number === n) || {}).persona || "Persona " + n
+  const list = document.getElementById("issues")
+  if (!data.issues.length) list.append(el("li", { class: "issue" }, el("span", { class: "n" }, "–"), el("div", {}, "Nobody got stuck or slowed on this flow.")))
+  data.issues.forEach((issue, i) => {
+    list.append(el("li", { class: "issue" },
+      el("span", { class: "n" }, String(i + 1)),
+      el("div", { class: "head" }, severityTag(issue.severity), el("h3", {}, issue.title)),
+      el("dl", {},
+        el("dt", {}, "Where"), el("dd", {}, issue.where),
+        el("dt", {}, "Who hit it"), el("dd", {}, issue.personas.map((n) => el("span", { class: "chip" }, n + " " + nameOf(n)))),
+        el("dt", {}, "Evidence"), el("dd", {}, issue.evidence),
+        el("dt", {}, "Fix"), el("dd", {}, issue.fix),
+        issue.steps && issue.steps.length ? [el("dt", {}, "Steps"), el("dd", {}, issue.steps.map((s, j) => [j ? ", " : "", el("a", { href: "#s-" + s.replace(".", "-") }, s)]))] : null)))
+  })
+
+  const zoom = document.getElementById("zoom")
+  document.getElementById("zoom-close").addEventListener("click", () => zoom.close())
+  zoom.addEventListener("click", (e) => { if (e.target === zoom) zoom.close() })
+  const lanes = document.getElementById("lanes")
+  for (const w of data.walks) {
+    const steps = el("div", { class: "steps", tabindex: "0", "aria-label": w.persona + " steps" })
+    for (const s of w.steps) {
+      const id = "s-" + w.number + "-" + s.n
+      const shot = s.shot ? el("button", { type: "button", class: "shot", "aria-label": "Enlarge step " + s.n + " screenshot",
+        onclick: () => {
+          document.getElementById("zoom-img").src = s.shot
+          document.getElementById("zoom-img").alt = w.persona + ", step " + s.n
+          document.getElementById("zoom-caption").textContent = w.persona + " · step " + s.n + ": " + s.did
+          zoom.showModal()
+        } }, el("img", { src: s.shot, alt: "", loading: "lazy" })) : null
+      steps.append(el("article", { class: "step " + (s.friction || ""), id },
+        el("div", { class: "step-top" }, el("strong", {}, "Step " + s.n), frictionTag(s.friction)),
+        shot,
+        s.heard ? el("div", { class: "heard" }, "Heard: " + s.heard) : null,
+        s.saw ? el("p", {}, el("span", { class: "label" }, "Saw: "), s.saw) : null,
+        el("p", {}, el("span", { class: "label" }, "Did: "), s.did),
+        s.thought ? el("p", {}, el("span", { class: "label" }, "Thought: "), "“" + s.thought + "”") : null,
+        s.result ? el("p", {}, el("span", { class: "label" }, "Then: "), s.result) : null,
+        s.friction && s.friction !== "none" ? el("div", { class: "fix" },
+          el("p", {}, el("span", { class: "label" }, "Element: "), s.element),
+          el("p", {}, el("span", { class: "label" }, "Evidence: "), s.evidence),
+          el("p", {}, el("span", { class: "label" }, "Fix: "), s.fix)) : null))
+    }
+    lanes.append(el("section", { class: "lane", "aria-labelledby": "l-" + w.number },
+      el("div", { class: "lane-head" }, el("h3", { id: "l-" + w.number }, w.number + " " + w.persona), outcomeTag(w.outcome), el("span", { class: "counts" }, w.viewport + " · " + w.moves)),
+      steps))
+  }
+})()
+</script>
+</body>
+</html>
