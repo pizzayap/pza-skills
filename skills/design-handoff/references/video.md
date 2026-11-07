@@ -85,7 +85,7 @@ Ask the user which narration they want before rendering. Each option times the v
 
 - **Keys** come from the environment or from a `.env` file the user creates in the project folder, with a line such as `FISH_API_KEY=...`. The script reads only those names, never prints them, and warns when `.env` is not in `.gitignore`. Never write a key into `handoff.json`, the deck, a command line you show, or a commit.
 - **Privacy:** with `elevenlabs` or `fish`, the narration lines are sent to that company. Use them only when the user picked them.
-- **Cost:** each line is cached in `video/voice/` by voice and text, so re-rendering after a visual fix does not pay again. Fish Audio's default model is `s2.1-pro`; `--model s2.1-pro-free` uses its free model. ElevenLabs uses `eleven_multilingual_v2` by default. Without `--voice-id` it uses George if the account has him, or else the account's first voice. A `402` answer means the account has no credit for that model.
+- **Cost:** each line is cached in `video/voice/` by voice, model and text, so re-rendering after a visual fix does not pay again. Fish Audio's default model is `s2.1-pro`; `--model s2.1-pro-free` uses its free model, tested and working on 2026-11-08. ElevenLabs uses `eleven_multilingual_v2` by default. Without `--voice-id` it uses George if the account has him, or else the account's first voice. A `402` answer means the account has no credit for that model.
 - **Kokoro voices:** `af_heart` (default), `af_bella`, `am_michael`, `bf_emma`, `bm_george`; pass one with `--voice-id`.
 
 ### Recording it yourself

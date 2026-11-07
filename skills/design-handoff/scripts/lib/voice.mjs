@@ -1,5 +1,5 @@
 // Narration for the handoff video. Each caption line becomes one audio clip, so every
-// scene can be timed to its own line. Clips are cached by provider, voice and text, so
+// scene can be timed to its own line. Clips are cached by provider, voice, model and text, so
 // re-rendering after a visual fix does not pay for the same speech twice.
 //
 //   local       Kokoro-82M through kokoro-js: free, offline after one model download
@@ -39,24 +39,29 @@ export async function synthLines(provider, lines, { dir, voiceId, model, skillDi
   mkdirSync(dir, { recursive: true })
   let voice = voiceId
   let speak
+  // Part of the cache key: a different model or speed must not reuse old clips.
+  let variant = ""
   if (provider === "local") {
     voice ??= KOKORO.voice
     speak = await kokoro(skillDir, voice)
+    variant = String(KOKORO.speed)
   } else if (provider === "elevenlabs") {
     const key = needKey(ELEVEN.keys, "ElevenLabs")
     voice ??= readKey(ELEVEN.voiceKeys)?.value ?? (await elevenDefaultVoice(key))
-    speak = elevenlabs(key, voice, model ?? ELEVEN.model)
+    variant = model ?? ELEVEN.model
+    speak = elevenlabs(key, voice, variant)
   } else if (provider === "fish") {
     const key = needKey(FISH.keys, "Fish Audio")
     voice ??= readKey(FISH.voiceKeys)?.value ?? FISH.voice
-    speak = fish(key, voice, model ?? FISH.model)
+    variant = model ?? FISH.model
+    speak = fish(key, voice, variant)
   } else throw new Error(`unknown voice provider ${provider}`)
   console.log(`  voice: ${voice}`)
 
   const out = []
   for (const [i, text] of lines.entries()) {
     const plain = text.replace(/\*\*/g, "")
-    const hash = createHash("sha1").update(`${provider}|${voice}|${provider === "local" ? KOKORO.speed : ""}|${plain}`).digest("hex").slice(0, 12)
+    const hash = createHash("sha1").update(`${provider}|${voice}|${variant}|${plain}`).digest("hex").slice(0, 12)
     const file = join(dir, `${provider}-${hash}.wav`)
     if (!existsSync(file)) {
       process.stdout.write(`  voice ${i + 1}/${lines.length}\r`)
