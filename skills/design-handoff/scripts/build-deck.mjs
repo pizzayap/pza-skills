@@ -101,6 +101,7 @@ if (!data.states?.length) warnings.push("no states listed; the deck will have no
 })
 if (!data.left?.length) warnings.push('no "left" items: say what is not done, or add one row saying nothing is left')
 if (!data.questions?.length) warnings.push("no open questions")
+if ((data.tokens?.colors ?? []).length > 16) warnings.push(`tokens.colors has ${data.tokens.colors.length} colors; keep to the 16 the built screens use`)
 ;(data.tokens?.colors ?? []).forEach((c, i) => {
   if (/var\(/.test(c.value ?? "")) problems.push(`tokens.colors[${i}].value is ${c.value}; give the resolved color (put the alias in "use")`)
 })
