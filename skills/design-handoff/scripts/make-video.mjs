@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Renders the team update video from the "video" part of handoff.json with Remotion.
 // Usage: node make-video.mjs <handoff.json> [options]
-//   --voice none|local|elevenlabs|fish|record   narration (default none: captions only)
+//   --voice none|local|elevenlabs|fish|record|clips   narration (default none: captions only)
 //   --voice-id <id>     Kokoro voice name, ElevenLabs voice_id, or Fish Audio reference_id
 //   --model <id>        ElevenLabs model_id or Fish Audio model (default eleven_multilingual_v2, s2.1-pro-free)
 //   --audio <file>      with --voice record: your recording of script.md
+//   --clips <folder>    with --voice clips: one audio file per line, 01.mp3, 02.mp3 and so on
 //   --script            write script.md (lines to record, with timings) and stop
 //   --sheet-only        render a contact sheet (3 stills per scene), no MP4
 //   --sheet-scene <n>   12 stills inside scene n (0-based), no MP4
@@ -17,7 +18,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSyn
 import { spawnSync } from "node:child_process"
 import { basename, dirname, extname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { PROVIDERS, mixTrack, splitRecording, synthLines } from "./lib/voice.mjs"
+import { PROVIDERS, mixTrack, readClips, splitRecording, synthLines } from "./lib/voice.mjs"
 
 const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const args = process.argv.slice(2)
@@ -38,6 +39,7 @@ const voice = flag("--voice") ?? "none"
 const voiceId = flag("--voice-id")
 const model = flag("--model")
 const audioArg = flag("--audio")
+const clipsArg = flag("--clips")
 const scriptOnly = has("--script")
 const sheetOnly = has("--sheet-only")
 const sheetScene = flag("--sheet-scene")
@@ -50,8 +52,9 @@ const fail = (msg) => {
   console.error(`make-video: ${msg}`)
   process.exit(1)
 }
-if (!dataPath) fail("usage: node make-video.mjs <handoff.json> [--voice none|local|elevenlabs|fish|record] [--sheet-only]")
+if (!dataPath) fail("usage: node make-video.mjs <handoff.json> [--voice none|local|elevenlabs|fish|record|clips] [--sheet-only]")
 if (!PROVIDERS.includes(voice)) fail(`--voice must be one of ${PROVIDERS.join(", ")}`)
+if (voice === "clips" && !clipsArg && !scriptOnly) fail("--voice clips needs --clips <folder>, with one audio file per line named 01.mp3, 02.mp3 and so on. Run with --script first to get the lines in lines.json.")
 if (voice === "record" && !audioArg && !scriptOnly) fail("--voice record needs --audio <your recording>. Run with --script first to get the lines to read.")
 
 const root = dirname(resolve(dataPath))
@@ -261,6 +264,7 @@ const writeScript = (plan) => {
 let clips = null
 if (scriptOnly) {
   writeScript(layout(null))
+  writeFileSync(join(outDir, "lines.json"), `${JSON.stringify(allLines.map(plain), null, 2)}\n`)
   console.log(`Script: ${scriptPath}  (${allLines.length} lines)`)
   process.exit(0)
 }
@@ -270,6 +274,12 @@ if (voice === "record") {
   const r = splitRecording(take, allLines.map(plain), join(outDir, "voice"))
   for (const w of r.warnings) warnings.push(w)
   clips = r.clips
+} else if (voice === "clips") {
+  try {
+    clips = readClips(resolve(clipsArg), allLines, join(outDir, "voice"))
+  } catch (e) {
+    fail(e.message)
+  }
 } else if (voice !== "none" && !sheetOnly && sheetScene == null) {
   console.log(`Voice: ${voice}${voiceId ? ` (${voiceId})` : ""}`)
   try {

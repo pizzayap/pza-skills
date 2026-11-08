@@ -6,6 +6,7 @@
 //   elevenlabs  ElevenLabs API with the user's key (ELEVENLABS_API_KEY)
 //   fish        Fish Audio API with the user's key (FISH_API_KEY)
 //   record      the user's own recording of script.md, split at the pauses
+//   clips       one audio file per line, made elsewhere (a signed-in Fish Audio connection)
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
@@ -14,7 +15,7 @@ import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 import { readKey } from "./env.mjs"
 
-export const PROVIDERS = ["none", "local", "elevenlabs", "fish", "record"]
+export const PROVIDERS = ["none", "local", "elevenlabs", "fish", "record", "clips"]
 export const KOKORO = { pkg: "kokoro-js@1.2.1", model: "onnx-community/Kokoro-82M-v1.0-ONNX", voice: "af_heart", speed: 1.1 }
 // Checked 2026-11-07 (docs/design-handoff-research.md). ElevenLabs premade voices differ by
 // account, so without --voice-id the script asks the account for its voices and takes George
@@ -169,6 +170,22 @@ function fish(key, voice, model) {
  * Splits one recording of the whole script into one clip per line. The reader pauses
  * between lines; the longest pauses become the cuts. Returns clips plus warnings.
  */
+/** Reads 01.mp3, 02.mp3 and so on (mp3, wav or m4a), one per line, in order. */
+export function readClips(folder, lines, dir) {
+  mkdirSync(dir, { recursive: true })
+  const found = lines.map((_, i) => {
+    const stem = String(i + 1).padStart(2, "0")
+    return ["mp3", "wav", "m4a"].map((ext) => join(folder, `${stem}.${ext}`)).find((f) => existsSync(f))
+  })
+  const missing = found.flatMap((f, i) => (f ? [] : [String(i + 1).padStart(2, "0")]))
+  if (missing.length) throw new Error(`${folder} has no audio for line ${missing.join(", ")}. Expected one file per line, named 01.mp3, 02.mp3 and so on.`)
+  return found.map((src, i) => {
+    const file = join(dir, `clips-${String(i + 1).padStart(2, "0")}.wav`)
+    ff(["-i", src, "-ac", "1", "-ar", "44100", file])
+    return { file, seconds: probeSeconds(file) }
+  })
+}
+
 export function splitRecording(take, lines, dir) {
   mkdirSync(dir, { recursive: true })
   const total = probeSeconds(take)

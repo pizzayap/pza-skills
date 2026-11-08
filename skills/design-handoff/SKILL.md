@@ -10,7 +10,7 @@ description: >-
   stress-testing content (edge-case), a public build-in-public video
   (build-in-public-video) or a launch video.
 user-invocable: true
-argument-hint: '[prototype folder or URL] [--deck-only | --video-only] [--spec] [--voice record|elevenlabs|fish|local|none] [--out <dir>]'
+argument-hint: '[prototype folder or URL] [--deck-only | --video-only] [--spec] [--voice record|elevenlabs|fish|local|clips|none] [--out <dir>]'
 ---
 
 # Design handoff
@@ -122,6 +122,7 @@ Then pick the narration, unless `--voice` already says. If `handoff/voice.json` 
 
 - a microphone and a quiet minute to read the script
 - a Fish Audio key (its free model is the default, so no credit is needed)
+- Fish Audio connected to this session by signing in, with no key (it spends the account's credits)
 - an ElevenLabs key with credit
 - none of these
 
@@ -129,8 +130,9 @@ Then suggest the best of what they have, in this order, and let them choose:
 
 1. **Record it yourself:** run with `--script`, give them `video/script.md`, and render with `--voice record --audio <their file>` once they send the take. Their own voice suits a stakeholder update best.
 2. **Fish Audio** (free model) or **ElevenLabs:** they need their own key in the environment or in `.env` (names in video.md). If the key is missing, tell them how to add it, hand over what is finished, and render the video once they say the key is set; never ask them to paste it into the chat.
-3. **The free local voice** (Kokoro), when they have neither a microphone nor a key.
-4. **Captions only.**
+3. **Fish Audio through its sign-in,** when the session has its `text_to_speech` tool. Follow "Fish Audio through a sign-in" in video.md, tell them the credit cost first, and render with `--voice clips`.
+4. **The free local voice** (Kokoro), when they have neither a microphone nor a key.
+5. **Captions only.**
 
 Save the choice as `handoff/voice.json`, such as `{ "voice": "fish" }` (add `"voiceId"` if they picked a voice), so later handoffs use it without asking. It holds no key. If they ask for a different voice later, update it.
 

@@ -81,12 +81,28 @@ Ask the user which narration they want before rendering; the first time in a pro
 | `elevenlabs` | ElevenLabs text to speech | `ELEVENLABS_API_KEY`; optional `ELEVENLABS_VOICE_ID` or `--voice-id` |
 | `fish` | Fish Audio text to speech | `FISH_API_KEY`; optional `FISH_VOICE_ID` or `--voice-id` (the id in a voice's fish.audio URL) |
 | `local` | Kokoro-82M, a free open voice that runs on the computer (Apache-2.0) | `node <skill-dir>/scripts/setup.mjs --voice local` once: about 400 MB of packages and a 90 MB model |
+| `clips` | One audio file per line, made elsewhere, such as through a Fish Audio sign-in | `--clips <folder>`, with `01.mp3`, `02.mp3` and so on |
 | `none` (default) | Captions only | Nothing |
 
 - **Keys** come from the environment or from a `.env` file the user creates in the project folder, with a line such as `FISH_API_KEY=...`. The script reads only those names, never prints them, and warns when `.env` is not in `.gitignore`. Never write a key into `handoff.json`, the deck, a command line you show, or a commit.
 - **Privacy:** with `elevenlabs` or `fish`, the narration lines are sent to that company. Use them only when the user picked them.
 - **Cost:** each line is cached in `video/voice/` by voice, model and text, so re-rendering after a visual fix does not pay again. Fish Audio's default here is its free model `s2.1-pro-free` (tested 2026-11-08); `--model s2.1-pro` uses the paid one. Fish says the free model is the same model as the paid one, with no uptime guarantee, free under a fair-use policy through 30 November 2026 at least, and that free requests may be used to train its models (checked 2026-11-08 at fish.audio/blog/s2-1-pro-free-api). Accounts get 5 requests at once; the script sends one at a time and retries a 429. ElevenLabs uses `eleven_multilingual_v2` by default. Without `--voice-id` it uses George if the account has him, or else the account's first voice. A `402` answer means the account has no credit for that model.
 - **Kokoro voices:** `af_heart` (default), `af_bella`, `am_michael`, `bf_emma`, `bm_george`; pass one with `--voice-id`.
+
+### Fish Audio through a sign-in
+
+Use this when the session has Fish Audio's `text_to_speech` tool from its MCP server (`https://api.fish.audio/mcp`) and there is no `FISH_API_KEY`. Checked 2026-11-08: this tool offers only `s2.1-pro` and `drama-3`, not the free `s2.1-pro-free`. It costs 1 credit per byte of text, takes up to 500 bytes per call, and returns an audio URL.
+
+1. Run `make-video.mjs handoff/<date>/handoff.json --script`. It writes `lines.json` next to `script.md`: every line, in order.
+2. Call `get_credit_balance`, then `text_to_speech` with `dry_run: true` to get the cost. Tell the user the total credits and their balance, and go on only when they agree.
+3. Call `text_to_speech` once per line, with the same voice each time. Download each returned URL to `handoff/<date>/video/clips/01.mp3`, `02.mp3` and so on, in the order of `lines.json`.
+4. Render:
+
+```bash
+node <skill-dir>/scripts/make-video.mjs handoff/<date>/handoff.json --voice clips --clips handoff/<date>/video/clips
+```
+
+Save `{ "voice": "clips", "via": "fish-connection" }` in `handoff/voice.json`. The lines go to Fish Audio, as with `fish`.
 
 ### Recording it yourself
 
