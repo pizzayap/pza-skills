@@ -8,7 +8,7 @@ import { createHash } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, relative, resolve } from "node:path"
 import { launch } from "./lib/browser.mjs"
-import { failWith, readArgs } from "./lib/cli.mjs"
+import { failWith, readArgs, readJson } from "./lib/cli.mjs"
 
 const fail = failWith("capture: ")
 const cli = readArgs(fail)
@@ -20,7 +20,7 @@ if (!specPath) {
   process.exit(1)
 }
 
-const spec = JSON.parse(readFileSync(resolve(specPath), "utf8"))
+const spec = readJson(resolve(specPath), fail)
 const root = dirname(resolve(specPath))
 const outDir = resolve(root, spec.out ?? "shots")
 mkdirSync(outDir, { recursive: true })

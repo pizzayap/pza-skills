@@ -1,6 +1,7 @@
 // What build-deck.mjs and make-video.mjs both check in handoff.json, and how they find captures.
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { dirname, resolve } from "node:path"
+import { readJson } from "./cli.mjs"
 
 export const isText = (v) => typeof v === "string" && v.trim() !== ""
 
@@ -23,8 +24,8 @@ export function checks(measure = (v) => (typeof v === "string" ? v : "")) {
 // Reads the capture manifest (no file means no captures). find(ref) takes a shot id, a step image's
 // name or a path relative to root, and returns the file it names even when nothing is there, so the
 // caller can say where it looked; null for a manifest entry without an image.
-export function openManifest(manifestPath, root) {
-  const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : []
+export function openManifest(manifestPath, root, fail) {
+  const manifest = existsSync(manifestPath) ? readJson(manifestPath, fail) : []
   const find = (ref) => {
     const m = manifest.find((e) => e.id === ref) ?? manifest.flatMap((e) => e.images ?? []).find((e) => e.name === ref)
     if (!m) return resolve(root, ref)

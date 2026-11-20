@@ -11,10 +11,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, extname, join, relative, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import { spawnSync } from "node:child_process"
-import { SKILL_DIR, failWith, readArgs } from "./lib/cli.mjs"
+import { SKILL_DIR, failWith, readArgs, readJson } from "./lib/cli.mjs"
 import { checks, isText, openManifest } from "./lib/handoff.mjs"
 
-const cli = readArgs(failWith("build-deck: "))
+const fail = failWith("build-deck: ")
+const cli = readArgs(fail)
 const check = cli.has("--check")
 const shotsArg = cli.option("--shots")
 const outArg = cli.option("--out")
@@ -25,9 +26,9 @@ if (!dataPath) {
 }
 
 const root = dirname(resolve(dataPath))
-const data = JSON.parse(readFileSync(resolve(dataPath), "utf8"))
+const data = readJson(resolve(dataPath), fail)
 const manifestPath = resolve(shotsArg ?? join(root, "shots", "manifest.json"))
-const { manifest, find } = openManifest(manifestPath, root)
+const { manifest, find } = openManifest(manifestPath, root, fail)
 const outPath = resolve(outArg ?? join(root, "deck.html"))
 
 const { problems, warnings, limit, wording } = checks()

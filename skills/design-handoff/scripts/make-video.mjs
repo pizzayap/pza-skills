@@ -14,10 +14,10 @@
 //   --shots <manifest>  default shots/manifest.json beside handoff.json
 //   --out <dir>         default video/ beside handoff.json
 // Writes <output>.mp4, captions.srt, script.md, sheet.png and props.json. Format: references/video.md.
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { basename, dirname, extname, join, resolve } from "node:path"
-import { SKILL_DIR, failWith, inSkillDir, readArgs } from "./lib/cli.mjs"
+import { SKILL_DIR, failWith, inSkillDir, readArgs, readJson } from "./lib/cli.mjs"
 import { checks, isText, openManifest } from "./lib/handoff.mjs"
 import { PROVIDERS, mixTrack, readClips, splitRecording, synthLines } from "./lib/voice.mjs"
 
@@ -42,14 +42,13 @@ if (voice === "clips" && !clipsArg && !scriptOnly) fail("--voice clips needs --c
 if (voice === "record" && !audioArg && !scriptOnly) fail("--voice record needs --audio <your recording>. Run with --script first to get the lines to read.")
 
 const root = dirname(resolve(dataPath))
-const data = JSON.parse(readFileSync(resolve(dataPath), "utf8"))
+const data = readJson(resolve(dataPath), fail)
 const story = data.video
 if (!story?.scenes?.length) fail('handoff.json has no "video" with scenes; see references/video.md')
 const manifestPath = resolve(shotsArg ?? join(root, "shots", "manifest.json"))
-const { find } = openManifest(manifestPath, root)
+const { find } = openManifest(manifestPath, root, fail)
 const outDir = resolve(outArg ?? join(root, "video"))
 const publicDir = join(outDir, "public")
-mkdirSync(join(publicDir, "shots"), { recursive: true })
 
 // ---- the story: five acts in a fixed order
 const ACTS = [
@@ -76,6 +75,7 @@ const sizeOf = (file) => {
   return w && h ? { w, h } : null
 }
 const images = {}
+const copies = [] // [from, to]: made only once the whole storyboard checks out
 const image = (ref, at) => {
   if (!isText(ref)) {
     problems.push(`${at} needs an image (a shot id)`)
@@ -93,7 +93,7 @@ const image = (ref, at) => {
     return null
   }
   const name = `${ref.replace(/[^\w.-]+/g, "_")}${extname(file)}`
-  copyFileSync(file, join(publicDir, "shots", name))
+  copies.push([file, join(publicDir, "shots", name)])
   return (images[ref] = { src: `shots/${name}`, ...size })
 }
 
@@ -185,6 +185,8 @@ if (problems.length) {
   for (const p of problems) console.error(`  - ${p}`)
   fail(`${problems.length} problem(s) in the storyboard`)
 }
+mkdirSync(join(publicDir, "shots"), { recursive: true })
+for (const [from, to] of copies) copyFileSync(from, to)
 
 // ---- timing: estimate from word count, or use the narration clips
 const allLines = scenes.flatMap((s) => s.says)

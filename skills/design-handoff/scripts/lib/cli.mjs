@@ -1,4 +1,5 @@
-// The skill folder, command-line options and stopping with a message, for every script.
+// The skill folder, command-line options, the JSON files they name, and stopping with a message.
+import { readFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -21,6 +22,21 @@ export function readArgs(fail, rest = process.argv.slice(2)) {
       if (rest[i + 1] === undefined || rest[i + 1].startsWith("--")) fail(`${name} needs a value`)
       return rest.splice(i, 2)[1]
     },
+  }
+}
+
+/** Parses a JSON file the user gave, or fails naming the file and what is wrong with it. */
+export function readJson(file, fail) {
+  let text
+  try {
+    text = readFileSync(file, "utf8")
+  } catch (e) {
+    fail(e.code === "ENOENT" ? `${file} not found` : `could not read ${file}: ${e.message}`)
+  }
+  try {
+    return JSON.parse(text)
+  } catch (e) {
+    fail(`${file} is not valid JSON: ${e.message}`)
   }
 }
 
