@@ -1,7 +1,8 @@
 // State lab: a dark switcher panel beside the real component, one state at a time.
 // Copy this folder into the lab folder unchanged. It is a tool, not part of the design.
 // React 18+, no other dependencies.
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import { useLabKeys, useUrlParam } from "./lab-hooks"
 import "./state-lab.css"
 
 export type StateGroup = { label: string; states: { slug: string; label: string }[] }
@@ -20,31 +21,11 @@ type Props = {
 
 export function StateLab({ groups, children, param = "state", width, standalone = true }: Props) {
   const all = groups.flatMap((g) => g.states.map((s) => s.slug))
-  const read = useCallback(() => {
-    const v = new URLSearchParams(window.location.search).get(param)
-    return v && all.includes(v) ? v : all[0]
-  }, [param, all.join("|")]) // eslint-disable-line react-hooks/exhaustive-deps
-  const [state, setState] = useState(read)
+  // An empty ?state= means the first state, even if some slug is "".
+  const [state, go] = useUrlParam(param, all.filter((s) => s !== ""), all[0])
   const [hidden, setHidden] = useState(false)
   const ref = useRef<HTMLElement>(null)
   const panel = useRef<HTMLElement>(null)
-
-  const go = useCallback(
-    (slug: string) => {
-      const url = new URL(window.location.href)
-      if (slug === all[0]) url.searchParams.delete(param)
-      else url.searchParams.set(param, slug)
-      window.history.replaceState(window.history.state, "", url)
-      setState(slug)
-    },
-    [param, all.join("|")], // eslint-disable-line react-hooks/exhaustive-deps
-  )
-
-  useEffect(() => {
-    const onPop = () => setState(read())
-    window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
-  }, [read])
 
   // Keep the active row visible inside the panel without scrolling the page.
   useEffect(() => {
@@ -56,31 +37,16 @@ export function StateLab({ groups, children, param = "state", width, standalone 
       box.scrollTop = row.offsetTop + row.offsetHeight - box.clientHeight + 8
   }, [state])
 
-  const latest = useRef({ state, go, all })
-  latest.current = { state, go, all }
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
-      const t = e.target as HTMLElement | null
-      if (t?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return
-      const el = ref.current
-      if (!el) return
-      const several = document.querySelectorAll("[data-lab-stage]").length > 1
-      if (several && !el.contains(document.activeElement) && !el.matches(":hover")) return
-      const { state: s, go: to, all: list } = latest.current
-      const i = list.indexOf(s)
-      const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key]
-      if (step) {
-        e.preventDefault()
-        to(list[(i + step + list.length) % list.length])
-      } else if (e.key.toLowerCase() === "h") {
-        e.preventDefault()
-        setHidden((h) => !h)
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
+  // Steps through every state in list order, across groups, wrapping at the ends.
+  const i = all.indexOf(state)
+  const step = (by: number) => () => go(all[(i + by + all.length) % all.length])
+  useLabKeys(ref, {
+    ArrowDown: step(1),
+    ArrowRight: step(1),
+    ArrowUp: step(-1),
+    ArrowLeft: step(-1),
+    h: () => setHidden((h) => !h),
+  })
 
   const lab = (
     <section
