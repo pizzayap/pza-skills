@@ -1,6 +1,6 @@
 # Migrate skill names and reviewer installations
 
-The collection now distributes five independent skill folders. The last framework
+The collection distributes independent skill folders. The last framework
 revision remains in Git history at `e4ad25f`; the active tree does not carry a
 second legacy copy.
 
