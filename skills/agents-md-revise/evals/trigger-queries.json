@@ -1,0 +1,109 @@
+[
+  {
+    "query": "update AGENTS.md with what we learned today about the flaky e2e port",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "add this rule to AGENTS.md: migrations go through `pnpm db:migrate`, never raw prisma commands",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "record this gotcha for next time: the iOS build fails unless you run pod install from ios/, not the root",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Our AGENTS.md still says `npm run test:all` but that script was removed months ago. Fix it up and show me the change first.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "we burned an hour because nobody wrote down that the API needs the local stub server on 8787. can you put that in the agent instructions for this repo?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "packages/web has its own conventions now (server actions only, no API routes). capture that in a nested AGENTS.md there",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "trim the stale and duplicated bits out of our AGENTS.md, propose a diff",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "there's no AGENTS.md yet. write one from what you learned in this repo and let me see the whole file before you create it",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "save the lesson from this session (seed data must be loaded before storybook starts) into AGENTS.md",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "add to agents.md: never commit .env.local, put new keys in .env.example",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "audit AGENTS.md read-only and give it a score",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "astra-instruction-audit"
+  },
+  {
+    "query": "score all our SKILL.md files against the article rubric",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "astra-instruction-audit"
+  },
+  {
+    "query": "update the README's install section with the new pnpm command",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "remember that I like terse commit messages",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "what should the next session pick up once we're finished here?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "ship the new rate limiter and record lessons at the end",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "check this plan for restructuring our nested AGENTS.md files before I start",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "areyousure"
+  },
+  {
+    "query": "did we miss anything in the AGENTS.md edit we just made?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "arewedone"
+  },
+  {
+    "query": "does the guidance change in PR #19 do what issue #18 asked?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "add a CONTRIBUTING.md section about branch naming",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

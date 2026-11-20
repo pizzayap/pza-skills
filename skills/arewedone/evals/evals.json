@@ -1,0 +1,36 @@
+{
+  "skill_name": "arewedone",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just finished the CSV export on the reports page: src/reports/export.ts plus the new button in src/components/ReportsToolbar.tsx. Are we done?",
+      "expected_output": "Scope is concrete, so the agent restates the goal briefly and goes straight into the audit: it discovers the changed files with scoped git status/diff, reads them and related tests, scripts and docs, covers the completion, quality, standards and proof areas, runs safe proof commands obvious from the repo scripts, and classifies issues. The report uses the compact shape: Verdict (done, fix first or blocked), Summary, Solid, Fix and Next (None when empty), Proof with each command's result, Evidence and Lanes. CONFIRMED findings carry an ID, severity (critical, warning or minor), path:line, smallest correction and a one-line why. If actionable fixes remain it offers the four post-audit choices and edits nothing before the user picks one.",
+      "assertions": [
+        "The report gives a Verdict of done, fix first or blocked",
+        "The report contains Summary, Solid, Fix and Next sections, with None for any that is empty",
+        "Each Proof entry names a command and a result of pass, fail, skipped or blocked, or proof is marked UNVERIFIABLE with a reason",
+        "No source file is edited before the user selects a fix option"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "yo is the dark mode toggle done? i touched ThemeToggle.tsx and globals.css",
+      "expected_output": "The same audit and report shape, without a clarifying round because the scope is named. Proof commands are run only if they are obvious from repo scripts or docs and safe; otherwise proof is marked UNVERIFIABLE with one or two candidate commands from the repo. No dependencies are installed.",
+      "assertions": [
+        "The agent starts the audit without asking clarifying questions first",
+        "No dependency install command is run",
+        "The report gives a Verdict of done, fix first or blocked"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review my login rate-limit work for completeness. Heads up: none of it is committed yet and the branch has never been pushed.",
+      "expected_output": "Git is used only to find which files to review. Uncommitted, unstaged or unpushed state is not treated as incomplete work: it is classified OUT_OF_SCOPE or at most mentioned as an informational Note, and on its own it never produces a fix first verdict. The agent does not commit, stage, stash or push.",
+      "assertions": [
+        "Uncommitted or unpushed state is not listed as a Fix item",
+        "Uncommitted or unpushed state alone does not lead to a fix first verdict",
+        "No commit, stage, stash or push is performed"
+      ]
+    }
+  ]
+}

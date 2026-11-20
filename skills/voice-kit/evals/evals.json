@@ -1,0 +1,37 @@
+{
+  "skill_name": "voice-kit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a voice profile for me from my posts in corpus/. There are about 60 LinkedIn and X posts, one file each with the platform, URL and date.",
+      "expected_output": "The agent keeps only the author's own published posts (excluding ghostwritten, company-account and quoted text), runs `python3 -I scripts/style_signals.py corpus/` for aggregate counts, reads a spread of samples per platform and shape, and writes voice-profile.md from the profile template: 3 to 5 signature moves each with two dated quotes, statistics with sample size and date range, description kept apart from prescription, and a Dead register section for any old register.",
+      "assertions": [
+        "The profile names 3 to 5 signature moves and each one has two dated quotes from the corpus",
+        "Every statistic in the profile states its sample size and date range",
+        "scripts/style_signals.py is run on the corpus directory",
+        "No corpus text is sent to an external service"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "write this in my voice for linkedin: we shipped dark mode in the Lumen app today after 3 weeks, the hardest part was the charts. voice-profile.md and facts.md are in the repo",
+      "expected_output": "Five options, strongest first, materially different in angle and structure, one of each type (polish, punchier, spoken, proof-led, playful), each tagged with its type, followed by framing flags and a rubric score. Generated lines pass the AI-tell cut, and every fact comes from the note or facts.md.",
+      "assertions": [
+        "Exactly five options are returned, each tagged with one of polish, punchier, spoken, proof-led or playful, and all five types appear",
+        "No option contains a metric, client, result or anecdote that is not in the user's note or facts.md",
+        "No option adds a hashtag, emoji or call to action",
+        "No generated line contains an em dash or any of delve, leverage, unlock, seamless, elevate or game changer"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build my voice profile from the 26 posts in corpus/. Heads up: 9 of them were written for me by our agency, they're tagged ghostwritten in the front matter. Should be plenty.",
+      "expected_output": "The agent excludes the 9 ghostwritten posts, leaving 17 of the author's own posts. Because fewer than 20 remain, it stops and asks for more of the author's own published text instead of building a profile.",
+      "assertions": [
+        "The ghostwritten posts are excluded from the sample",
+        "The agent stops and asks for more posts because fewer than 20 of the author's own posts remain",
+        "No voice-profile.md is written or changed"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  { "query": "does this sound like me? draft below, it's for my newsletter", "should_trigger": true, "split": "train" },
+  { "query": "build a voice profile from my Substack archive in corpus/substack", "should_trigger": true, "split": "train" },
+  { "query": "Our CEO is posting about the Series A tomorrow. Draft it the way they write; their past posts are in corpus/ceo and the approved facts are in facts.md", "should_trigger": true, "split": "train" },
+  { "query": "tighten this tweet but keep it sounding like me, don't make it corporate", "should_trigger": true, "split": "train" },
+  { "query": "remember that I never want the word 'folks' in my posts again, add it to my voice preferences", "should_trigger": true, "split": "train" },
+  { "query": "Ghostwrite a LinkedIn post for my cofounder about our hiring freeze, matching how they actually write. Their posts and facts.md are in voice/", "should_trigger": true, "split": "train" },
+  { "query": "write down my taste from these 40 saved Pinterest pins so I can paste it into any AI tool", "should_trigger": false, "split": "train", "instead": "taste-file" },
+  { "query": "plan a video about the CLI I built, and the post that goes with it", "should_trigger": false, "split": "train", "instead": "build-in-public-video" },
+  { "query": "review these icon concepts against our style bible", "should_trigger": false, "split": "train", "instead": "art-direction-loop" },
+  { "query": "add this to AGENTS.md: always write commit messages in the imperative mood", "should_trigger": false, "split": "train", "instead": "agents-md-revise" },
+  { "query": "Fix the grammar and spelling in this email to my landlord", "should_trigger": false, "split": "train" },
+  { "query": "Rewrite this product description in a playful pirate tone for our April Fools page", "should_trigger": false, "split": "train" },
+  { "query": "write this in their voice: Dana's announcement about the new office, Dana's old posts are in corpus/dana", "should_trigger": true, "split": "validation" },
+  { "query": "Can you check my draft against my voice profile and point out the lines that don't sound like me? Don't rewrite it.", "should_trigger": true, "split": "validation" },
+  { "query": "refine this thread so it reads like my older X posts, same rhythm, no new claims", "should_trigger": true, "split": "validation" },
+  { "query": "I'm launching a podcast and want every episode description to sound like me. Start by profiling how I write from my 45 blog posts in content/blog, then draft the first description.", "should_trigger": true, "split": "validation" },
+  { "query": "turn my saved Dribbble shots into a taste.md of what I like and avoid", "should_trigger": false, "split": "validation", "instead": "taste-file" },
+  { "query": "help me package this: I built an offline map app and want five titles and thumbnail text", "should_trigger": false, "split": "validation", "instead": "build-in-public-video" },
+  { "query": "Shorten this README intro to two sentences", "should_trigger": false, "split": "validation" },
+  { "query": "Summarise the decisions from the transcript of our content-strategy meeting", "should_trigger": false, "split": "validation", "instead": "meeting-memory" }
+]

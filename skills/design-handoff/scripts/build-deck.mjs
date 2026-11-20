@@ -9,46 +9,34 @@
 // Data format: references/handoff-data.md.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, extname, join, relative, resolve } from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
+import { pathToFileURL } from "node:url"
 import { spawnSync } from "node:child_process"
+import { SKILL_DIR, failWith, readArgs, readJson } from "./lib/cli.mjs"
+import { checks, isText, openManifest } from "./lib/handoff.mjs"
 
-const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const args = process.argv.slice(2)
-const flag = (name) => {
-  const i = args.indexOf(name)
-  if (i === -1) return null
-  const v = args[i + 1]
-  args.splice(i, 2)
-  return v
-}
-const check = args.includes("--check")
-if (check) args.splice(args.indexOf("--check"), 1)
-const shotsArg = flag("--shots")
-const outArg = flag("--out")
-const dataPath = args[0]
+const fail = failWith("build-deck: ")
+const cli = readArgs(fail)
+const check = cli.has("--check")
+const shotsArg = cli.option("--shots")
+const outArg = cli.option("--out")
+const dataPath = cli.rest[0]
 if (!dataPath) {
   console.error("usage: node build-deck.mjs <handoff.json> [--shots manifest.json] [--out deck.html] [--check]")
   process.exit(1)
 }
 
 const root = dirname(resolve(dataPath))
-const data = JSON.parse(readFileSync(resolve(dataPath), "utf8"))
+const data = readJson(resolve(dataPath), fail)
 const manifestPath = resolve(shotsArg ?? join(root, "shots", "manifest.json"))
-const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : []
-const manifestRoot = dirname(manifestPath) // capture.mjs writes image paths relative to the manifest
+const { manifest, find } = openManifest(manifestPath, root, fail)
 const outPath = resolve(outArg ?? join(root, "deck.html"))
 
-const problems = []
-const warnings = []
-const isText = (v) => typeof v === "string" && v.trim() !== ""
-const limit = (v, max, at) => {
-  if (typeof v === "string" && v.length > max) problems.push(`${at} is ${v.length} characters; keep it under ${max}`)
-}
+const { problems, warnings, limit, wording } = checks()
 
 // Copy rules that apply to every string in the deck.
 const walk = (v, at) => {
   if (typeof v === "string") {
-    if (/\bAI[- ]generated\b/i.test(v)) problems.push(`${at}: do not label anything "AI-generated"`)
+    wording(v, at)
     if (/lorem ipsum/i.test(v)) problems.push(`${at}: placeholder text`)
   } else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${at}[${i}]`))
   else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) if (!k.startsWith("__")) walk(x, at ? `${at}.${k}` : k)
@@ -116,10 +104,7 @@ const injected = new Set(manifest.filter((m) => m.injected).map((m) => m.id))
 const mocked = new Set(manifest.filter((m) => m.mocked).map((m) => m.id))
 const resolveShot = (ref, at) => {
   if (!ref || images[ref]) return
-  let file = null
-  const m = manifest.find((e) => e.id === ref) ?? manifest.flatMap((e) => e.images ?? []).find((e) => e.name === ref)
-  if (m) file = resolve(manifestRoot, m.image ?? m.file)
-  else if (existsSync(resolve(root, ref))) file = resolve(root, ref)
+  const file = find(ref)
   if (!file || !existsSync(file)) {
     problems.push(`${at}: no capture named "${ref}" in ${relative(process.cwd(), manifestPath)}`)
     return

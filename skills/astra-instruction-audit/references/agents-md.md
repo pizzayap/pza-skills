@@ -11,6 +11,12 @@ architecture boundaries, project-specific pitfalls, and actual validation or
 permission requirements. Check paths and command definitions locally. A command
 existing in a manifest proves its definition, not successful execution or safety.
 
+When the file lists skills, role files, harness adapters, or a README catalog, or
+describes harness behavior as current, compare that claim with tracked files and
+checked-in docs. Those files are evidence for the claim, not added audit scope.
+Report an omission only when local evidence shows a specific non-obvious command,
+gate, or pitfall the file lacks, and name the addition.
+
 Question mandatory whole-repository tours, repeated document reading, generic
 coding advice, historical diaries, and stale model workarounds. Explain their
 effect on a realistic small task before proposing removal. Keep non-obvious

@@ -4,6 +4,23 @@ Use this structure as a compact build contract. Remove empty sections and adapt 
 
 For website mode, keep shared rules here and use [Website coverage](website-coverage.md) for the route/control inventory. Repeat template-specific sections only for distinct families or material variants; link larger template contracts rather than duplicating shared tokens and navigation for every content URL.
 
+Contents: the template below has these sections, in order:
+
+- Source And Evidence
+- Design Summary
+- Website Coverage
+- Entry And Loading Experience
+- Design Tokens
+- Template Structure: [Family / Variant ID]
+- Components
+- Imagery And Iconography
+- Motion And Interaction
+- Content Style
+- Agent Build Instructions
+- Asset Provenance
+- Uncertainties And Intentional Deviations
+- Rerun Inputs
+
 ````markdown
 # DESIGN.md: [Source site or page]
 

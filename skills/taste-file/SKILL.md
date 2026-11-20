@@ -6,7 +6,6 @@ description: >-
   past picks. Use for "write down the taste", "make a taste file", "turn
   these saves into a style guide". Not for judging concept images against a project
   style bible (that's art-direction-loop) or for extracting tokens from a page.
-user-invocable: true
 argument-hint: '[likes-or-saves-file|study-notes|existing-taste.md]'
 ---
 

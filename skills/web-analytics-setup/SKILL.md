@@ -6,13 +6,12 @@ description: >-
   user says "add analytics", "GA isn't tracking", "verify my site in Search
   Console" or "Vercel Analytics says awaiting data". Covers single and
   multi-domain sites. Not for SEO audits or event tracking plans.
-user-invocable: true
 argument-hint: '[app-path] [vercel|ga4|search-console|all]'
 ---
 
 # Web analytics setup
 
-This skill wires up to three separate tools on a Next.js site and proves each one receives data after deploy. It does not audit SEO (that's `seo-audit`), design a custom event plan, or give legal advice on consent.
+This skill wires up to three separate tools on a Next.js site and proves each one receives data after deploy. It does not audit SEO (that's `seo-audit`, a skill outside this collection), design a custom event plan, or give legal advice on consent.
 
 | Tool | Answers | Wired by |
 | --- | --- | --- |
@@ -31,14 +30,6 @@ Two failure modes, and the first is worse:
 1. **Calling it set up without a hit.** The dashboard toggle is on but the code never shipped, or the code shipped but the env var is missing in Production.
 2. **Tracking more than you can stand behind.** GA firing before consent on a site that needs it, or a report that counts CTA clicks as signups.
 
-## Facts (as of Oct 2026)
-
-Check the current Vercel Analytics, Next.js third-party and Search Console docs before applying; these change.
-
-- `@next/third-parties` is still marked experimental. Keep its version aligned with `next`.
-- Vercel: mount `<Analytics />` from `@vercel/analytics/next`. For Vite or plain React, import from `@vercel/analytics/react`. Local dev does not report.
-- Search Console Domain properties need a DNS record. A `*.vercel.app` host has no DNS you control, so use a URL-prefix property.
-
 ## Hard rules
 
 1. **Three products, three setups.** Setting up one does nothing for the others.
@@ -51,6 +42,8 @@ Check the current Vercel Analytics, Next.js third-party and Search Console docs 
 
 ## The sequence
 
+Check the current Vercel Analytics, Next.js third-party and Search Console docs before applying; these change.
+
 ### 1. Inventory
 
 Find the framework and router, root layout path, deploy target, domains, existing analytics code, CSP headers, privacy page and Vercel projects. Fill the status table (see Output) with today's state of each tool: none, code only, dashboard only, or both.
@@ -59,11 +52,11 @@ Find the framework and router, root layout path, deploy target, domains, existin
 
 ### 2. Vercel Web Analytics
 
-Install `@vercel/analytics`, mount `<Analytics />` inside `<body>` in the root layout, and redeploy. Pass `mode="production"` if environment detection misfires.
+Install `@vercel/analytics`, mount `<Analytics />` inside `<body>` in the root layout, and redeploy. Take the import path for the project's framework from [facts.md](references/facts.md). Pass `mode="production"` if environment detection misfires.
 
 ### 3. GA4
 
-Install `@next/third-parties`, add the env var, then in the root layout:
+Install `@next/third-parties` (check its status and version rule in [facts.md](references/facts.md) first), add the env var, then in the root layout:
 
 ```tsx
 import { GoogleAnalytics } from '@next/third-parties/google';
@@ -80,6 +73,8 @@ const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 | You control the domain's DNS | Domain | DNS TXT record (covers every subdomain and protocol) |
 | `*.vercel.app` or no DNS access | URL prefix | HTML file: copy the downloaded file unchanged into `public/` |
 | Prefer code over a file | URL prefix | HTML tag: store only the `content` value and render it with Next metadata `verification: { google: value }` |
+
+Domain properties need a DNS record. A `*.vercel.app` host has no DNS you control, so use a URL-prefix property.
 
 After verifying, submit the sitemap URL.
 

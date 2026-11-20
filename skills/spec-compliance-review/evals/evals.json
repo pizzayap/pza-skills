@@ -1,0 +1,36 @@
+{
+  "skill_name": "spec-compliance-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check it against the spec: branch feat/saved-searches vs main, spec is specs/saved-searches.md.",
+      "expected_output": "A read-only review. The agent resolves the spec from --spec, numbers requirements R1, R2 and non-goals N1, N2 with source locations, lists changed files with git diff --name-status, maps each requirement to the lines that meet it, classifies each as MET, PARTIAL, MISSING, INCORRECT or UNVERIFIED, and checks for scope creep. Output follows the template: Verdict (APPROVE, NEEDS ATTENTION, SKIPPED or BLOCKED), Spec source, Requirements counts, a table of rows that need attention, and Notes.",
+      "assertions": [
+        "The Verdict is one of APPROVE, NEEDS ATTENTION, SKIPPED or BLOCKED",
+        "Every table row cites both a requirement source and a code location",
+        "MET requirements appear only in the counts line, not as table rows",
+        "No tests or builds are run and no file is edited"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "does PR #301 match issue #77?",
+      "expected_output": "The agent fetches issue #77 read-only with gh, extracts its acceptance criteria as numbered requirements, maps them against the PR diff, and reports in the template. It does not comment on the issue or change labels.",
+      "assertions": [
+        "gh is used only to read; no issue comment, label change or PR comment is made",
+        "Requirements are numbered with sources such as '#77 AC1'",
+        "The output has Verdict, Spec source, Requirements and Notes headings"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "There's no issue or spec doc for this branch, I just hacked it together. Check it against the spec anyway before I merge.",
+      "expected_output": "One spec source is required. With none, the agent returns SKIPPED: no spec source found and stops. It does not invent requirements from the code or branch name and does not ask for a spec mid-review.",
+      "assertions": [
+        "The verdict is SKIPPED with the reason that no spec source was found",
+        "No requirements are invented from the code, commits or branch name",
+        "No compliance table of findings is produced"
+      ]
+    }
+  ]
+}

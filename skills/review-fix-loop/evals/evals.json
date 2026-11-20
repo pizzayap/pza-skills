@@ -1,0 +1,36 @@
+{
+  "skill_name": "review-fix-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Fix everything from this review and merge it.\nCR-1 src/checkout/cart.ts:58 total ignores percentage discounts\nCR-2 src/checkout/cart.ts:112 duplicated tax rounding, extract one helper (refactor, no behaviour change)\nCR-3 src/checkout/api.ts:30 no error handling when the payment call times out",
+      "expected_output": "The agent locates the review and what it reviewed, turns it into an ordered work list (ID, finding, intended fix, acceptance check), asks once in a single batch about anything that is the user's call, sets up a working branch and records a baseline of the project's checks. Fixes land one finding per commit; a fresh re-reviewer repeats the original review at the same bar over the same scope, for up to 3 rounds. With the default --merge ask it asks before merging, stating what will land and what the merge triggers. It ends with the report block.",
+      "assertions": [
+        "An ordered work list is shown in which every item has an ID, the finding, the intended fix and an acceptance check",
+        "Each fixed finding lands in its own commit",
+        "The agent asks the user before merging",
+        "The final report has Review, Rounds, Fixed, Skipped, Left, New, Merged and Check by hand lines"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review of PR #88:\nR1 src/api/users.ts:42 missing null check on user.email\nR2 src/api/users.ts:77 N+1 query in listUsers\nR3 (optional) rename fetchAll to listAll\nwork through these findings and merge",
+      "expected_output": "The agent works on PR #88's branch, asks once up front in a single batch about the optional R3, implements R1 and R2 one commit each, pushes the fix commits to the PR branch, runs a fresh re-review over the full PR diff, and gates the merge. Every finding ends in a recorded state.",
+      "assertions": [
+        "Questions to the user come in a single batch before implementation starts, and R3 is among them",
+        "Fix commits go to PR #88's branch, not directly to the default branch",
+        "Each of R1, R2 and R3 appears in exactly one of Fixed, Skipped or Left in the final report"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Fix everything from the review above and merge it.",
+      "expected_output": "Sent as the first message, so there is no review in the conversation. Step 0 is a gate: with no review, the agent stops and says so. It does not write a review itself and makes no commits.",
+      "assertions": [
+        "The agent reports that no review was found and stops",
+        "The agent does not write a review of its own",
+        "No commits are made and nothing is merged"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "skill_name": "art-direction-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Generate concepts for the watchtower asset, look 2. Idea: a winch-driven lift on the side. The style bible is docs/art/style-bible.md.",
+      "expected_output": "The agent reads the project's style bible first. It builds the prompt in the fixed order (Look, Framing, the asset's section, this look's goal, the idea, then 'Do not include:' with every Never item), with no brand, studio or artist names and no text in images, at the lowest quality with 4 images by default. It saves each PNG with a JSON sidecar without overwriting earlier files, looks at every result, and reports each file, its cost and the round total. It leaves the verdict to the human.",
+      "assertions": [
+        "The style bible is read before the prompt is written",
+        "The prompt ends with a 'Do not include:' line listing the Never items and contains no brand, studio or artist names",
+        "Each generated PNG has a JSON sidecar beside it and no earlier file is overwritten",
+        "The report lists each file and its cost plus the round total"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "review these concepts against docs/art/style-bible.md: concepts/tower/look-1-a.png and look-1-b.png",
+      "expected_output": "For each image the agent reads its sidecar, checks the six points in order (Silhouette, Role, Family, Distinct, Buildable, Never list), each marked pass, fail or unsure with a one-line reason, then advises strong, show with concerns or weak in one sentence. It shows the advice and records a verdict only in the human's own words.",
+      "assertions": [
+        "Each image gets six numbered checks, each marked pass, fail or unsure with a reason",
+        "Each image ends with advice of strong, show with concerns or weak, plus one sentence why",
+        "The agent does not write verdict or verdictNote in any sidecar without the human's words"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write the build brief for the watchtower (style bible: docs/art/style-bible.md). Looks 1 and 2 are approved; we haven't reviewed look 3 yet, but go ahead anyway.",
+      "expected_output": "The build brief has a gate: it is refused until every look of the asset has a concept with verdict yes. The agent names look 3 as missing an approved concept and writes nothing.",
+      "assertions": [
+        "The agent refuses to write the brief and names look 3 as the look without an approved concept",
+        "No brief file is written",
+        "No sidecar verdict is set by the agent to get past the gate"
+      ]
+    }
+  ]
+}

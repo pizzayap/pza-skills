@@ -1,0 +1,22 @@
+[
+  { "query": "what did we decide about the onboarding redesign?", "should_trigger": true, "split": "train" },
+  { "query": "Summarise docs/meetings/raw/2026-11-19.md like the other summaries", "should_trigger": true, "split": "train" },
+  { "query": "who raised that risk about vendor lock-in? pretty sure it was one of the October syncs", "should_trigger": true, "split": "train" },
+  { "query": "Here's the transcript from the client call with Fernhill Studio. Turn it into a summary with decisions and action items, same format as the rest.", "should_trigger": true, "split": "train" },
+  { "query": "what feedback did we get on the new dashboard from the pilot customers?", "should_trigger": true, "split": "train" },
+  { "query": "When did we agree to move the launch to January, and has that changed since?", "should_trigger": true, "split": "train" },
+  { "query": "Update the workshop deck from this session transcript", "should_trigger": false, "split": "train", "instead": "transcript-to-deck-coverage" },
+  { "query": "what's next? give me a prompt to start the next task in a fresh session", "should_trigger": false, "split": "train", "instead": "next-session-prompt" },
+  { "query": "Draft a follow-up email to Fernhill Studio recapping today's call", "should_trigger": false, "split": "train" },
+  { "query": "Take notes while I'm on this call and ping me with action items as they come up", "should_trigger": false, "split": "train" },
+  { "query": "Add this rule to AGENTS.md: we decided to always run migrations through the CLI", "should_trigger": false, "split": "train", "instead": "agents-md-revise" },
+  { "query": "did we miss anything in this PR before I merge it?", "should_trigger": false, "split": "train", "instead": "arewedone" },
+  { "query": "did anyone ever bring up accessibility in the design reviews? need dates", "should_trigger": true, "split": "validation" },
+  { "query": "transcript from today's standup is in docs/meetings/raw/, summarise it pls", "should_trigger": true, "split": "validation" },
+  { "query": "how did our thinking on the pricing tiers evolve over the last few meetings?", "should_trigger": true, "split": "validation" },
+  { "query": "Our PM is out and I need to brief the new designer. Go through the meeting summaries and tell me what was decided about the mobile nav, who pushed for it, and when, with dates I can check.", "should_trigger": true, "split": "validation" },
+  { "query": "add what we covered in the session to the slides", "should_trigger": false, "split": "validation", "instead": "transcript-to-deck-coverage" },
+  { "query": "Write an implementation plan for the API changes we agreed in yesterday's meeting (notes pasted below)", "should_trigger": false, "split": "validation", "instead": "write-plan" },
+  { "query": "next task? check the issues and tell me what to pick up", "should_trigger": false, "split": "validation", "instead": "next-session-prompt" },
+  { "query": "Transcribe this audio file of our board meeting into text", "should_trigger": false, "split": "validation" }
+]

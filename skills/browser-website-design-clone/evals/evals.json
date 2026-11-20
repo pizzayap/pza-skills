@@ -1,0 +1,36 @@
+{
+  "skill_name": "browser-website-design-clone",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Clone https://tallyhq.example into this Next.js repo.",
+      "expected_output": "Website mode by default. The agent opens the site in a live browser, discovers the internal destinations from the homepage, header, expanded menus and footer, groups pages into layout families, and freezes the required route set in ROUTES.md. It stores evidence under .design-reference/<site-page>/ with URL, date, viewport and limitations, writes DESIGN.md at the destination root before coding, implements in the existing stack, and verifies against the source at matched viewports. It reports static checks, live-browser checks, asset validation and unresolved gaps separately, and claims acceptance only with a matched-state score of at least 80/100 and every applicable category at least 70/100.",
+      "assertions": [
+        "ROUTES.md lists destinations found from the homepage, header, menus and footer, not only the homepage",
+        "DESIGN.md exists at the destination root before implementation code is written",
+        "Evidence is stored under .design-reference/<site-page>/ with the source URL, date and viewport recorded",
+        "The final report does not claim a pass without a matched-state score of at least 80/100, and it lists unresolved gaps"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "just document the design of this page, no code: https://quietfolio.example/work/atlas",
+      "expected_output": "An explicit page-only, document-only request. The agent stays on that page, collects browser evidence, and ends with an evidence-backed DESIGN.md contract (tokens, layout, components, imagery, motion, provenance, uncertainties) without writing implementation code or claiming a fidelity score.",
+      "assertions": [
+        "No implementation code is written; the outcome is an evidence-backed DESIGN.md contract",
+        "Required coverage stays on the named page; other site routes are not inventoried as required routes",
+        "Conclusions are labelled observed, measured or inferred, and estimated values are marked as approximations"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Recreate this site in our Astro repo: https://tallyhq.example/blog/launch-week",
+      "expected_output": "A deep URL is an additional seed, not an implicit page-only limit. The agent works in website mode: it discovers routes from the homepage, header, menus and footer as well as the blog post, freezes them in ROUTES.md, and records discovery limits instead of cloning only the one post.",
+      "assertions": [
+        "The agent works in website mode and discovers routes from the homepage, header, menus and footer, not only the blog post",
+        "The blog post URL is included as a required route in ROUTES.md",
+        "The report records discovery limits or outstanding destinations rather than claiming exhaustive coverage"
+      ]
+    }
+  ]
+}

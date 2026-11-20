@@ -1,0 +1,36 @@
+{
+  "skill_name": "issue-to-merged-pr",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "work #142",
+      "expected_output": "The agent validates the argument, reads the issue and comments, and applies the readiness gate (acceptance criteria present, no open blocker, no needs-info or human-decision label, not a parent with open children). It fetches origin and branches from the default branch as <type>/142-<slug>, writes numbered failure modes (F1, F2, ...) in an evidence doc and commits them, writes tests and captures a red run, makes the smallest fix and runs tests green plus lint, typecheck and build, finishes the evidence doc, reviews against every acceptance criterion, then opens a PR with Closes #142 or Refs #142 and checks the keyword survived. It merges only when the user asks or the repo's process authorizes it, and closes the issue only after the merge is confirmed on origin. It ends with the Final status block.",
+      "assertions": [
+        "A failure-modes commit comes before any test or fix commit",
+        "Failing test output is captured before the fix is written",
+        "The issue is not closed before the merge is confirmed on origin's default branch",
+        "The final status contains Issue, Branch/PR, Commits, Proof, Closure and Owner checklist lines"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "take the next ready issue",
+      "expected_output": "With no issue given, the agent lists open issues with gh issue list --state open --json number,title,labels,assignees, proposes the best ready one, and asks the user if there is no clear pick. It then works exactly one issue through the same sequence.",
+      "assertions": [
+        "The agent lists open issues with gh before choosing one",
+        "The agent proposes a single issue, or asks the user to choose when there is no clear pick",
+        "Only one issue is worked"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "issue to PR: #12 and #15, they're related so do them together",
+      "expected_output": "The skill works one issue per run. The agent takes one of the two (or asks which), does not bundle the other into the same branch or PR, and notes the second as a proposed follow-up.",
+      "assertions": [
+        "Only one of #12 and #15 is worked in this run",
+        "The other issue's changes are not bundled into the same branch or PR",
+        "The agent states which issue it is taking or asks the user to choose"
+      ]
+    }
+  ]
+}

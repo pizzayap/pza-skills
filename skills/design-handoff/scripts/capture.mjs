@@ -8,17 +8,19 @@ import { createHash } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, relative, resolve } from "node:path"
 import { launch } from "./lib/browser.mjs"
+import { failWith, readArgs, readJson } from "./lib/cli.mjs"
 
-const args = process.argv.slice(2)
-const onlyAt = args.indexOf("--only")
-const only = onlyAt === -1 ? null : new Set(String(args.splice(onlyAt, 2)[1] ?? "").split(",").filter(Boolean))
-const specPath = args[0]
+const fail = failWith("capture: ")
+const cli = readArgs(fail)
+const onlyArg = cli.option("--only")
+const only = onlyArg === null ? null : new Set(onlyArg.split(",").filter(Boolean))
+const specPath = cli.rest[0]
 if (!specPath) {
   console.error("usage: node capture.mjs <shots.json> [--only id1,id2]")
   process.exit(1)
 }
 
-const spec = JSON.parse(readFileSync(resolve(specPath), "utf8"))
+const spec = readJson(resolve(specPath), fail)
 const root = dirname(resolve(specPath))
 const outDir = resolve(root, spec.out ?? "shots")
 mkdirSync(outDir, { recursive: true })
@@ -29,10 +31,7 @@ const viewports = {
   ...(spec.viewports ?? {}),
 }
 const defaults = { viewport: "desktop", reducedMotion: true, colorScheme: "light", wait: 300, format: "jpeg", ...(spec.defaults ?? {}) }
-if (!spec.baseUrl && spec.shots?.some((s) => !/^https?:|^file:/.test(s.path ?? s.url ?? ""))) {
-  console.error("capture: shots.json needs baseUrl, or full URLs on every shot")
-  process.exit(1)
-}
+if (!spec.baseUrl && spec.shots?.some((s) => !/^https?:|^file:/.test(s.path ?? s.url ?? ""))) fail("shots.json needs baseUrl, or full URLs on every shot")
 const idPattern = /^[a-z0-9][a-z0-9-]*$/
 const ids = new Set()
 for (const shot of spec.shots ?? []) {

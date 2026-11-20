@@ -2,6 +2,16 @@
 
 Use these recipes only when the active browser surface exposes the matching capability. Follow the browser documentation returned in the current session when it differs from these examples.
 
+Contents:
+
+- [Compact Style Probe](#compact-style-probe)
+- [Experiential Runtime Probe](#experiential-runtime-probe)
+- [Structure](#structure)
+- [Screenshots And Viewports](#screenshots-and-viewports)
+- [Fresh Entry And Preloader Capture](#fresh-entry-and-preloader-capture)
+- [Page Assets](#page-assets)
+- [Evidence Hygiene](#evidence-hygiene)
+
 ## Compact Style Probe
 
 Prefer a small, representative computed-style result over a full HTML or CSS dump. Run a read-only page evaluation similar to this and retain only fields that affect the recreation:

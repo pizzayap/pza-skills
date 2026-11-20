@@ -1,0 +1,35 @@
+{
+  "skill_name": "ship-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Ship this: add a --dry-run flag to the `sync` CLI command so it prints the planned changes without writing anything. Take it from plan to commit.",
+      "expected_output": "The loop starts at step 1: a plan with current state, exact files per step, out of scope, and automated plus manual verification, 4 to 6 todos with verify last, and no code. The agent stops at the plan gate and ends with the gate report (Step, Changed, Proof, Next phrased as a yes/no question), waiting for the user before verifying the plan or implementing.",
+      "assertions": [
+        "The agent stops after the plan step and does not implement in the same turn",
+        "The turn ends with a gate report containing Step, Changed, Proof and Next lines",
+        "The Next line is phrased as a yes/no question to the user"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "run the whole loop on the empty-state copy fix in src/components/EmptyInbox.tsx. run through the gates, commit when done",
+      "expected_output": "Run through skips the ordinary gates, but the commit and push gates are never skipped. The agent plans, verifies the plan, implements, reviews (verdict done, fix first or blocked, findings with path:line) and applies findings, then stops before committing and asks. Nothing is pushed or merged.",
+      "assertions": [
+        "The agent stops before creating the commit and asks the user",
+        "Nothing is pushed or merged",
+        "The review step gives a verdict of done, fix first or blocked"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Ship the dark-mode toggle in settings. While you're in there, also fix the typo in the footer and rename src/utils/helpers.ts to src/utils/format.ts.",
+      "expected_output": "One change per loop: the plan covers only the dark-mode toggle. The footer typo and the rename go into a note, a proposed issue or Out of scope, never into this diff.",
+      "assertions": [
+        "The plan's steps cover only the dark-mode toggle",
+        "The footer typo and the rename are recorded as a note, proposed issue or out-of-scope item rather than as plan steps",
+        "No change to the footer or to src/utils/helpers.ts appears in the diff"
+      ]
+    }
+  ]
+}

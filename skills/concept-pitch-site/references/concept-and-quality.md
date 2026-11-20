@@ -3,6 +3,14 @@
 Load the sections as the skill's sequence reaches them: Concept at step 2,
 Gaps at step 4, Quality bar, Motion and Traps at step 5.
 
+Contents:
+
+- [Concept](#concept)
+- [Gaps that look finished](#gaps-that-look-finished)
+- [Quality bar](#quality-bar)
+- [Motion and fallbacks](#motion-and-fallbacks)
+- [Traps worth checking](#traps-worth-checking)
+
 ## Concept
 
 The concept is the one idea the page is built from. It sets background,

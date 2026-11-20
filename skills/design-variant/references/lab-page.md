@@ -4,7 +4,7 @@ The lab page is a throwaway dev page that holds one component and a small contro
 
 ## The kit
 
-Copy [lab-kit.tsx](../assets/lab-kit/lab-kit.tsx) and [lab-kit.css](../assets/lab-kit/lab-kit.css) into the lab folder unchanged and build the page from `LabStage`, `CaseBar`, `BeforeAfter` and `Segmented`. Do not restyle the kit or rebuild it by hand: a hand-built tray drifts from this look on every run. The kit is React 18+ with no other dependencies. On another stack, port it and keep the values below.
+Copy [lab-kit.tsx](../assets/lab-kit/lab-kit.tsx), [lab-kit.css](../assets/lab-kit/lab-kit.css) and [lab-hooks.ts](../assets/lab-kit/lab-hooks.ts) into the lab folder unchanged and build the page from `LabStage`, `CaseBar`, `BeforeAfter` and `Segmented`. Do not restyle the kit or rebuild it by hand: a hand-built tray drifts from this look on every run. The kit is React 18+ with no other dependencies. On another stack, port it and keep the values below.
 
 ## Layout
 

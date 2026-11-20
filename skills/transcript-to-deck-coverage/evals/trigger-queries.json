@@ -1,0 +1,22 @@
+[
+  { "query": "update the deck from this recording, transcript is transcripts/2026-11-18.txt and the deck is decks/prompting-101", "should_trigger": true, "split": "train" },
+  { "query": "We ran the Agents for PMs workshop yesterday and our guest showed an eval trick that isn't in the slides. Here's the transcript; work it into the existing deck without dropping anything we agreed in the brief.", "should_trigger": true, "split": "train" },
+  { "query": "add what we covered in the session to slides.md pls", "should_trigger": true, "split": "train" },
+  { "query": "Revise the talk deck at decks/local-first/ using last night's meetup transcript. Every point from the talk needs to land somewhere, even if it's only a speaker note.", "should_trigger": true, "split": "train" },
+  { "query": "The recording of session 2 has a bunch of Q&A answers that belong in the deck. Go through the transcript, fold them into the existing slides, then check the served deck at localhost:4100 shows them.", "should_trigger": true, "split": "train" },
+  { "query": "Sync our workshop deck with what actually got taught on Tuesday, transcript attached. Keep the session timings as agreed.", "should_trigger": true, "split": "train" },
+  { "query": "Turn this screen-recorded tutorial into a workshop page with timed stages", "should_trigger": false, "split": "train", "instead": "video-to-workshop" },
+  { "query": "Summarise this meeting transcript and pull out the action items", "should_trigger": false, "split": "train", "instead": "meeting-memory" },
+  { "query": "Make a handoff deck for the developers from the prototype in ./app", "should_trigger": false, "split": "train", "instead": "design-handoff" },
+  { "query": "What did we decide about the workshop pricing in the October meetings?", "should_trigger": false, "split": "train", "instead": "meeting-memory" },
+  { "query": "Fix the typo on slide 7 and make the title bold", "should_trigger": false, "split": "train" },
+  { "query": "Plan a short video about how I rebuilt my slide tool, I have the commits", "should_trigger": false, "split": "train", "instead": "build-in-public-video" },
+  { "query": "update teh deck from the recording? transcript is in ./raw", "should_trigger": true, "split": "validation" },
+  { "query": "Here's the Zoom transcript from our onboarding training. The trainer improvised a section on permissions. Get that into the onboarding slides and give me a ledger of where each item went.", "should_trigger": true, "split": "validation" },
+  { "query": "Can you add what we covered in the session on Friday to the conference talk deck? It's served from the reveal.js dev server", "should_trigger": true, "split": "validation" },
+  { "query": "Before the second cohort, I want the deck to match what we taught the first one. Transcript: transcripts/cohort1-day1.vtt. Requirements: docs/brief.md", "should_trigger": true, "split": "validation" },
+  { "query": "make a class from this youtube tutorial, transcript attached", "should_trigger": false, "split": "validation", "instead": "video-to-workshop" },
+  { "query": "Explain why this keynote slide design works, screenshot attached", "should_trigger": false, "split": "validation", "instead": "explain-design" },
+  { "query": "Export my deck to PDF with speaker notes", "should_trigger": false, "split": "validation" },
+  { "query": "Draft the follow-up email to attendees of yesterday's session with the slide link", "should_trigger": false, "split": "validation" }
+]

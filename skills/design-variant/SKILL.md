@@ -7,7 +7,6 @@ description: >-
   options", "show me variants of this card", or "explore other layouts for X".
   Not for product states (state-machine), stress tests (edge-case) or a critique
   (ui-review).
-user-invocable: true
 disable-model-invocation: true
 argument-hint: '[component name or path] [what to explore]'
 ---

@@ -1,0 +1,109 @@
+[
+  {
+    "query": "show me different directions for this screen: the trip detail page",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "give me options before we build the new pricing page",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "explore a few really different directions for the whole onboarding flow before anything gets built",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "show me a few layout directions for the settings screen as standalone pages I can compare",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "explore three directions for our app's pricing page, side by side on one board",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I want different directions for the account settings screen before we build it",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I'm redoing my portfolio homepage. can you show me a few directions to compare before I build it?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "mock up 4 takes on the checkout screen, density axis, as plain html I can double click",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "three alternative layouts for the trip page to pick from, built as separate html pages",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Need to explore the 3-step invite flow from a few angles before engineering starts. Use the real copy from the app, not lorem.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "3 variants of the CommentItem component inside the running app with a picker, then promote the winner",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-variant"
+  },
+  {
+    "query": "what's off about the CheckoutSummary card now that it's built",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ui-review"
+  },
+  {
+    "query": "why does our current trip page work so well? break it down",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "explain-design"
+  },
+  {
+    "query": "generate concept images for our five map marker icons from the style bible",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "art-direction-loop"
+  },
+  {
+    "query": "build a concept site for Harbor Lane Bakery to pitch to the owner",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "concept-pitch-site"
+  },
+  {
+    "query": "build the onboarding screen into the app from direction 2, the one I picked",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "walk the invite flow as a first-time user and a power user",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "persona-walkthrough"
+  },
+  {
+    "query": "rank these three mockups and tell me which one is best",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "recreate the layout of this site's pricing page as a working page: https://tallyhq.example/pricing",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "browser-website-design-clone"
+  },
+  {
+    "query": "put together a moodboard of finance app screens for inspiration",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

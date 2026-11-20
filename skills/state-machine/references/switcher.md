@@ -1,6 +1,6 @@
 # State switcher spec
 
-The switcher is a tool, not part of the design. Copy [state-lab.tsx](../assets/state-lab/state-lab.tsx) and [state-lab.css](../assets/state-lab/state-lab.css) into the lab folder unchanged and render the component through `StateLab`. Do not restyle it or rebuild it by hand. The kit is React 18+ with no other dependencies; on another stack, port it and keep the values below.
+The switcher is a tool, not part of the design. Copy [state-lab.tsx](../assets/state-lab/state-lab.tsx), [state-lab.css](../assets/state-lab/state-lab.css) and [lab-hooks.ts](../assets/state-lab/lab-hooks.ts) into the lab folder unchanged and render the component through `StateLab`. Do not restyle it or rebuild it by hand. The kit is React 18+ with no other dependencies; on another stack, port it and keep the values below.
 
 ## Look
 

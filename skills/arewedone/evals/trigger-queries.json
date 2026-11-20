@@ -1,0 +1,110 @@
+[
+  {
+    "query": "are we done? the CSV export is wired into ReportsToolbar and the API route is in",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "is this done? I think the dark mode toggle is finished",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "did we miss anything on the password reset flow?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "before I tell the team it's finished, can you sanity check the onboarding changes and run the tests?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Review what I changed for the invoice PDF feature and tell me whether it's complete or what still needs fixing.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "i think the AGENTS.md edit we just made is good, anything we overlooked?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "is the token refresh change finished? expiry, logout and the retry path all need to work",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "r we done w the settings page? lmk if anything's missing",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "I finished the billing module refactor, did we miss anything before I open the PR?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Can you double check the three SKILL.md edits I made are complete and consistent with the README?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "does this branch do what issue #58 asked for, nothing more?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "security pass on the auth changes before I merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "adversarial-security-review"
+  },
+  {
+    "query": "fix everything from the review in docs/reviews/checkout.md and merge it",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "review-fix-loop"
+  },
+  {
+    "query": "is this plan right before I start building? it's in docs/plans/offline.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "areyousure"
+  },
+  {
+    "query": "we're done with search, what should I work on next?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "just run the test suite and tell me if it's green",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "prove the new pricing page works on mobile",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "ship this: add rate limiting to /api/upload, plan through commit",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "summarize what we changed today for standup",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "work #91 end to end and get it merged",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "issue-to-merged-pr"
+  }
+]

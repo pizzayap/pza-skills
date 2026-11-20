@@ -1,0 +1,22 @@
+[
+  { "query": "prove it works, the new sidebar at localhost:3000/settings", "should_trigger": true, "split": "train" },
+  { "query": "check it on mobile pls, I just reworked the hero", "should_trigger": true, "split": "train" },
+  { "query": "Here's the Figma export in design/checkout.png. Does the checkout page we built actually look like it at desktop and phone sizes? Show me captures.", "should_trigger": true, "split": "train" },
+  { "query": "I switched the card grid to CSS grid with auto-fit. Screenshot it at 1440 and 390 wide and confirm nothing scrolls sideways.", "should_trigger": true, "split": "train" },
+  { "query": "does this match the design? the reference is the mockup in docs/ref/home.png", "should_trigger": true, "split": "train" },
+  { "query": "Before I hand the dashboard redesign to the PM, get me real captures of each state (loading, empty, filled) in light and dark, and fix whatever scores lowest.", "should_trigger": true, "split": "train" },
+  { "query": "review this component, what's off about the PricingCard?", "should_trigger": false, "split": "train", "instead": "ui-review" },
+  { "query": "are we done? I think the settings refactor is finished", "should_trigger": false, "split": "train", "instead": "arewedone" },
+  { "query": "walk the signup flow as a first-time user and a screen-reader user and tell me where they get stuck", "should_trigger": false, "split": "train", "instead": "persona-walkthrough" },
+  { "query": "does PR #88 do everything the acceptance criteria in issue #81 ask for?", "should_trigger": false, "split": "train", "instead": "spec-compliance-review" },
+  { "query": "what happens with long names in the UserBadge? break it", "should_trigger": false, "split": "train", "instead": "edge-case" },
+  { "query": "why does this landing page look so good? break it down for me", "should_trigger": false, "split": "train", "instead": "explain-design" },
+  { "query": "Responsive pass: verify the pricing table at phone and desktop widths in the running app", "should_trigger": true, "split": "validation" },
+  { "query": "made the header sticky, can u verify on mobile + desktop w/ screenshots", "should_trigger": true, "split": "validation" },
+  { "query": "Score the onboarding screen against the reference, don't change anything yet", "should_trigger": true, "split": "validation" },
+  { "query": "We merged the fix for issue #88 where the heading clipped on small phones. I need before and after captures proving it's fixed, saved somewhere the reviewer can rerun.", "should_trigger": true, "split": "validation" },
+  { "query": "polish this UI: the Toast component feels off", "should_trigger": false, "split": "validation", "instead": "ui-review" },
+  { "query": "show me every state of the FileUpload component on a dev page", "should_trigger": false, "split": "validation", "instead": "state-machine" },
+  { "query": "Review the framer-motion code in Drawer.tsx for jank and bad easing curves", "should_trigger": false, "split": "validation" },
+  { "query": "give me 3 variants of the PlanCard component to pick from", "should_trigger": false, "split": "validation", "instead": "design-variant" }
+]

@@ -2,6 +2,12 @@
 
 A starting point for `run.mjs`. It uses Playwright, which drives a real browser from a script. If the project already has a browser harness or a preview tool, use that instead and keep the same rules: fixed viewports, confirmed sizes, settled states, dated file names.
 
+Contents:
+
+- The `run.mjs` script, right below
+- [One-page report](#one-page-report)
+- [Recording motion](#recording-motion)
+
 Install once: `npm i -D playwright && npx playwright install chromium`.
 
 Run: `node docs/verification/<id>/run.mjs <url> <id> before` (then `after`).

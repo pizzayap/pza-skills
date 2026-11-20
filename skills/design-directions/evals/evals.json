@@ -1,0 +1,36 @@
+{
+  "skill_name": "design-directions",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me different directions for the Trip page (src/app/trip/page.tsx). Goal: help a commuter see in two seconds whether tonight's connection is at risk.",
+      "expected_output": "The agent restates the brief in one sentence, reads the product's tokens and real content, writes system.md in a run folder (design-runs/directions-<screen>-<date>/ by default), declares one axis and three bets in run.json with direction 1 extending today's design, and sends one subagent per direction (or builds them one after another if subagents are unavailable). Each direction is a self-contained index.html in its own folder that opens offline. The agent checks each direction, builds board.html with build-board.mjs, and returns the summary (board path, axis, one line per direction with its bet and cost, issues) without ranking. Project source stays untouched.",
+      "assertions": [
+        "Exactly 3 directions are produced, each in its own folder with an index.html",
+        "The bets are written down before any direction is built, and direction 1 keeps the current Trip page's patterns",
+        "No direction's index.html loads anything from an outside URL (no CDN, framework or web font links)",
+        "The summary describes each direction's bet and cost without ranking them or naming a favorite"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "explore this page before we build: the empty dashboard new teams see. goal is getting them to invite a teammate. 4 directions, density axis",
+      "expected_output": "The agent builds four directions spread along the density axis, collects them on one board.html, and writes only inside the run folder.",
+      "assertions": [
+        "Four directions are built, spread from calm to dense",
+        "A board.html file is produced that contains every direction",
+        "No file in the project's source tree is modified"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Show me 8 different directions for the pricing page. Goal: make the yearly plans easier to compare.",
+      "expected_output": "The skill builds 3 directions by default and 5 at most. The agent caps the run at 5 directions (or asks whether 5 is acceptable) and says why, instead of building 8.",
+      "assertions": [
+        "No more than 5 directions are planned or built",
+        "The response tells the user the run is capped at 5 directions",
+        "No extra review or scoring agents are started beyond one per direction"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  { "query": "add Portless to apps/web please", "should_trigger": true, "split": "train" },
+  { "query": "my dev servers clash on ports whenever I run the marketing site and the dashboard at the same time", "should_trigger": true, "split": "train" },
+  { "query": "Every project I start grabs localhost:3000 and the second one quietly moves to 3001. Can each Next app get its own stable https name?", "should_trigger": true, "split": "train" },
+  { "query": "Set up named .localhost URLs for each app in our Turborepo so agents stop opening the wrong port", "should_trigger": true, "split": "train" },
+  { "query": "which local URL do I open for the admin app? the port keeps changing", "should_trigger": true, "split": "train" },
+  { "query": "I want https://acme.localhost instead of localhost:3000 for this Next.js project, with a way to still run plain next dev", "should_trigger": true, "split": "train" },
+  { "query": "Add Vercel Web Analytics and GA4 to this Next.js app", "should_trigger": false, "split": "train", "instead": "web-analytics-setup" },
+  { "query": "Add a line to AGENTS.md telling agents the dev URL is https://acme.localhost", "should_trigger": false, "split": "train", "instead": "agents-md-revise" },
+  { "query": "Expose my Next dev server so my phone on the same wifi can open it", "should_trigger": false, "split": "train" },
+  { "query": "Write a plan for moving our monorepo's dev setup to Portless; don't change anything yet", "should_trigger": false, "split": "train", "instead": "write-plan" },
+  { "query": "Set up an ngrok tunnel so a client can see my local build", "should_trigger": false, "split": "train" },
+  { "query": "Security pass on this diff before merge: it widens our Host guard to accept *.local", "should_trigger": false, "split": "train", "instead": "adversarial-security-review" },
+  { "query": "portless for the monorepo? web and docs apps, keep convex dev as it is", "should_trigger": true, "split": "validation" },
+  { "query": "Auth callbacks break because two of my local apps share localhost:3000. Give them separate stable hostnames.", "should_trigger": true, "split": "validation" },
+  { "query": "add Portless, the app is in ./site and I'd like it to be shop.localhost", "should_trigger": true, "split": "validation" },
+  { "query": "We just moved to git worktrees and every worktree's dev server collides on the same port. Can Portless give each branch its own URL in our Next app?", "should_trigger": true, "split": "validation" },
+  { "query": "Check this plan for adding Portless to our turborepo against the repo. Is it right?", "should_trigger": false, "split": "validation", "instead": "areyousure" },
+  { "query": "Point shop.acme.example.com at our Vercel production deployment", "should_trigger": false, "split": "validation" },
+  { "query": "My Next app runs at https://shop.localhost now; check the checkout page on mobile with screenshots", "should_trigger": false, "split": "validation", "instead": "visual-proof" },
+  { "query": "Kill whatever process is holding port 3000", "should_trigger": false, "split": "validation" }
+]

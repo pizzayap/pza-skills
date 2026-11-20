@@ -1,0 +1,108 @@
+[
+  {
+    "query": "where do people get stuck in this flow? signup, starting at /signup",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "walk this as a new user: the invite-a-teammate flow from /settings",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "can a screen-reader user and a total newbie get through the reconnect flow? show me where each one trips",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "how fast can someone who knows the app get through CSV import? find what slows a power user down, with screenshots",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "new user and screen reader user going through signup: where do they get stuck? start at /join",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "our invite flow loses people somewhere. have a few personas try it from /team and report where it breaks",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "first-timer vs power user on the invite flow, side by side, with a step-by-step screenshot trail",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "test this flow with personas: booking a table from the restaurant page to confirmation (stop before it actually books)",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Could a keyboard-only user finish checkout on the staging site? And a first-time visitor? Walk it and give me fixes per element.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "add a persona for a grandparent opening a shared trip link on their phone, plus the usual three, and walk the share-link flow",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "review the craft of the ShareButton: hit area, label, contrast",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ui-review"
+  },
+  {
+    "query": "explain why the checkout page design works",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "explain-design"
+  },
+  {
+    "query": "check the onboarding screen on mobile after my layout change",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "explore a few directions for the invite flow before we build it",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-directions"
+  },
+  {
+    "query": "see how the RecipientChip looks with a 60-character email and no display name",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "edge-case"
+  },
+  {
+    "query": "write Playwright e2e tests for the checkout flow",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "check the signup flow does everything issue #42 asked for",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "write a script for interviewing five real users about onboarding",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "add analytics events to every step of the signup funnel",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "build user personas for our marketing plan: demographics, goals, quotes",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

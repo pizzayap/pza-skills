@@ -1,0 +1,36 @@
+{
+  "skill_name": "web-analytics-setup",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add analytics to our Next.js App Router site: Vercel Web Analytics, GA4 and Search Console. Domain is lumenbooks.example.com and we control its DNS.",
+      "expected_output": "The agent inventories the project and fills a status table for each tool, installs @vercel/analytics and mounts <Analytics /> in the root layout, adds GA4 through GoogleAnalytics from @next/third-parties/google rendered only when NEXT_PUBLIC_GA_MEASUREMENT_ID is set, adds a placeholder to .env.example, recommends a Domain property verified by DNS TXT record and sitemap submission, documents env vars and post-deploy steps in a short table, and reports the Tool/Before/After/Proof table. Any tool without a Proof entry is reported as not done.",
+      "assertions": [
+        "GA4 is rendered with GoogleAnalytics from @next/third-parties/google and only when NEXT_PUBLIC_GA_MEASUREMENT_ID is set, not with a pasted script tag or a NODE_ENV check alone",
+        "<Analytics /> from @vercel/analytics is mounted in the root layout",
+        "Search Console uses a Domain property verified with a DNS TXT record",
+        "No real measurement ID or verification token appears in committed docs or .env.example, and any tool with no observed hit is reported as not done"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "vercel analytics says awaiting data, it's been 2 days. what gives",
+      "expected_output": "The agent inventories first and fills the status table (none, code only, dashboard only, or both) for each tool, then stops and fixes only the missing half, for example mounting <Analytics /> if only the dashboard toggle is on, or asking for the toggle and a redeploy if only the code shipped. It does not reinstall what works and does not report it fixed until the Analytics tab shows production data.",
+      "assertions": [
+        "A status table of each tool's current state is produced before anything is changed",
+        "Only the missing half is changed; a tool that already works is not reinstalled or rewired",
+        "The agent does not report Vercel Analytics as fixed without a proof entry showing data from the production site"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Set up GA4 and Search Console for our Next site. It only lives on its default *.vercel.app address, no custom domain. Use a domain property for Search Console. Also put a signups number in the report based on clicks on the Get Started button.",
+      "expected_output": "The agent uses a URL-prefix Search Console property (HTML file in public/ or a metadata verification tag), explaining that a *.vercel.app host has no DNS the user controls, keeps the verification in place permanently, and declines to report CTA clicks as signups.",
+      "assertions": [
+        "Search Console is set up as a URL-prefix property with an HTML file or meta tag, with the reason that a vercel.app host has no DNS the user controls",
+        "Clicks on the Get Started button are not reported as signups",
+        "The agent says the verification file or tag must stay in place after verifying"
+      ]
+    }
+  ]
+}

@@ -5,6 +5,15 @@ not permission to execute. Verify installed versions and current official help
 before presenting exact app labels or commands. If unavailable, describe the
 manual review and state what remains unverified. Do not run every example.
 
+Contents:
+
+- [Ordinary files, cloud storage, and Trash](#ordinary-files-cloud-storage-and-trash)
+- [Xcode and simulators](#xcode-and-simulators)
+- [Package caches and developer tools](#package-caches-and-developer-tools)
+- [Coding assistants, worktrees, and app state](#coding-assistants-worktrees-and-app-state)
+- [Models, browser binaries, containers, and VMs](#models-browser-binaries-containers-and-vms)
+- [System assets and snapshots](#system-assets-and-snapshots)
+
 ## Ordinary files, cloud storage, and Trash
 
 Start with System Settings → General → Storage or Finder. For Downloads and

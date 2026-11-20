@@ -7,7 +7,6 @@ description: >-
   existing brief backlog into status buckets. Use for "tear down this
   competitor", "what can we learn from X", "what's left in the todos". Not
   for copy or pricing.
-user-invocable: true
 argument-hint: '[competitor-url-or-screenshots] [product-surface] | inventory [briefs-dir]'
 ---
 

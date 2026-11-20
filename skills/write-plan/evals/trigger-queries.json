@@ -1,0 +1,109 @@
+[
+  {
+    "query": "plan this: a 'remember me' option on the login form",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "write a plan for moving image uploads from the API server to presigned S3 URLs",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "spec this out before we touch anything: offline drafts in the editor",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Before I refactor the cart reducer, lay out the steps, the files involved and how we'll verify it. Don't write code yet.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "need an implementation plan a fresh session can pick up for issue #64 (CSV import). no code",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "how should we approach migrating from REST to tRPC? put the steps in docs/plans/trpc.md",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "can you write up a plan for swapping moment for date-fns? just the plan",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "spec out the notifications refactor, I only want the plan, nothing built",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "plan the image upload feature so a new session can implement it without asking questions",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "planning only: how do we add rate limiting to /api/upload? files, steps, out of scope, verification",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "validate the plan in docs/plans/offline-mode.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "areyousure"
+  },
+  {
+    "query": "run the whole loop on adding SSO: plan, build, review, commit",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "spec check: does PR #140 do what the PRD says?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "we have a 20-issue milestone; orchestrate this across workers",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "session-orchestrator"
+  },
+  {
+    "query": "implement step 2 of the plan we wrote yesterday, nothing else",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "what's a good template for a product roadmap doc?",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "what's next on the roadmap? I just want one task to start a new session with",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "take the next ready issue and get it merged",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "explain how the auth middleware works right now",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "the plan's implemented, did we miss anything from it?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "arewedone"
+  }
+]

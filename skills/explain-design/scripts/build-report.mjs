@@ -145,7 +145,20 @@ for (const holder of [data.image, data.page?.image, ...sections.map((sec) => sec
   if (holder && local(holder.src)) holder.src = embed(holder.src, dataDir)
 }
 
-const template = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../assets/report-template.html"), "utf8")
+// The template is assembled from assets/report/: template.html is the page shell, and each
+// "<!-- @include <file> -->" line in it is replaced by that sibling file, in order. The styles
+// and the one script stay inline, so the report is still a single file with no dependencies.
+const pieces = resolve(dirname(fileURLToPath(import.meta.url)), "../assets/report")
+const piece = (name) => {
+  try {
+    return readFileSync(join(pieces, name), "utf8")
+  } catch (error) {
+    fail(`template piece assets/report/${name} is missing or unreadable: ${error.message}`)
+  }
+}
+const template = piece("template.html").replace(/^<!-- @include ([\w.-]+) -->\n/gm, (_, name) => piece(name))
+const unexpanded = /<!-- @include[^>]*-->/.exec(template)
+if (unexpanded) fail(`template has an include marker it could not expand: ${unexpanded[0]}`)
 const block = /(<script type="application\/json" id="report-data">)[\s\S]*?(<\/script>)/
 if (!block.test(template)) fail("template is missing its report-data block")
 

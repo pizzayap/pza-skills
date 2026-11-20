@@ -6,15 +6,15 @@ description: >-
   throwaway page, then apply approved fixes with a Before and After toggle. Use
   when the user says "review this component", "what's off about this card", or
   "polish this UI". Not for stress tests (edge-case), new designs
-  (design-variant) or motion code (review-animations).
-user-invocable: true
+  (design-variant) or motion code (review-animations, a skill outside this
+  collection).
 disable-model-invocation: true
 argument-hint: '[component name or path] [--only typography,color,...]'
 ---
 
 # UI review
 
-This skill does one thing: it inspects one rendered component the way a senior designer would, points at each problem on the component itself, and fixes what the user approves. It does not feed it worst-case content (that's `edge-case`), invent alternatives (that's `design-variant`), walk product states (that's `state-machine`) or review animation code (that's `review-animations`).
+This skill does one thing: it inspects one rendered component the way a senior designer would, points at each problem on the component itself, and fixes what the user approves. It does not feed it worst-case content (that's `edge-case`), invent alternatives (that's `design-variant`), walk product states (that's `state-machine`) or review animation code (that's `review-animations`, a skill outside this collection).
 
 ## Stance
 

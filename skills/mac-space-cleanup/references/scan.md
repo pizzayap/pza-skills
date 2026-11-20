@@ -1,5 +1,12 @@
 # Staged read-only scan
 
+Contents:
+
+- [Baseline and access](#baseline-and-access)
+- [Discover, then narrow](#discover-then-narrow)
+- [Focused usage evidence](#focused-usage-evidence)
+- [Measurement and report rules](#measurement-and-report-rules)
+
 ## Baseline and access
 
 Use macOS tools already present. Record the local timestamp and OS version, then

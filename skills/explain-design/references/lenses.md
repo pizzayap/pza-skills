@@ -4,6 +4,12 @@ There are two sets. **Craft** (1 to 8) explains how the design looks and why tha
 
 Each lens lists what to look at, the principle that makes it work, and how to measure it. When the design's own system sets a value on purpose, the system wins. Explain the choice instead of flagging it.
 
+Contents:
+
+- Craft: [1. Hierarchy](#1-hierarchy), [2. Typography](#2-typography), [3. Layout and spacing](#3-layout-and-spacing), [4. Color and contrast](#4-color-and-contrast), [5. Consistency](#5-consistency), [6. Content and writing](#6-content-and-writing), [7. Interaction and motion](#7-interaction-and-motion), [8. Accessibility](#8-accessibility)
+- Behaviour: [9. Value and clarity](#9-value-and-clarity), [10. Choice and cognitive load](#10-choice-and-cognitive-load), [11. Trust and proof](#11-trust-and-proof), [12. Motivation and persuasion](#12-motivation-and-persuasion), [13. Friction and commitment](#13-friction-and-commitment), [14. Attention and guidance](#14-attention-and-guidance), [15. Feedback and expectation](#15-feedback-and-expectation)
+- Writing points: [Measuring a live page](#measuring-a-live-page)
+
 # Craft
 
 ## 1. Hierarchy

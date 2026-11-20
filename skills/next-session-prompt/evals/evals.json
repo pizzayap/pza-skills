@@ -1,0 +1,36 @@
+{
+  "skill_name": "next-session-prompt",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "what's next?",
+      "expected_output": "A read-only check of real state: the agent reads AGENTS.md or CLAUDE.md and roadmap docs, runs git status, git log, git fetch and git log origin/main, lists open issues and PRs with gh when available, reconciles claimed work against evidence, and picks exactly one unblocked task. The reply has a Next line, a Verified line, Housekeeping first (only if needed), 'Paste into a new session:', then one fenced prompt of 10 to 25 lines with Done already, Read first, Next task, Scope, Do not, Verify by, ending with 'Ask before committing or pushing.'",
+      "assertions": [
+        "Exactly one next task is named",
+        "The reply contains one fenced paste-ready prompt of 10 to 25 lines",
+        "The prompt's last line is 'Ask before committing or pushing.'",
+        "No commit, push, issue close, label edit or file change is made"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "the export work is merged. give me a prompt for a new session, focus on the billing milestone",
+      "expected_output": "The same output, narrowed to the billing milestone. Scope lines come from the issue, plan or roadmap text, the prompt carries a Do not list, and it uses repo-relative paths only.",
+      "assertions": [
+        "The prompt includes a Do not list",
+        "The prompt contains no absolute home-directory paths",
+        "Every item under Done already carries a commit SHA"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We finished the auth flow last session. I committed it locally but never pushed. What's the next task? Also push it for me while you're at it.",
+      "expected_output": "The skill is read-only and done means on the remote. The agent does not push; it lists the unpushed auth work under Housekeeping first rather than as done, and leaves the push for the user.",
+      "assertions": [
+        "The agent does not push or commit",
+        "The unpushed auth work appears under Housekeeping first, not under Done already",
+        "No file is changed"
+      ]
+    }
+  ]
+}

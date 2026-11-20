@@ -1,0 +1,189 @@
+  /* Sheet: color and type tokens, the one-screen page, head, body grid, minimap, storyboard, stepper and figure. */
+  :root {
+    --ink: #1a1a1a;
+    --text: #454545;
+    --muted: #6b6b6b;
+    --faint: #9a9a9a;
+    --hair: #d9d9d6;
+    --soft: #f3f3f1;
+    --paper: #fff;
+    --desk: #f2f2ef;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --col: 236px;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font: 12.5px/1.5 var(--sans);
+    color: var(--text);
+    background: var(--desk);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, p, figure { margin: 0; }
+
+  .caps {
+    font-size: 10.5px;
+    line-height: 1.3;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Sheet: always one screen. */
+  .page { height: 100vh; padding: 16px; display: flex; }
+  .sheet {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 16px;
+    padding: 26px 32px 18px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Head: title left, notes right */
+  .sh-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+    gap: 40px;
+    align-items: start;
+  }
+  .sh-eyebrow { color: var(--faint); }
+  .sh-title {
+    margin-top: 8px;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .sh-notes { display: grid; gap: 6px; }
+  .sh-notes .caps { color: var(--ink); }
+  .sh-url {
+    display: inline-block;
+    max-width: 100%;
+    margin-top: 8px;
+    overflow: hidden;
+    font: 12px/1.3 var(--mono);
+    color: var(--muted);
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sh-url:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .sh-idea { font-size: 14px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
+  .sh-summary { color: var(--muted); text-wrap: pretty; }
+  .sh-audience { color: var(--text); text-wrap: pretty; }
+  .sh-audience .caps { margin-right: 8px; color: var(--faint); }
+
+  /* Body: drawing, then spec column */
+  .sh-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 272px;
+    gap: 36px;
+    min-height: 0;
+  }
+  .sh-body[data-nospec] { grid-template-columns: minmax(0, 1fr); }
+  .sh-body[data-map] { grid-template-columns: auto minmax(0, 1fr) 272px; }
+  .sh-body[data-map][data-nospec],
+  [data-spec="drawer"] .sh-body[data-map] { grid-template-columns: auto minmax(0, 1fr); }
+
+  /* Minimap: the whole page, one band per section. */
+  .sh-map { min-height: 0; height: 100%; }
+  .sh-map-inner { position: relative; height: 100%; width: max-content; }
+  .sh-map-inner img { display: block; height: 100%; width: auto; outline: 1px solid var(--hair); }
+  .sh-band {
+    all: unset;
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 1px 0 rgba(26, 26, 26, 0.35);
+    cursor: pointer;
+    transition: background-color 160ms ease;
+  }
+  .sh-band:hover { background: rgba(255, 255, 255, 0.15); }
+  .sh-band[data-current] { z-index: 1; background: transparent; outline: 1.5px solid var(--ink); outline-offset: -1px; }
+  .sh-band:focus-visible { outline: 2px solid var(--ink); }
+  .sh-band-n { position: absolute; top: 3px; left: 3px; padding: 1px 3px; font: 500 9px/1 var(--mono); color: var(--ink); background: var(--paper); border-radius: 2px; }
+
+  /* Overview storyboard */
+  .sh-board { display: grid; gap: 14px; line-height: normal; }
+  /* Thumbs sit above the leader lines, so a line to an inner thumb passes behind the outer one. */
+  .sh-thumb { all: unset; position: relative; z-index: 1; display: grid; gap: 6px; min-width: 0; background: var(--paper); cursor: pointer; }
+  .sh-thumb-img { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; background: var(--soft); outline: 1px solid var(--hair); border-radius: 3px; transition: outline-color 160ms ease; }
+  .sh-thumb-img img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .sh-thumb:hover .sh-thumb-img,
+  .sh-thumb:focus-visible .sh-thumb-img,
+  .sh-thumb[data-active] .sh-thumb-img { outline: 1.5px solid var(--ink); }
+  .sh-thumb-cap { overflow: hidden; color: var(--muted); white-space: nowrap; text-overflow: ellipsis; }
+  .sh-thumb-cap b { font-weight: 500; color: var(--ink); }
+
+  .sh-figsum { display: block; max-width: 68ch; margin: 4px auto 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); text-align: center; text-wrap: pretty; }
+  .sh-steps { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+  .sh-step {
+    all: unset;
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    font: 13px/1 var(--sans);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .sh-step:hover { color: var(--paper); background: var(--ink); }
+  .sh-step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .sh-step-label { min-width: 210px; white-space: nowrap; }
+
+  .sh-draw {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--col) minmax(0, 1fr) var(--col);
+    gap: 64px;
+    min-height: 0;
+  }
+  [data-spec="drawer"] .sh-body { grid-template-columns: minmax(0, 1fr); }
+  [data-spec="drawer"] .sh-draw { --col: 264px; gap: 40px; }
+  .sh-col { position: relative; min-height: 0; }
+  .sh-fig {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+  }
+  .sh-frame { position: relative; line-height: 0; }
+  .sh-frame > img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    outline: 1px solid var(--hair);
+    outline-offset: 0;
+    border-radius: 2px;
+  }
+  .sh-empty {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 240px;
+    color: var(--faint);
+    border: 1px dashed var(--hair);
+    border-radius: 8px;
+  }
+  .sh-figcap { color: var(--faint); text-align: center; }
+

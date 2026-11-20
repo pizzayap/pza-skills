@@ -7,7 +7,6 @@ description: >-
   empty/error/loading state", or "build a state switcher for this card". Not for
   stress-testing content (edge-case), exploring alternative designs
   (design-variant) or critiquing finished UI (ui-review).
-user-invocable: true
 disable-model-invocation: true
 argument-hint: '[component name or path]'
 ---

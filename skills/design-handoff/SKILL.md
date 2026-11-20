@@ -9,7 +9,6 @@ description: >-
   teardown (explain-design), designing missing states (state-machine),
   stress-testing content (edge-case), a public build-in-public video
   (build-in-public-video) or a launch video.
-user-invocable: true
 argument-hint: '[prototype folder or URL] [--deck-only | --video-only] [--spec] [--voice record|elevenlabs|fish|local|clips|none] [--out <dir>]'
 ---
 
@@ -49,7 +48,7 @@ Two failure modes, and the first is worse:
 
 The scripts need Node 20 or later, ffmpeg and Google Chrome already on the computer; if one is missing, setup stops and says which, and the designer installs it. Everything else the skill downloads happens in one setup command, so the designer approves it once instead of mid-task. Before running it, tell the designer in plain words:
 
-> Setup downloads about 370 MB once: the packages that capture the prototype and render the video (about 200 MB, from npm) and the browser the video renders in (about 170 MB, from remotion.media). With the free voice, add about 490 MB (the Kokoro voice and its model, from npm and huggingface.co). Once unpacked, it takes about 1 GB of disk, or 1.5 GB with the free voice, including a render cache. Codex will ask you to approve this one command, because it needs the network and writes into the skill's folder and npm's download cache.
+> Setup downloads about 370 MB once: the packages that capture the prototype and render the video (about 200 MB, from npm) and the browser the video renders in (about 170 MB, from remotion.media). With the free voice, add about 490 MB (the Kokoro voice and its model, from npm and huggingface.co). Once unpacked, it takes about 1 GB of disk, or 1.5 GB with the free voice, including a render cache. If your coding agent runs commands in a sandbox, it will ask you to approve this one command, because it needs the network and writes into the skill's folder and npm's download cache.
 
 ```bash
 node <skill-dir>/scripts/setup.mjs [--voice local] [--project .]
@@ -57,7 +56,7 @@ node <skill-dir>/scripts/setup.mjs [--voice local] [--project .]
 
 `<skill-dir>` is the folder that holds this file. Add `--voice local` when the designer may want the free voice (ask before setup, or add it later by running setup again), and `--project .` when the prototype's own packages are not installed yet (it uses `npm ci` when the project has a `package-lock.json`; otherwise it asks the designer to run the project's own install). Setup skips anything already there, keeps the free voice once it is installed, and fails within seconds when the network or a folder is blocked. It prints what to do in each case.
 
-Later steps also start local programs: the prototype's dev server opens a local port, the capture, deck check and video render each start a browser, and the render writes a cache of about 200 MB into the skill's folder. In the Codex app each of these asks for approval the first time. Tell the designer this is expected. If Codex offers to approve similar commands for the rest of the session, accepting saves repeated prompts. When a script says Chrome is installed but could not start, the sandbox blocked it: approve and rerun, and never install a second browser.
+Later steps also start local programs: the prototype's dev server opens a local port, the capture, deck check and video render each start a browser, and the render writes a cache of about 200 MB into the skill's folder. In a sandboxed agent, such as the Codex app, each of these asks for approval the first time. Tell the designer this is expected. If the agent offers to approve similar commands for the rest of the session, accepting saves repeated prompts. When a script says Chrome is installed but could not start, the sandbox blocked it: approve and rerun, and never install a second browser.
 
 Remotion is free for individuals and for companies of up to three people; larger companies need a Remotion Company License (remotion.dev/license).
 

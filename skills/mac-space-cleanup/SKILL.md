@@ -5,6 +5,7 @@ description: >-
   Data and other storage, and guide manual cleanup with measured tradeoffs.
   Use when the user wants more disk space or a storage review. AI-assisted
   cleanup requires approval of specific reviewed actions.
+disable-model-invocation: true
 ---
 
 # Mac Space Cleanup

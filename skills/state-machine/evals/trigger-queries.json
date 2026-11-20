@@ -1,0 +1,109 @@
+[
+  {
+    "query": "show me every state of the ConnectionCard so I can design them",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I need to design the empty/error/loading state for the ProjectsTable",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "can you put the BillingBanner in all its states on one dev page? trial, limit reached, free vs pro, the works",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "what does the SyncStatus widget look like when auth expires or the connection drops? I want to flip through all of them with mock data",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "set up a page where i can click between the inbox list's empty, syncing and error views to design each one",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "The PaymentMethodRow has branches for an expired card, no card on file and a read-only role. Render all of them with a switcher, and don't touch the component.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the upload prototype never got a designed error or loading view. lay out every state the UploadPanel code can reach so I can design the missing ones",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "build a state swticher for the TeamMemberCard",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Our design file has 12 states for NotificationBell but I suspect the code only reaches some. Map the real branches and mock each one on a lab page.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Before I touch visuals on the QuotaMeter, I want to see it signed out, over the limit, on the free plan and while refetching. Mock the data at the fetch boundary please.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "what happens to the TeamCard when someone's name is a 40-letter German compound and the bio is 300 characters?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "edge-case"
+  },
+  {
+    "query": "try three really different layouts for the BillingSummary card and let me pick one",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-variant"
+  },
+  {
+    "query": "the PlanBadge contrast and padding look off to me, can you review it and fix what's wrong",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ui-review"
+  },
+  {
+    "query": "the prototype is finished, capture every screen and state and make a deck for the engineers",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-handoff"
+  },
+  {
+    "query": "I just changed the dashboard layout, prove it works on mobile and desktop",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "write an xstate state machine for the checkout logic with guards for payment failure",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "walk the reconnect flow as a first-time user and a screen-reader user and tell me where they get stuck",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "persona-walkthrough"
+  },
+  {
+    "query": "add a loading skeleton to the ProjectsTable while the query runs",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "the error state on the login form never shows when the API returns 401, fix it",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "render the OrderRow with a 9-digit total, a missing customer name and at 320px wide",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "edge-case"
+  }
+]

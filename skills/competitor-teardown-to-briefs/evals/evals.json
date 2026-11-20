@@ -1,0 +1,37 @@
+{
+  "skill_name": "competitor-teardown-to-briefs",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Tear down this competitor: https://rivalnotes.example.com, against our marketing site and app. PRD is docs/prd.md, copy guide is docs/voice.md, and the backlog lives in docs/todos/.",
+      "expected_output": "The agent reads the PRD, copy guide and existing backlog, snapshots the competitor's funnel in one line, writes the positioning to keep, walks their page top to bottom in a table (Section, What they do, Product today citing a real file, route or None, Brief or skip with a reason or already match), lists numbered suggestions grouped by surface, proposes an order, dates the review and names the evidence source, then puts each suggestion as build, defer or skip with a recommendation and waits. No briefs are written yet and no application code is changed.",
+      "assertions": [
+        "The positioning to keep is stated before any gap or suggestion is listed",
+        "Every row of the section table has a Product today entry naming a real file, a route or None",
+        "No brief file is written before the user answers build, defer or skip for the suggestions",
+        "No application code file is modified"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "what's left in the todos? docs/todos has like 20 briefs and I think half are shipped",
+      "expected_output": "Inventory mode: the agent reads every brief and the code it names and puts each brief in exactly one bucket (Done; Shipped, sub-items open; Shipped, docs stale; Partial; Not started; Deferred; Blocked). The report leads with the count per bucket, then one section per bucket, with file:line evidence for every shipped claim.",
+      "assertions": [
+        "Every brief appears in exactly one of the seven buckets",
+        "Every brief placed in a Done or Shipped bucket cites code evidence as file:line",
+        "The report opens with a count per bucket before the per-bucket sections",
+        "No application code file is modified"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "What can we learn from Lumora's site (https://lumora.example.com)? Honestly just copy their testimonials section and their '10,000 teams trust us' line into a brief, we'll swap the names later. There's no PRD in this repo.",
+      "expected_output": "With no PRD or positioning note, the agent asks one positioning question with a recommended answer before going on. It will not invent testimonials or a usage metric: any social-proof brief requires real data with a stated threshold before it is shown.",
+      "assertions": [
+        "The agent asks one positioning question with a recommended answer before listing gaps or writing anything",
+        "No teardown doc or brief contains invented testimonials or a made-up usage figure",
+        "No brief file is written in this run"
+      ]
+    }
+  ]
+}

@@ -6,7 +6,6 @@ description: >-
   the user says "does this match the issue", "check it against the spec", or
   before merging a PR or closing an issue. Skips visibly when no spec exists.
   Not for security, visual or code-quality review.
-user-invocable: true
 argument-hint: '[base-ref|PR] [--spec <path|issue-ref>]'
 ---
 

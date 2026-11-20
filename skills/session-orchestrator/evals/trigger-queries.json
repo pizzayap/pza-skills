@@ -1,0 +1,108 @@
+[
+  {
+    "query": "orchestrate this: the 8 ready issues in milestone v2.3, two lanes",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "run the backlog, everything labelled `ready`",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "farm this out: 40 icon exports listed in assets/icons/todo.md",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "This research job (30 competitor pages to summarize) will never fit in one context. Set up a master session that hands each batch to a fresh worker and tracks it in a file.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "work #12, #13 and #14 and merge them all",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "resume from .orchestrator/state.md, we got compacted mid-backlog",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "9 independent tickets, each in its own worker, in parallel please",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "the backlog will outlast this context window. set up a master session with workers",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "orchestrate the 20 issues in the milestone across workers",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "the plan has 14 independent tasks; hand each to its own worker and accept them on evidence",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "work issue #19 to a merged PR",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "orchestrate adding a loading spinner to the Save button",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "check whether the export change on branch feat/export is actually done",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "ship this one change through plan, review and commit: debounce the search box",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "fix everything from the maintainability audit and merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "review-fix-loop"
+  },
+  {
+    "query": "last unit just merged, what's the single next task for a fresh session?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "spec this out: a plan for the image upload feature",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "write-plan"
+  },
+  {
+    "query": "how many open issues are labelled ready?",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "set up a GitHub Actions matrix so tests run in parallel",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "loop over every repo in ~/code and run npm audit",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

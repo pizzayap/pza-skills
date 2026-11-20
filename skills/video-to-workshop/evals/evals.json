@@ -1,0 +1,36 @@
+{
+  "skill_name": "video-to-workshop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Turn this video into a workshop: the screen-recorded tutorial is at https://video.example.com/watch/agent-landing-page the transcript is transcripts/agent-landing-page.vtt, and frames I pulled every 10 seconds are in frames/agent-landing-page/. Audience is non-technical marketers, 90 minutes in total.",
+      "expected_output": "The agent reads the whole transcript, keeps a caption-correction list, maps chapters to delivery modes (SAY, SLIDE, EXPLAINER, DEMO, ROOM DOES) and plans in a notes file: promise, lede, 2 to 3 parts, 5 to 8 stages with source timestamps, agent run lengths, costs and open warning items. It proposes the one-sentence promise and waits for agreement before writing the workshop page.",
+      "assertions": [
+        "A single promise sentence of 25 words or fewer is proposed and the user is asked to agree before any workshop page is written",
+        "The plan has 2 to 3 parts and 5 to 8 stages in total, and every stage cites source timestamps from the transcript or is labeled as a workshop invention",
+        "Each mapped passage carries one delivery mode (SAY, SLIDE, EXPLAINER, DEMO or ROOM DOES), and only ROOM DOES passages become stages"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "ok here's everything for the supabase magic-link tutorial: transcripts/supabase-auth.txt and the frames in frames/. we agreed the promise yesterday: 'Leave with a working magic-link login on your own page.' 60 min, total beginners. write the page",
+      "expected_output": "A workshop page built from the stage template, each stage with a 'Stage N · M min' header, You'll have, Watch, 3 to 6 steps with labeled prompts, a real frame and caption, Done when, and collapsed Stuck?, From the video and For the facilitator blocks. Setup sits in Before the day with costs and a glossary. A notes file holds the chapter map, stage map, caption corrections, image provenance and Removed on purpose. The report block lists the promise, parts, totals marked 'Planned, untested', checklist result, costs and open items.",
+      "assertions": [
+        "Every stage has a header with its minutes and a 'Done when' check",
+        "The stated total equals the sum of the timed stage minutes, with setup and optional extras listed outside the total",
+        "Every prompt on the page is labeled either as from the video at a MM:SS timestamp or as a workshop prompt",
+        "The final report marks the timings as planned and untested"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Make a class from this tutorial: https://video.example.com/watch/notion-agent-dashboard. I don't have a transcript or captions, just work from the title and description, it's pretty obvious what it covers.",
+      "expected_output": "The source gate stops the work: with no transcript or captions the agent asks for them (and for screenshots if frames cannot be pulled) instead of planning. Stopping here is the correct result.",
+      "assertions": [
+        "The agent asks for the transcript or captions before planning",
+        "No promise, stage plan or workshop page is produced",
+        "The video's method is not described from its title, description or memory"
+      ]
+    }
+  ]
+}

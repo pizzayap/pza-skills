@@ -7,7 +7,6 @@ description: >-
   write a build brief once every look is approved. Use for "generate concepts
   for", "review these concepts", "write the build brief". Not for a personal
   taste file (that's taste-file) or final assets.
-user-invocable: true
 argument-hint: '[concept|review|brief] [asset] [look] [idea]'
 ---
 

@@ -1,0 +1,110 @@
+[
+  {
+    "query": "ship this: add a --dry-run flag to the sync command",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "take it from plan to commit: make the toast auto-dismiss after 5s",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "run the whole loop on the empty-inbox copy fix, stop at each gate",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I want this change planned, double-checked, built, reviewed and committed, with you stopping for me between steps: lazy-load the charts on the dashboard",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "here's an idea for a CSV import on the contacts page. get it all the way to a commit",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Carry docs/plans/rate-limit.md through implementation, review and a commit. Stop before committing.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "ship the new rate limiter and capture any lessons in AGENTS.md at the end",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "shipit: retry with backoff in src/net/fetcher.ts, --stop-at review",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "no ticket for this one, just ship a --json flag for the CLI, plan to commit",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "take this from idea to a committed change: dark mode toggle in settings",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "just write a plan for the notifications refactor, don't build anything",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "write-plan"
+  },
+  {
+    "query": "only need the next-session prompt, nothing else",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "ship the fix for issue #42 as a PR with failure modes and evidence, close it after merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "ship these 9 independent tickets in parallel with workers",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "session-orchestrator"
+  },
+  {
+    "query": "the code review is done, work through the findings and merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "review-fix-loop"
+  },
+  {
+    "query": "commit what I've got with a decent message",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "I already implemented the toast change. is this done?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "arewedone"
+  },
+  {
+    "query": "check this plan before I implement it: docs/plans/toast.md",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "areyousure"
+  },
+  {
+    "query": "push main to origin",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "record this gotcha for next time: e2e needs PORT=4100",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "agents-md-revise"
+  }
+]

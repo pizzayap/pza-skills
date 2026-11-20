@@ -13,10 +13,13 @@ import { spawnSync } from "node:child_process"
 import { createRequire } from "node:module"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
+import { SKILL_DIR } from "./cli.mjs"
 import { readKey } from "./env.mjs"
 
 export const PROVIDERS = ["none", "local", "elevenlabs", "fish", "record", "clips"]
 export const KOKORO = { pkg: "kokoro-js@1.2.1", model: "onnx-community/Kokoro-82M-v1.0-ONNX", voice: "af_heart", speed: 1.1 }
+// Narration pace in spoken words a second: Kokoro measured 2.4 at speed 1, and the skill uses 1.1.
+export const WORDS_PER_SECOND = 2.6
 // Checked 2026-11-07 (docs/design-handoff-research.md). ElevenLabs premade voices differ by
 // account, so without --voice-id the script asks the account for its voices and takes George
 // if it is there, else the first one. Fish Audio's "Energetic Male" is the docs' example voice.
@@ -36,7 +39,7 @@ const ff = (args) => {
 }
 
 /** Speaks every line and returns [{ file, seconds }] in the same order. */
-export async function synthLines(provider, lines, { dir, voiceId, model, skillDir }) {
+export async function synthLines(provider, lines, { dir, voiceId, model }) {
   mkdirSync(dir, { recursive: true })
   let voice = voiceId
   let speak
@@ -44,7 +47,7 @@ export async function synthLines(provider, lines, { dir, voiceId, model, skillDi
   let variant = ""
   if (provider === "local") {
     voice ??= KOKORO.voice
-    speak = await kokoro(skillDir, voice)
+    speak = await kokoro(voice)
     variant = String(KOKORO.speed)
   } else if (provider === "elevenlabs") {
     const key = needKey(ELEVEN.keys, "ElevenLabs")
@@ -76,13 +79,13 @@ export async function synthLines(provider, lines, { dir, voiceId, model, skillDi
   return out
 }
 
-async function kokoro(skillDir, voice) {
+async function kokoro(voice) {
   let mod
   try {
-    const path = createRequire(join(skillDir, "noop.js")).resolve("kokoro-js")
+    const path = createRequire(join(SKILL_DIR, "noop.js")).resolve("kokoro-js")
     mod = await import(pathToFileURL(path).href)
   } catch {
-    throw new Error(`The free local voice is not installed (about 400 MB, plus a 90 MB model). Install it once with:\n  node "${join(skillDir, "scripts", "setup.mjs")}" --voice local`)
+    throw new Error(`The free local voice is not installed (about 400 MB, plus a 90 MB model). Install it once with:\n  node "${join(SKILL_DIR, "scripts", "setup.mjs")}" --voice local`)
   }
   let tts
   try {
@@ -90,7 +93,7 @@ async function kokoro(skillDir, voice) {
   } catch (e) {
     const cause = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`
     if (/fetch failed|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|network/i.test(cause))
-      throw new Error(`Could not download the Kokoro voice model from huggingface.co. This happens once, on first use (about 90 MB). Allow network access for this command (in the Codex app, approve the request), or run setup with --voice local, then try again.\n(${cause})`)
+      throw new Error(`Could not download the Kokoro voice model from huggingface.co. This happens once, on first use (about 90 MB). Allow network access for this command (in a sandboxed coding agent, approve the request), or run setup with --voice local, then try again.\n(${cause})`)
     throw new Error(`The Kokoro voice model did not load: ${cause}`)
   }
   if (!tts.voices?.[voice]) throw new Error(`Kokoro has no voice "${voice}". Try af_heart, af_bella, am_michael, bf_emma or bm_george.`)
@@ -226,7 +229,7 @@ export function splitRecording(take, lines, dir) {
     const file = join(dir, `take-${String(i + 1).padStart(2, "0")}.wav`)
     ff(["-i", take, "-ss", start.toFixed(3), "-to", end.toFixed(3), "-ac", "1", "-ar", "44100", file])
     const seconds = Math.max(0.1, end - start)
-    const expected = lines[i].split(/\s+/).length / 2.6
+    const expected = lines[i].split(/\s+/).length / WORDS_PER_SECOND
     if (seconds > expected * 2.2 + 1 || seconds < expected * 0.4)
       warnings.push(`line ${i + 1} runs ${seconds.toFixed(1)} s against about ${expected.toFixed(1)} s expected; check it was read once and in order`)
     out.push({ file, seconds })

@@ -1,0 +1,108 @@
+[
+  {
+    "query": "clone this website: https://tallyhq.example",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "extract the design system from quietfolio.example into a DESIGN.md, no code",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "rebuild northwind-outfitters.example locally so I can study its layouts and navigation",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "pull the colour tokens and type scale off https://quietfolio.example and write them up with evidence",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "recreate the pricing page layout from tallyhq.example/pricing as a working page, just that page",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "this awwwards site of the day has a wild WebGL hero. can you rebuild it, scroll effects and all?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "copy the look of our old marketing site (we own it) into the new Next app, every page template",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Map every layout and nav state of driftwood-studio.example and write a spec a dev could build from",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "homepage only: rebuild lumen-notes.example in plain html",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "The client authorized us to replicate their current site in React before the migration. Start from https://client-site.example and cover every page type.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "explain what makes driftwood-studio.example's homepage design so effective",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "explain-design"
+  },
+  {
+    "query": "design a one-page concept site for the corner tailor to show its owner",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "concept-pitch-site"
+  },
+  {
+    "query": "tear down tallyhq.example against our product and turn the good ideas into briefs",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "competitor-teardown-to-briefs"
+  },
+  {
+    "query": "does my implementation match the Figma? capture it at mobile and desktop",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "turn my saved Dribbble shots into a taste.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "taste-file"
+  },
+  {
+    "query": "scrape every product name and price from this shop into a CSV",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "I don't want a copy of their site; sketch a few original directions for our own checkout screen",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "design-directions"
+  },
+  {
+    "query": "download all the images from this site into a folder",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "embed their booking widget on our page with an iframe",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "what font is this site using?",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

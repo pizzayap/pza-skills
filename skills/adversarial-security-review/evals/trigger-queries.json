@@ -1,0 +1,108 @@
+[
+  {
+    "query": "security pass on my branch please, it touches the session cookie handling",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Is PR #212 safe to merge? It adds a webhook receiver that shells out to ffmpeg with the uploaded filename.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "check this PR for vulnerabilities: https://github.com/acme-tools/portal/pull/77",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Before this goes in, think like an attacker: who can reach the new /admin/export endpoint and what can they pull out of it?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "review the staged changes for injection or path traversal, I added a zip extractor in src/import/unzip.ts",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "can someone outside abuse anything in the diff against main? new GraphQL resolvers plus a redis cache key built from user input",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "quick sec review of the diff vs origin/main, only src/api/** changed",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "I bumped jsonwebtoken and rewrote token refresh. any way to forge or replay tokens with this change?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "threat-model the changes in this PR before we ship: there's a new image proxy at /proxy?url= that fetches whatever it's given",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "do a security pass on the staged diff, I'm about to commit the password reset flow",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Does PR #212 meet issue #190's acceptance criteria, no more and no less?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "do a full security audit of the entire monorepo, every package",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "check the new login screen on mobile and make sure nothing overlaps",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "the security review found 3 issues in PR #212; fix them one per commit and merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "review-fix-loop"
+  },
+  {
+    "query": "run npm audit and bump whatever is vulnerable",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "is the token refresh work done? did we cover expiry and logout?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "check this plan before I build it: store the refresh token in localStorage and rotate it hourly",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "areyousure"
+  },
+  {
+    "query": "explain how SameSite=Lax protects against CSRF and when it doesn't",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "work #310 (the stored XSS in comments) through to a merged PR",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "style and naming review of the diff, it reads messy",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

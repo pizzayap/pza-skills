@@ -7,7 +7,6 @@ description: >-
   says "plan this", "write a plan", or "spec this out" before a feature, fix,
   refactor or migration. To check a plan use `areyousure`; to run one use
   `ship-loop`.
-user-invocable: true
 argument-hint: '[goal-or-issue] [--file plan-path]'
 ---
 
@@ -100,7 +99,7 @@ Optional. Include each only when its trigger applies, and omit the heading entir
 
 ## Verification notes
 
-A plan is checked before anyone implements it. The checker (`areyousure`, or this skill if asked) fixes the plan in place and appends this block. The implementer never edits the plan, including this block.
+A plan is checked before anyone implements it. The checker (`areyousure`, or this skill if asked) reports its findings, applies the corrections the user accepts and appends this block. The implementer never edits the plan, including this block.
 
 ```markdown
 ## Verification notes

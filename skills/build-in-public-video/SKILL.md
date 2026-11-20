@@ -7,7 +7,6 @@ description: >-
   video about what I built" or "help me package this". Refuses topics with no
   first-hand material. Not for turning a tutorial into a class (that's
   video-to-workshop).
-user-invocable: true
 argument-hint: '[spark-url-or-idea] [shape: short|walkthrough|build-log|live|take]'
 ---
 

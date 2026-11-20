@@ -4,6 +4,19 @@ Use this workflow for sites whose identity depends on runtime graphics or substa
 
 The goal is behavioral and perceptual fidelity, not recovery of the source code. Do not assume the original library merely because an effect resembles it.
 
+Contents:
+
+- [Resolve The Actual Source](#resolve-the-actual-source)
+- [Detect The Runtime Architecture](#detect-the-runtime-architecture)
+- [Inspect Fresh Entry And Preloader](#inspect-fresh-entry-and-preloader)
+- [Capture A Temporal Storyboard](#capture-a-temporal-storyboard)
+- [Build The Experience Model](#build-the-experience-model)
+- [Interaction And Motion Signature](#interaction-and-motion-signature)
+- [Choose The Reproduction Technique](#choose-the-reproduction-technique)
+- [Performance And Lifecycle Contract](#performance-and-lifecycle-contract)
+- [EXPERIENCE.md Contract](#experiencemd-contract)
+- [Verification Gate](#verification-gate)
+
 ## Resolve The Actual Source
 
 Award galleries and inspiration directories are provenance, not necessarily the clone target.

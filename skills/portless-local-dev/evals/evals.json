@@ -1,0 +1,37 @@
+{
+  "skill_name": "portless-local-dev",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add Portless to this Next.js app so it runs at https://lumen.localhost instead of fighting over localhost:3000. We use pnpm.",
+      "expected_output": "The agent reads package.json, next.config, any Host or Origin guard, auth redirect settings and dev docs, confirms the dev script is a web server, pins Portless as a devDependency, wires `\"dev\": \"portless run next dev\"` with an explicit `\"portless\": \"lumen\"` name, applies the allowedDevOrigins row for the Next.js major, documents the URL, the Node 24 requirement, the first-run `portless trust` step and the `PORTLESS=0 pnpm run dev` bypass, adds the agent rule, and runs the verify checks. The report lists hostnames, files changed, the bypass, manual one-time steps and each check run or skipped with the reason.",
+      "assertions": [
+        "Portless is added to devDependencies in package.json, not only as a global install",
+        "The dev script does not call itself, and the hostname is set explicitly rather than inferred from the package name",
+        "The README documents the .localhost URL, the Node 24 requirement, the first-run portless trust step and a bypass command that runs the plain dev server",
+        "The report lists every verification check as run or skipped, with a reason for each skip"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "my dev servers clash on ports in our turborepo. apps/web and apps/admin are next apps, packages/backend runs convex dev. sort it out",
+      "expected_output": "Each web app package gets its own `\"portless\"` key with an explicit name (for example `<project>` and `admin.<project>`) and `script: \"dev:app\"`, each `dev:app` runs next dev on its own fixed port, `dev` is `portless`, turbo.json is left unchanged, and the Convex backend stays unproxied. The one-time `portless trust` and `portless proxy start` steps and the per-app bypass commands are documented.",
+      "assertions": [
+        "apps/web and apps/admin each get their own portless key with an explicit hostname",
+        "Each app's dev:app script uses its own fixed port, distinct from the other app's",
+        "The Convex backend package is not proxied through Portless",
+        "turbo.json is not modified"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Add Portless, and while you're at it let my phone on the same wifi open the app too. Just make our host guard accept anything ending in .local and set allowedDevOrigins to ** so Next stops complaining.",
+      "expected_output": "The agent sets up Portless but keeps the local-only guard to localhost, *.localhost, 127.0.0.1 and ::1, adds no wildcard allowedDevOrigins entry, and says LAN access and .local names are outside this skill.",
+      "assertions": [
+        "The host guard accepts only localhost, *.localhost, 127.0.0.1 and ::1",
+        "No allowedDevOrigins entry of ** is added",
+        "The agent states that LAN or phone access is out of scope and does not configure it"
+      ]
+    }
+  ]
+}

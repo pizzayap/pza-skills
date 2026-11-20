@@ -83,9 +83,8 @@ The core loop: `write-plan`, `areyousure`, implement, `arewedone`, fix,
 
 | Skill | Use it for | Requirements |
 |---|---|---|
-| [agents-md-audit](skills/agents-md-audit/SKILL.md) | A focused, read-only AGENTS.md review | Local file access |
 | [agents-md-revise](skills/agents-md-revise/SKILL.md) | Capture durable project guidance in AGENTS.md through an approved diff | Local file access; approval before guidance edits |
-| [astra-instruction-audit](skills/astra-instruction-audit/SKILL.md) | Article-based, scored, or combined skills/AGENTS.md audits and authorized updates | Local file access; web optional |
+| [astra-instruction-audit](skills/astra-instruction-audit/SKILL.md) | A focused, read-only AGENTS.md audit (`--agents-only --audit`); article-based, scored, or combined skills/AGENTS.md audits and authorized updates | Local file access; web optional |
 
 ### Teach and create content
 
@@ -128,13 +127,13 @@ read-only workers when useful and available, and work serially otherwise. They
 do not configure models or invoke external model CLIs. Missing optional tools
 are disclosed; missing evidence is not silently treated as success.
 
-The focused AGENTS audit and the broader Astra audit retain separate scoring
-rubrics. Their scores are judgment-based and should not be compared as measured
-agent performance. The Astra skill credits
+The Astra audit scores skills and AGENTS.md with one rubric. Its scores are
+judgment-based and should not be read as measured agent performance. The Astra
+skill credits
 [Eric Provencher's article](https://x.com/pvncher/status/2095991462416490862);
 it is an independent implementation, not an official or endorsed skill.
 
-For renamed skills or existing plugin/runtime installations, read the
+For renamed or retired skills, or existing plugin/runtime installations, read the
 [migration note](docs/migration.md). Repository updates do not uninstall old
 machine-local copies or settings.
 
@@ -153,8 +152,9 @@ ruby scripts/validate-skills.rb
 ```
 
 It checks YAML metadata, names, resource links, catalog entries, accidental
-framework/personal dependencies, and fixture paths. It reads only package files;
-it does not install anything, inspect global configuration, or run skill commands.
+framework/personal dependencies, fixture paths, and eval file shapes. It reads
+only package files; it does not install anything, inspect global configuration,
+or run skill commands.
 Markdown links in this package use inline `[label](path)` syntax so resource
 validation can follow them. Instruction boundaries still require review and,
 when behavior changes materially, a realistic trial; string matching cannot
@@ -164,6 +164,22 @@ The [Astra validation record](docs/astra-instruction-audit-validation.md) includ
 synthetic audit/update fixtures and explicitly bounded historical results. Run
 affected behavior trials for substantial workflow changes and distinguish them
 from static package checks. No external reviewer service is required.
+
+### Evals
+
+Every skill folder carries `evals/evals.json`, three output cases each with a
+prompt, an expected output, and assertions, and `evals/trigger-queries.json`,
+twenty labelled queries with a fixed train/validation split. Half of the
+queries are near-misses; `instead` names the neighbouring skill that should
+handle a near-miss when one exists. The formats follow agentskills.io's guides
+to [evaluating skills](https://agentskills.io/skill-creation/evaluating-skills)
+and [optimizing descriptions](https://agentskills.io/skill-creation/optimizing-descriptions).
+
+`ruby scripts/validate-skills.rb` checks their shape only. The evals have not
+been run yet, and many output cases need a seeded project (components, a plan,
+a transcript) before they can be graded. Trigger queries for skills marked
+`disable-model-invocation: true` document the intended boundary; they test
+routing only in harnesses that route by description.
 
 ## License
 

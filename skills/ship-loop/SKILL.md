@@ -7,7 +7,7 @@ description: >-
   "ship this", "take it from plan to commit", or "run the whole loop". For only
   a plan use `write-plan`; for only a next-session prompt use
   `next-session-prompt`.
-user-invocable: true
+disable-model-invocation: true
 argument-hint: '[goal-or-plan-path] [--stop-at plan|implement|review|commit]'
 ---
 
@@ -44,6 +44,7 @@ Each step names a skill to use if it is installed. None is required: the fallbac
 | 1. Plan | `write-plan` |
 | 2. Verify the plan | `areyousure` |
 | 4. Review | `arewedone` |
+| 6. Record lessons | `agents-md-revise` |
 | 9. Hand off | `next-session-prompt` |
 
 Stop at every gate unless the user said "run through". `--stop-at <step>` ends the loop after that step. The commit and push gates are never skipped.
@@ -56,7 +57,7 @@ Fallback: write a plan with current state, exact files per step, out of scope, a
 
 ### 2. Verify the plan (gate)
 
-Fallback: check every path exists or is marked new, every command exists in the repo's scripts, library calls match current official docs, existing work is not rebuilt, and verification proves each behavior line. Fix the plan in place and append `## Verification notes` (date, plan source, evidence checked, confidence, finding IDs). **Gate:** report findings applied and confidence. If confidence is low, stop here.
+Fallback: check the plan's files, commands, APIs and coverage of the request against the repo and current official docs. Report the findings, the corrections you would make and your confidence. **Gate:** apply the corrections the user accepts; in a run through, apply them all. Then append `## Verification notes` (date, plan source, evidence checked, confidence, findings applied), also when nothing needed correcting. If confidence is low, stop here, even in a run through.
 
 ### 3. Implement
 
@@ -64,9 +65,9 @@ The instruction is: "Implement the plan as specified. Do not edit the plan file.
 
 ### 4. Review for completeness (gate)
 
-Fallback: diff against every plan step and behavior line and list gaps. Run the repo's lint, typecheck, test and build. Give each finding an ID, a severity (critical, warning, minor), `path:line` and the smallest fix. Label proof by level: static read, unit test, local end-to-end, device, deployed.
+Fallback: diff against every plan step and behavior line and list gaps. Run the repo's lint, typecheck, test and build. Give each finding an ID, a severity (critical, warning, minor), `path:line`, the smallest fix and a one-line why. Say what each proof shows: a static read, a local test, or browser, device, service or deployed behavior. Verdict: done, fix first or blocked.
 
-**Gate:** recommend one of: fix all, fix critical and warning only, or defer to `REVIEW-BACKLOG.md`. Give the reason in one line and wait.
+**Gate:** recommend one of: fix all, fix critical and warning only, explain what is left in plain English (no edits, then offer the others again), or defer to `REVIEW-BACKLOG.md`. Give the reason in one line and wait.
 
 ### 5. Apply findings
 
@@ -74,14 +75,9 @@ Apply the chosen findings in one pass. Rerun the affected checks, re-review only
 
 ### 6. Record durable lessons (gate)
 
-Answer these and keep only what a future session would need:
+Keep only what a future session would need: a command that failed or needed a retry (record the working one, and the wrong one if someone will likely try it), something you had to search for that should have been written down, a plan assumption that was wrong, a boundary that caused trouble (generated files, environments, deploy targets, ports).
 
-- Which command failed or needed a retry? Record the working one, and the wrong one if someone will likely try it.
-- What did you have to search for that should have been written down?
-- Which plan assumption was wrong?
-- Which boundary caused trouble: generated files, environments, deploy targets, ports?
-
-Propose a diff to the repo's AGENTS.md or CLAUDE.md, one line per concept, with no secrets, personal paths or one-off fixes. **Gate:** wait for approval, then write it. No lessons is a valid answer.
+Fallback: propose a focused diff to the repo's AGENTS.md (if there is none, propose creating the root AGENTS.md and show the whole file), with no personal preferences, secrets, machine-local paths or one-off fixes. **Gate:** wait for approval, then write it. No lessons is a valid answer.
 
 ### 7. Commit (gate)
 
@@ -101,7 +97,7 @@ Then check the linked issue. A `Closes #N` in a PR body does not fire when you f
 
 ### 9. Hand off
 
-Recommend a fresh session for the next change instead of compacting this one. Fallback: one fenced prompt with what is done (with SHAs), files to read first, the single next task, a do-not list, how to verify, and `Ask before committing or pushing.`
+Recommend a fresh session for the next change instead of compacting this one. Fallback: list housekeeping first for anything not yet pushed or closed, then one fenced prompt with what is done (on the remote, with SHAs), files to read first, the single next task and its scope, a do-not list, how to verify, and `Ask before committing or pushing.`
 
 ## Gate report
 

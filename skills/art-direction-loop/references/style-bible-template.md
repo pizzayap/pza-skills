@@ -3,6 +3,12 @@
 Copy and adapt. Keep the bible in the project, for example
 `docs/art/style-bible.md`, and concepts under `docs/art/concepts/<asset>/`.
 
+Contents:
+
+- [Style bible](#style-bible)
+- [Sidecar](#sidecar)
+- [Build brief](#build-brief)
+
 ## Style bible
 
 ```markdown

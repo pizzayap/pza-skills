@@ -8,7 +8,7 @@ description: >-
   everything from the review", "work through these findings and merge". Not for
   writing the review (`arewedone`), one change from idea to commit (`ship-loop`)
   or a backlog of independent units (`session-orchestrator`).
-user-invocable: true
+disable-model-invocation: true
 argument-hint: '[review-path|PR|"the review above"] [--implementer <model and effort>] [--rounds <n>] [--merge ask|auto]'
 ---
 

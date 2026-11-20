@@ -1,0 +1,22 @@
+[
+  { "query": "tear down this competitor: https://quillstack.example.com vs our editor", "should_trigger": true, "split": "train" },
+  { "query": "what can we learn from Brightdesk's onboarding? screenshots are in ./ref/brightdesk", "should_trigger": true, "split": "train" },
+  { "query": "Go through Parcelwise's landing page section by section, compare it to ours, and turn the ideas worth stealing into small briefs in docs/todos with acceptance criteria", "should_trigger": true, "split": "train" },
+  { "query": "what's left in the todos? half of these briefs might already be shipped", "should_trigger": true, "split": "train" },
+  { "query": "Sort the briefs in docs/todos into done, partial, not started and so on, and cite the code for anything shipped", "should_trigger": true, "split": "train" },
+  { "query": "Our closest rival just relaunched their marketing site. I want a gap analysis against our product and a backlog of buildable changes, with a list of what we deliberately skip.", "should_trigger": true, "split": "train" },
+  { "query": "Clone the landing page at https://quillstack.example.com as a working Next.js site", "should_trigger": false, "split": "train", "instead": "browser-website-design-clone" },
+  { "query": "What's good about Brightdesk's homepage design? explain why it works", "should_trigger": false, "split": "train", "instead": "explain-design" },
+  { "query": "find local businesses in Northgate that a web designer could help", "should_trigger": false, "split": "train", "instead": "evidence-gated-lead-research" },
+  { "query": "Rewrite our hero headline and tagline so we sound better than Parcelwise", "should_trigger": false, "split": "train" },
+  { "query": "Plan this feature: an onboarding checklist like the one Tallyho has. Write the implementation plan, no code", "should_trigger": false, "split": "train", "instead": "write-plan" },
+  { "query": "what's next? pick the next task from the issues and give me a prompt for a new session", "should_trigger": false, "split": "train", "instead": "next-session-prompt" },
+  { "query": "compare Tallyho's empty states and onboarding checklist to ours and write a brief per idea we should adopt", "should_trigger": true, "split": "validation" },
+  { "query": "whats left in our backlog of briefs, which ones are blocked or deferred?", "should_trigger": true, "split": "validation" },
+  { "query": "We keep losing deals to Fernwave. Look at their site and these app screenshots, tell me what they do better, and write it up as briefs a contractor could build one at a time.", "should_trigger": true, "split": "validation" },
+  { "query": "What can we learn from Driftly? URL is https://driftly.example.com, our PRD is in docs/prd.md", "should_trigger": true, "split": "validation" },
+  { "query": "Should we raise our Pro tier to $24 like Fernwave did? model the revenue for me", "should_trigger": false, "split": "validation" },
+  { "query": "extract the design system and every page layout from driftly.example.com into a spec", "should_trigger": false, "split": "validation", "instead": "browser-website-design-clone" },
+  { "query": "ship docs/todos/marketing-live-demo.md: plan it, build it, review it and commit", "should_trigger": false, "split": "validation", "instead": "ship-loop" },
+  { "query": "I think the onboarding checklist work is finished. are we done? did we miss anything?", "should_trigger": false, "split": "validation", "instead": "arewedone" }
+]

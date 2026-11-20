@@ -6,7 +6,7 @@ description: >-
   closing keyword, and closure only after the merge lands. Decision issues end
   in an adopt or defer record. Use when the user says "work #N", "take the next
   ready issue", or "issue to PR". Needs `git` and `gh`.
-user-invocable: true
+disable-model-invocation: true
 argument-hint: '[#N | owner/repo#N | issue-url] [--direct-to-main]'
 ---
 

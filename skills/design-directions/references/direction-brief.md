@@ -1,5 +1,12 @@
 # Direction brief and file formats
 
+Contents:
+
+- [Run folder](#run-folder)
+- [run.json](#runjson)
+- [direction.json](#directionjson)
+- [Subagent brief](#subagent-brief)
+
 ## Run folder
 
 ```text

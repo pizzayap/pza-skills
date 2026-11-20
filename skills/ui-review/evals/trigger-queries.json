@@ -1,0 +1,109 @@
+[
+  {
+    "query": "review this component: src/components/ArticleCard.tsx",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "what's off about this card? it's the StatTile",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the PlanBadge contrast and padding look wrong to me. measure it against our tokens and suggest fixes",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "check the ArticleCard's type, spacing and colour against our design tokens and pin each problem on the component",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "something about the PricingCard feels off, spacing maybe. go through it like a senior designer would and point at what's wrong",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the CheckoutSummary card is built now. Critique its craft: hierarchy, contrast, hit areas, copy",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "polish the StatTile and fix the problems you find, after showing me",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "ShareButton: is the hit area big enough, does it have an accessible name, does the label read well? measure it",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "pls do a design QA pass on the NavTab component, typography + colour only",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Our designers say the ProfileHeader looks 'a bit cheap' but can't say why. Find the concrete issues with numbers and show me a before/after once fixed.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "show every state of the PaymentMethod row: expired card, no card, read-only role",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "state-machine"
+  },
+  {
+    "query": "stress test the ArticleCard with very long titles and missing thumbnails",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "edge-case"
+  },
+  {
+    "query": "give me 3 options for the PricingCard header to choose from",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-variant"
+  },
+  {
+    "query": "walk the signup flow as a new user and a screen-reader user and report where they get stuck",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "persona-walkthrough"
+  },
+  {
+    "query": "why does this landing page look so good? break it down for me: https://lumen-notes.example",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "explain-design"
+  },
+  {
+    "query": "review the hover and open animation code on the Dropdown",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "I just restyled the header; check it on mobile and prove it matches the Figma",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "lint the Card component's CSS and fix the stylelint warnings",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "run an axe accessibility scan across every page of the site",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "give me different directions for the whole account settings screen before we build",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "design-directions"
+  }
+]

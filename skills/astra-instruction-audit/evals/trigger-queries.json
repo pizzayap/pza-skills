@@ -1,0 +1,109 @@
+[
+  {
+    "query": "audit my skills",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "score this SKILL.md: skills/ship-loop/SKILL.md",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "audit AGENTS.md, read-only",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Use the Astra article rubric to review every skill and the AGENTS.md in this repo and tell me what to cut",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Give each skill under skills/ a quality score with file:line findings, then fix the ones I pick",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "are our skill descriptions distinct enough from each other? audit them and propose fixes",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "audit + update skills/write-plan, apply what you find",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "rate our AGENTS.md against the rubric, no edits",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "how good are our SKILL.md instructions? score them, and the AGENTS.md too",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "--skills-only audit of .claude/skills please, read only",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "update AGENTS.md with the flaky e2e port lesson",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "agents-md-revise"
+  },
+  {
+    "query": "add this rule to AGENTS.md: never run migrations against prod",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "agents-md-revise"
+  },
+  {
+    "query": "trim the stale commands out of our AGENTS.md and show me the diff",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "agents-md-revise"
+  },
+  {
+    "query": "I edited three SKILL.md files, are we done?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "check the new skill against the spec in docs/skill-spec.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "write a new skill that generates changelogs from git history",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "install the arewedone skill globally",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "validate my plan for splitting write-plan into SKILL.md plus references",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "areyousure"
+  },
+  {
+    "query": "audit our npm dependencies for outdated packages",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "security pass on the skills PR: does any script shell out unsafely?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "adversarial-security-review"
+  }
+]

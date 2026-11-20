@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- explain-design report: one sheet, callouts around the design, leader lines to each element.
+     Fill only the report-data block; the renderer below builds and lays out the sheet.
+     Build with scripts/build-report.mjs. In a built report the JSON can also be replaced by hand,
+     writing every "<" as \u003c. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explain design</title>
+<style>
+<!-- @include sheet.css -->
+<!-- @include annotations.css -->
+<!-- @include panels.css -->
+<!-- @include fallbacks.css -->
+</style>
+</head>
+<body>
+<div class="page"><main class="sheet" id="sheet"></main></div>
+
+<script type="application/json" id="report-data">{}</script>
+
+<script>
+(() => {
+  "use strict"
+
+<!-- @include core.js -->
+<!-- @include sheet.js -->
+<!-- @include controls.js -->
+<!-- @include views.js -->
+<!-- @include layout.js -->
+<!-- @include dimensions.js -->
+<!-- @include start.js -->
+})()
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+[
+  {
+    "query": "make a concept site for this shop: Kettle & Thread on Mill Road",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Harbor Lane Bakery needs a concept website I can show the owner as a pitch",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the corner tailor near me only has a dead Facebook page. design them a one-pager I can show the owner",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Lead qualified: Orchard Row Florist, bad mobile site, brief in leads/orchard-row.md. Now do the pitch page and a walkthrough video.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "can you mock up a website for the local bike repair place, plain html, so I can send the owner a video of it",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I'm a freelance designer. Take one idea from what this ceramics studio actually does and build a single-page concept around it, sourced facts only.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "concept page for Lotus Noodle Bar pls, they only have a google listing",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Turn the facts brief for Dunmore Hardware into a one-page pitch site with a not-yet-live banner and noindex",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Design a website concept for a family-run upholsterer to win them as a client. Phone first, contact visible right away.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "build a spec site for the barber on Quay Street to pitch them, no framework",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "find cafes in Leeds with broken or missing websites I could pitch",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "evidence-gated-lead-research"
+  },
+  {
+    "query": "audit this lead list and tell me which plumbers really have a website problem",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "evidence-gated-lead-research"
+  },
+  {
+    "query": "clone northwind-outfitters.example so I can study how it's built",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "browser-website-design-clone"
+  },
+  {
+    "query": "explore three directions for our app's pricing page",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-directions"
+  },
+  {
+    "query": "write the cold email to the bakery owner with the concept video attached",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "update the opening hours on the client site we launched last month",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "break down why this bakery's website works so well",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "explain-design"
+  },
+  {
+    "query": "tear down the rival bakery chain's site and turn the good ideas into briefs",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "competitor-teardown-to-briefs"
+  },
+  {
+    "query": "make a Next.js marketing site for my SaaS with a pricing page",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "deploy the approved shop site to their domain and set up DNS",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]
