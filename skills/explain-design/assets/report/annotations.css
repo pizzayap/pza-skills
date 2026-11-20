@@ -1,0 +1,89 @@
+  /* Annotations: regions on the design, callouts, marks, code chips, leader lines and dimension lines. */
+  /* Difference blending keeps outlines visible on light and dark designs alike. */
+  .sh-region {
+    position: absolute;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    mix-blend-mode: difference;
+    cursor: pointer;
+    transition: border-color 160ms ease, opacity 160ms ease;
+  }
+  .sh-region[data-active] { border-style: solid; border-color: #fff; }
+  [data-focus] .sh-region:not([data-active]) { opacity: 0.25; }
+  .sh-region .mark { display: none; position: absolute; top: -9px; left: -9px; }
+
+  /* Callouts */
+  .co {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    outline: none;
+    cursor: default;
+    transition: opacity 160ms ease;
+  }
+  .co[data-side="left"] { text-align: right; }
+  .co-head { display: flex; align-items: center; gap: 8px; }
+  .co[data-side="left"] .co-head { flex-direction: row-reverse; }
+  .co-head h3 { min-width: 0; color: var(--ink); }
+  .co-tags { display: flex; align-items: center; gap: 8px; justify-self: start; }
+  .co[data-side="left"] > .co-tags { justify-self: end; flex-direction: row-reverse; }
+  .co-tag { color: var(--faint); white-space: nowrap; }
+  .co-thought { font-size: 12.5px; line-height: 1.4; font-weight: 500; color: var(--ink); text-wrap: pretty; }
+  .co-tag[data-impact="High"] { padding: 1px 5px; color: var(--paper); background: var(--ink); border-radius: 3px; }
+  .co-tag[data-impact="Medium"] { padding: 0 5px; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); border-radius: 3px; }
+  .co-why { font-size: 12px; line-height: 1.45; color: var(--text); text-wrap: pretty; }
+  .co-fix { font-size: 12px; line-height: 1.45; }
+  .co-val { font: 11px/1.5 var(--mono); color: var(--muted); }
+  .co-val s { color: var(--faint); text-decoration-color: var(--faint); }
+  .co-val b { font-weight: 500; color: var(--ink); }
+  .co-fix { color: var(--ink); }
+  .co-fix .caps { margin-right: 6px; color: var(--faint); }
+  [data-focus] .co:not([data-active]) { opacity: 0.3; }
+  .co:focus-visible .co-head h3 { text-decoration: underline; text-underline-offset: 3px; }
+
+  .mark {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font: 500 10.5px/1 var(--mono);
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+  }
+  .mark[data-kind="improve"] { border-radius: 50%; }
+  [data-active] > .co-head .mark,
+  .sh-region[data-active] .mark { color: var(--paper); background: var(--ink); }
+
+  code {
+    padding: 0 4px;
+    font: 0.9em/1.4 var(--mono);
+    color: var(--ink);
+    background: var(--soft);
+    border-radius: 3px;
+  }
+
+  /* Leaders and dimensions */
+  .sh-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .sh-lines .leader { fill: none; stroke: #8f8f8c; stroke-width: 1; transition: stroke 160ms ease, opacity 160ms ease; }
+  .sh-lines .dot { fill: #8f8f8c; transition: fill 160ms ease, opacity 160ms ease; }
+  .sh-lines [data-active] .leader { stroke: var(--ink); }
+  .sh-lines [data-active] .dot { fill: var(--ink); }
+  [data-focus] .sh-lines g.lead:not([data-active]) { opacity: 0.18; }
+  .sh-lines .dim { stroke: var(--ink); stroke-width: 0.75; fill: none; }
+  .sh-lines .ext { stroke: var(--ink); stroke-width: 0.5; opacity: 0.6; }
+  .sh-lines .dim-label {
+    font: 500 10px/1 var(--mono);
+    fill: var(--ink);
+    paint-order: stroke;
+    stroke: var(--paper);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+  [data-focus] .sh-lines g.dims { opacity: 0.25; }
+

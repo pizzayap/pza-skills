@@ -1,0 +1,29 @@
+  /* Fallbacks: the stacked layout for small windows or overflowing sides, reduced motion and print. */
+  /* Fallback when the sheet can't fit one screen: stack and scroll. */
+  [data-layout="stack"] .page { height: auto; min-height: 100vh; }
+  [data-layout="stack"] .sheet { overflow: visible; padding: 22px 20px; }
+  [data-layout="stack"] .sh-head,
+  [data-layout="stack"] .sh-body,
+  [data-layout="stack"] .sh-body[data-map] { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  [data-layout="stack"] .sh-draw { display: flex; flex-direction: column; gap: 24px; }
+  [data-layout="stack"] .sh-fig { order: -1; }
+  [data-layout="stack"] .sh-col { display: grid; gap: 22px; }
+  [data-layout="stack"] .sh-col:empty { display: none; }
+  [data-layout="stack"] .co { position: static; text-align: left; }
+  [data-layout="stack"] .co .co-head { flex-direction: row; }
+  [data-layout="stack"] .sh-lines g.lead { display: none; }
+  [data-layout="stack"] .sh-region .mark { display: inline-grid; }
+  [data-layout="stack"] .sh-spec { overflow: visible; }
+  [data-layout="stack"] .sh-spec { position: static; width: auto; padding: 0; border: 0; transform: none; visibility: visible; }
+  [data-layout="stack"] .spec-btn { display: none; }
+  [data-layout="stack"] .sh-map { display: none; }
+  [data-layout="stack"] .sh-board { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); width: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+  @media print {
+    @page { size: landscape; margin: 0; }
+    body { background: var(--paper); }
+    .seg { display: none; }
+  }

@@ -70,13 +70,13 @@ Write one line on who is looking and what they came to do. Then walk the craft l
 
 ### 4. Build the report
 
-Write the data file described in [report-data.md](references/report-data.md), then build the report from [report-template.html](assets/report-template.html):
+Write the data file described in [report-data.md](references/report-data.md), then build the report from the template in [assets/report/](assets/report/template.html):
 
 ```bash
 node <skill-dir>/scripts/build-report.mjs data.json <out-dir> --image capture.png
 ```
 
-For a whole page, leave out `--image`: the section and minimap images are paths in the data file, relative to it. [build-report.mjs](scripts/build-report.mjs) needs Node 18 or later. It checks the data, embeds the images so the report is one file, escapes the JSON safely, and names the file from `source` and `source.date`. Without Node, copy the template and replace the contents of its `report-data` block yourself, writing every `<` as `\u003c`.
+For a whole page, leave out `--image`: the section and minimap images are paths in the data file, relative to it. [build-report.mjs](scripts/build-report.mjs) needs Node 18 or later. It checks the data, embeds the images so the report is one file, escapes the JSON safely, and names the file from `source` and `source.date`. Without Node, copy `template.html`, replace each `<!-- @include <file> -->` line with that file from `assets/report/`, then replace the contents of its `report-data` block yourself, writing every `<` as `\u003c`.
 
 ### 5. Check and hand over
 

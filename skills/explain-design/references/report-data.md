@@ -1,6 +1,8 @@
 # Report data
 
-The report is [report-template.html](../assets/report-template.html) with one JSON block, `<script type="application/json" id="report-data">`. It renders as one landscape sheet that fits the screen. The design sits in the middle, every point is a callout beside it joined to its element by a leader line, and the type, color and spacing tables run down the right. The renderer inserts every string as text, so page content can't run as code. Inline `` `code` `` in any prose field renders as a small mono chip.
+The report is the template in [assets/report/](../assets/report/template.html) with one JSON block, `<script type="application/json" id="report-data">`. It renders as one landscape sheet that fits the screen. The design sits in the middle, every point is a callout beside it joined to its element by a leader line, and the type, color and spacing tables run down the right. The renderer inserts every string as text, so page content can't run as code. Inline `` `code` `` in any prose field renders as a small mono chip.
+
+The template is small source files that `build-report.mjs` inlines into one HTML file: [template.html](../assets/report/template.html) is the page shell and lists the pieces in order. The look is in the `.css` files, from [sheet.css](../assets/report/sheet.css) to [fallbacks.css](../assets/report/fallbacks.css) for the stacked and print layouts. The behaviour is in the `.js` files, which share one function scope: [views.js](../assets/report/views.js) renders a view, [layout.js](../assets/report/layout.js) places the callouts and leader lines, and [dimensions.js](../assets/report/dimensions.js) draws the measured distances.
 
 When the window is too small for the sheet (under 1080 × 600), or the callouts on one side don't fit, the report stacks into a scrolling page and shows numbered marks on the design instead of leader lines.
 
