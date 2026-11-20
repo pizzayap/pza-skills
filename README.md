@@ -83,9 +83,8 @@ The core loop: `write-plan`, `areyousure`, implement, `arewedone`, fix,
 
 | Skill | Use it for | Requirements |
 |---|---|---|
-| [agents-md-audit](skills/agents-md-audit/SKILL.md) | A focused, read-only AGENTS.md review | Local file access |
 | [agents-md-revise](skills/agents-md-revise/SKILL.md) | Capture durable project guidance in AGENTS.md through an approved diff | Local file access; approval before guidance edits |
-| [astra-instruction-audit](skills/astra-instruction-audit/SKILL.md) | Article-based, scored, or combined skills/AGENTS.md audits and authorized updates | Local file access; web optional |
+| [astra-instruction-audit](skills/astra-instruction-audit/SKILL.md) | A focused, read-only AGENTS.md audit (`--agents-only --audit`); article-based, scored, or combined skills/AGENTS.md audits and authorized updates | Local file access; web optional |
 
 ### Teach and create content
 
@@ -128,13 +127,13 @@ read-only workers when useful and available, and work serially otherwise. They
 do not configure models or invoke external model CLIs. Missing optional tools
 are disclosed; missing evidence is not silently treated as success.
 
-The focused AGENTS audit and the broader Astra audit retain separate scoring
-rubrics. Their scores are judgment-based and should not be compared as measured
-agent performance. The Astra skill credits
+The Astra audit scores skills and AGENTS.md with one rubric. Its scores are
+judgment-based and should not be read as measured agent performance. The Astra
+skill credits
 [Eric Provencher's article](https://x.com/pvncher/status/2095991462416490862);
 it is an independent implementation, not an official or endorsed skill.
 
-For renamed skills or existing plugin/runtime installations, read the
+For renamed or retired skills, or existing plugin/runtime installations, read the
 [migration note](docs/migration.md). Repository updates do not uninstall old
 machine-local copies or settings.
 

@@ -18,6 +18,20 @@ skill manager or copy the complete folders, then remove obsolete `-plain` copies
 after checking ownership and local modifications. Repository updates do not
 automatically migrate installed names.
 
+## Retired AGENTS.md audit skill
+
+| Retired name | Use instead |
+|---|---|
+| `agents-md-audit` | `astra-instruction-audit --agents-only --audit` |
+
+The read-only AGENTS.md audit now lives in `astra-instruction-audit`. A path
+still narrows the scope. Without one it covers the root and nested AGENTS.md
+files, as `--all` did; in place of `--root-only`, pass the root file's path. The
+old 100-point rubric and letter grades are not carried over: scores use the
+Astra rubric and are not comparable with earlier grades. An installed copy of
+the retired skill is not removed automatically; remove it through the same
+skill manager after checking ownership and local modifications.
+
 ## Retired features
 
 - Framework implementations of `arewedone` and `areyousure`, plus `pza-settings`,
