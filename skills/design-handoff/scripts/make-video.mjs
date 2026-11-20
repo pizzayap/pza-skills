@@ -323,8 +323,8 @@ try {
 } catch (e) {
   const cause = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`
   if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|fetch failed|download/i.test(cause))
-    fail(`Remotion could not download its headless Chrome from remotion.media (first render only, about 170 MB). Allow network access for this command (in the Codex app, approve the request), or run scripts/setup.mjs, then try again.\n(${cause.split("\n")[0]})`)
-  fail(`Remotion's browser could not start. In a sandbox such as the Codex app, approve the request to run it, then try again.\n(${cause.split("\n")[0]})`)
+    fail(`Remotion could not download its headless Chrome from remotion.media (first render only, about 170 MB). Allow network access for this command (in a sandboxed coding agent, approve the request), or run scripts/setup.mjs, then try again.\n(${cause.split("\n")[0]})`)
+  fail(`Remotion's browser could not start. If your coding agent runs commands in a sandbox, approve the request to run it, then try again.\n(${cause.split("\n")[0]})`)
 }
 const composition = await selectComposition({ serveUrl, id: "Handoff", inputProps: props, puppeteerInstance: browser })
 

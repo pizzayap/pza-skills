@@ -51,7 +51,7 @@ export async function launch() {
       // Chrome is there but could not start: almost always a sandbox that blocks launching apps.
       if (installed && !/is not found|not found at|Executable doesn't exist/i.test(chromeError.message))
         throw new Error(
-          `Google Chrome is installed (${installed}) but could not start. In a sandbox such as the Codex app, starting a browser needs permission: approve the request, or rerun this command with permission. Do not install another browser.\n(${cause})`,
+          `Google Chrome is installed (${installed}) but could not start. If your coding agent runs commands in a sandbox, starting a browser needs permission: approve the request, or rerun this command with permission. Do not install another browser.\n(${cause})`,
         )
       throw new Error(
         `Google Chrome was not found. Ask the designer to install Google Chrome, then run this again.\n(${cause})`,

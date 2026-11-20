@@ -29,9 +29,9 @@ const npm = process.platform === "win32" ? "npm.cmd" : "npm"
 const FAST = ["--fetch-retries=0", "--fetch-timeout=30000", "--no-audit", "--no-fund"]
 const step = (n, text) => console.log(`\n[${n}] ${text}`)
 const networkHint = (host) =>
-  `Could not reach ${host}. The download needs network access: in the Codex app, approve the request when it asks (or rerun this command with network permission), then run setup again.`
+  `Could not reach ${host}. The download needs network access: if your coding agent runs commands in a sandbox, approve the request when it asks (or rerun this command with network permission), then run setup again.`
 const writeHint = (what) =>
-  `Could not write to ${what}. Setup installs into the skill folder and npm's cache: in the Codex app, approve the request when it asks (or rerun this command outside the sandbox), then run setup again.`
+  `Could not write to ${what}. Setup installs into the skill folder and npm's cache: if your coding agent runs commands in a sandbox, approve the request when it asks (or rerun this command outside the sandbox), then run setup again.`
 const NET = /ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|ETIMEDOUT|fetch failed|network|Exit handler never called/i
 const PERM = /EPERM|EACCES|EROFS|operation not permitted|permission denied/i
 

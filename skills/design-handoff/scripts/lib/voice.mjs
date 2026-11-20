@@ -93,7 +93,7 @@ async function kokoro(voice) {
   } catch (e) {
     const cause = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`
     if (/fetch failed|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|network/i.test(cause))
-      throw new Error(`Could not download the Kokoro voice model from huggingface.co. This happens once, on first use (about 90 MB). Allow network access for this command (in the Codex app, approve the request), or run setup with --voice local, then try again.\n(${cause})`)
+      throw new Error(`Could not download the Kokoro voice model from huggingface.co. This happens once, on first use (about 90 MB). Allow network access for this command (in a sandboxed coding agent, approve the request), or run setup with --voice local, then try again.\n(${cause})`)
     throw new Error(`The Kokoro voice model did not load: ${cause}`)
   }
   if (!tts.voices?.[voice]) throw new Error(`Kokoro has no voice "${voice}". Try af_heart, af_bella, am_michael, bf_emma or bm_george.`)
