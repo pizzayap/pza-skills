@@ -7,7 +7,6 @@ description: >-
   skills", "score this SKILL.md", or "audit AGENTS.md, read-only"
   (`--agents-only --audit`). Not for writing session learnings into AGENTS.md or
   other routine AGENTS.md upkeep (that's `agents-md-revise`).
-user-invocable: true
 argument-hint: '[path] [--audit|--update] [--skills-only|--agents-only]'
 license: MIT
 ---

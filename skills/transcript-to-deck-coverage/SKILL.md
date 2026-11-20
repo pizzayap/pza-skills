@@ -7,7 +7,6 @@ description: >-
   "update the deck from this recording" or "add what we covered in the
   session". Not for building a new page from a tutorial (that's
   video-to-workshop).
-user-invocable: true
 argument-hint: '[transcript-path] [deck-path-or-url] [requirements-doc]'
 ---
 

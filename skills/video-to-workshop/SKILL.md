@@ -6,7 +6,6 @@ description: >-
   prompts and real frames. Use when asked to "turn this video into a workshop",
   "make a class from this tutorial" or "adapt this for a session". Not for
   updating a deck from a recording (that's transcript-to-deck-coverage).
-user-invocable: true
 argument-hint: '[video-url-or-transcript-path] [audience-and-length-notes]'
 ---
 

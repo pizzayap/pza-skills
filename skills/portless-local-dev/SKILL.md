@@ -6,7 +6,6 @@ description: >-
   "add Portless", "my dev servers clash on ports", or "which local URL do I
   open", in a single Next.js app or a Turborepo. Not for LAN access, tunnels or
   production hosting.
-user-invocable: true
 argument-hint: '[app-or-workspace-path] [desired-name]'
 ---
 

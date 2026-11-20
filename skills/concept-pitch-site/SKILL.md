@@ -7,7 +7,6 @@ description: >-
   gate and a walkthrough video. Use for "make a concept site for this shop".
   Not for finding leads (that's evidence-gated-lead-research), outreach, or
   live client sites.
-user-invocable: true
 argument-hint: '[business-name-or-brief-path] [slug]'
 ---
 

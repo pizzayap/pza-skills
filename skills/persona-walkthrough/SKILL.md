@@ -9,7 +9,6 @@ description: >-
   do people get stuck in this flow", "walk this as a new user", "test this flow
   with personas". Read-only on the project. Not a craft review of one component (ui-review) or
   a design explanation (explain-design).
-user-invocable: true
 argument-hint: '[flow or task] [start url] [--personas first-time,power,screen-reader,...] [--out <dir>]'
 ---
 

@@ -7,7 +7,6 @@ description: >-
   text. Use for "find businesses a web designer could help" or "audit this
   lead list". Not for building the pitch (that's concept-pitch-site),
   outreach, or bulk scraping.
-user-invocable: true
 argument-hint: '[area-or-category] [--min-rating 4.5] [--min-reviews 50]'
 ---
 

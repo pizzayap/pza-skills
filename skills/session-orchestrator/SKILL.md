@@ -6,7 +6,6 @@ description: >-
   from a state file, and accepts work only on evidence. Use when the user says
   "orchestrate this", "run the backlog", "farm this out", or the job will
   outlast one context window. For a single task, work directly instead.
-user-invocable: true
 argument-hint: '[goal] [--state <path>] [--lanes <1-3>] [--resume]'
 ---
 

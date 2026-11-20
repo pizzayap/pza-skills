@@ -7,7 +7,6 @@ description: >-
   says "plan this", "write a plan", or "spec this out" before a feature, fix,
   refactor or migration. To check a plan use `areyousure`; to run one use
   `ship-loop`.
-user-invocable: true
 argument-hint: '[goal-or-issue] [--file plan-path]'
 ---
 

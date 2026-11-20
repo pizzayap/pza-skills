@@ -6,7 +6,6 @@ description: >-
   transcript to summarise, or asks "what did we decide about X?", "who raised
   that risk?" or "what feedback did we get?". Not for live note-taking or
   drafting follow-up emails.
-user-invocable: true
 argument-hint: '[summarize <transcript-path> | ask <question>]'
 ---
 

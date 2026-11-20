@@ -6,7 +6,6 @@ description: >-
   text goes out under a specific person's name: "write this in their voice",
   "does this sound like me?", "build a voice profile". Not for planning a
   video from real work (that's build-in-public-video).
-user-invocable: true
 argument-hint: '[build|draft|refine|review|learn] [text-or-path] [platform]'
 ---
 

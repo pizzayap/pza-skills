@@ -9,7 +9,6 @@ description: >-
   teardown (explain-design), designing missing states (state-machine),
   stress-testing content (edge-case), a public build-in-public video
   (build-in-public-video) or a launch video.
-user-invocable: true
 argument-hint: '[prototype folder or URL] [--deck-only | --video-only] [--spec] [--voice record|elevenlabs|fish|local|clips|none] [--out <dir>]'
 ---
 

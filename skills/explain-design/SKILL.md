@@ -10,7 +10,6 @@ description: >-
   this design" or "break down this page". Read-only. Not for fixing a component
   (ui-review), proving a change (visual-proof) or cloning a site
   (browser-website-design-clone).
-user-invocable: true
 argument-hint: '[url | image path | figma link | component] [--page] [--focus craft | behaviour | typography,trust,...] [--out <dir>]'
 ---
 

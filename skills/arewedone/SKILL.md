@@ -8,7 +8,6 @@ description: >-
   (`spec-compliance-review`), an attacker-minded security pass
   (`adversarial-security-review`), or taking a finished review to merge
   (`review-fix-loop`).
-user-invocable: true
 argument-hint: '[scope-or-notes]'
 ---
 

@@ -6,7 +6,6 @@ description: >-
   user says "add analytics", "GA isn't tracking", "verify my site in Search
   Console" or "Vercel Analytics says awaiting data". Covers single and
   multi-domain sites. Not for SEO audits or event tracking plans.
-user-invocable: true
 argument-hint: '[app-path] [vercel|ga4|search-console|all]'
 ---
 

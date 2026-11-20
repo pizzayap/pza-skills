@@ -7,7 +7,6 @@ description: >-
   Before and After. Use when the user says "break this component", "test the
   edge cases", or "what happens with long names". Not for product states
   (state-machine) or a craft review (ui-review).
-user-invocable: true
 disable-model-invocation: true
 argument-hint: '[component name or path]'
 ---

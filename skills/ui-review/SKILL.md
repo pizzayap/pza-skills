@@ -7,7 +7,6 @@ description: >-
   when the user says "review this component", "what's off about this card", or
   "polish this UI". Not for stress tests (edge-case), new designs
   (design-variant) or motion code (review-animations).
-user-invocable: true
 disable-model-invocation: true
 argument-hint: '[component name or path] [--only typography,color,...]'
 ---

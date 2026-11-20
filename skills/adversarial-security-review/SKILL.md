@@ -6,7 +6,6 @@ description: >-
   traced findings. Use when the user says "security pass", "is this safe to
   merge", or "check this PR for vulnerabilities". Not for spec fit, visual
   checks, style, or a whole-repo audit.
-user-invocable: true
 argument-hint: '[base-ref|PR|--staged] [--paths <glob>]'
 ---
 

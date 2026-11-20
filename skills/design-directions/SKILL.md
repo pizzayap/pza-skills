@@ -8,7 +8,6 @@ description: >-
   "show me different directions for this screen", "explore this page", "give me
   options before we build". Not for variants of one component inside the running
   app (design-variant) or a critique of finished UI (ui-review).
-user-invocable: true
 argument-hint: '[screen, flow or path] [goal] [--count 3-5] [--axis structure|emphasis|density|flow|tone] [--out <dir>]'
 ---
 

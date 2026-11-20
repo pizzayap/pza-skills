@@ -7,7 +7,6 @@ description: >-
   "add this rule to AGENTS.md", or "record this gotcha for next time". Not for
   auditing or scoring AGENTS.md or skills (that's `astra-instruction-audit`),
   and not for README or other guidance files.
-user-invocable: true
 argument-hint: '[path] [--root-only|--all]'
 ---
 

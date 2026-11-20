@@ -7,7 +7,6 @@ description: >-
   "ship this", "take it from plan to commit", or "run the whole loop". For only
   a plan use `write-plan`; for only a next-session prompt use
   `next-session-prompt`.
-user-invocable: true
 argument-hint: '[goal-or-plan-path] [--stop-at plan|implement|review|commit]'
 ---
 

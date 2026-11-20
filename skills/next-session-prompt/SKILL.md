@@ -6,7 +6,6 @@ description: >-
   paste-ready prompt of 10 to 25 lines with a do-not list. Use when the user
   says "what's next", "give me a prompt for a new session", or "next task".
   It does not summarise this conversation; for that use `handoff`.
-user-invocable: true
 argument-hint: '[focus-area-or-milestone]'
 ---
 

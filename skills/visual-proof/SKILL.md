@@ -6,7 +6,6 @@ description: >-
   when the user says "prove it works", "check it on mobile", "does this match
   the design", or after any UI, layout or responsive change. Not for reviewing
   motion code or checking spec requirements.
-user-invocable: true
 argument-hint: '[screen-or-url] [--reference <path-or-url>] [--id <evidence-id>] [--score-only]'
 ---
 
