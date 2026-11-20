@@ -11,7 +11,7 @@ argument-hint: '[app-path] [vercel|ga4|search-console|all]'
 
 # Web analytics setup
 
-This skill wires up to three separate tools on a Next.js site and proves each one receives data after deploy. It does not audit SEO (that's `seo-audit`), design a custom event plan, or give legal advice on consent.
+This skill wires up to three separate tools on a Next.js site and proves each one receives data after deploy. It does not audit SEO (that's `seo-audit`, a skill outside this collection), design a custom event plan, or give legal advice on consent.
 
 | Tool | Answers | Wired by |
 | --- | --- | --- |

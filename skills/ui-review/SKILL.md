@@ -6,7 +6,8 @@ description: >-
   throwaway page, then apply approved fixes with a Before and After toggle. Use
   when the user says "review this component", "what's off about this card", or
   "polish this UI". Not for stress tests (edge-case), new designs
-  (design-variant) or motion code (review-animations).
+  (design-variant) or motion code (review-animations, a skill outside this
+  collection).
 disable-model-invocation: true
 argument-hint: '[component name or path] [--only typography,color,...]'
 ---
