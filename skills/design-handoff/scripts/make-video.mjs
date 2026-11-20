@@ -19,7 +19,7 @@ import { spawnSync } from "node:child_process"
 import { basename, dirname, extname, join, resolve } from "node:path"
 import { SKILL_DIR, failWith, inSkillDir, readArgs, readJson } from "./lib/cli.mjs"
 import { checks, isText, openManifest } from "./lib/handoff.mjs"
-import { PROVIDERS, mixTrack, readClips, splitRecording, synthLines } from "./lib/voice.mjs"
+import { PROVIDERS, WORDS_PER_SECOND, mixTrack, readClips, splitRecording, synthLines } from "./lib/voice.mjs"
 
 const fail = failWith("make-video: ")
 const cli = readArgs(fail)
@@ -190,7 +190,10 @@ for (const [from, to] of copies) copyFileSync(from, to)
 
 // ---- timing: estimate from word count, or use the narration clips
 const allLines = scenes.flatMap((s) => s.says)
-const estimate = (text) => words(text) / 2.8 + 0.3
+// Seconds added because the estimate stands in for a whole clip's length, while splitRecording
+// checks speech cut between pauses.
+const CLIP_PAD = 0.3
+const estimate = (text) => words(text) / WORDS_PER_SECOND + CLIP_PAD
 const LEAD = 0.4
 const GAP = 0.35
 const TAIL = 0.35

@@ -18,6 +18,8 @@ import { readKey } from "./env.mjs"
 
 export const PROVIDERS = ["none", "local", "elevenlabs", "fish", "record", "clips"]
 export const KOKORO = { pkg: "kokoro-js@1.2.1", model: "onnx-community/Kokoro-82M-v1.0-ONNX", voice: "af_heart", speed: 1.1 }
+// Narration pace in spoken words a second: Kokoro measured 2.4 at speed 1, and the skill uses 1.1.
+export const WORDS_PER_SECOND = 2.6
 // Checked 2026-11-07 (docs/design-handoff-research.md). ElevenLabs premade voices differ by
 // account, so without --voice-id the script asks the account for its voices and takes George
 // if it is there, else the first one. Fish Audio's "Energetic Male" is the docs' example voice.
@@ -227,7 +229,7 @@ export function splitRecording(take, lines, dir) {
     const file = join(dir, `take-${String(i + 1).padStart(2, "0")}.wav`)
     ff(["-i", take, "-ss", start.toFixed(3), "-to", end.toFixed(3), "-ac", "1", "-ar", "44100", file])
     const seconds = Math.max(0.1, end - start)
-    const expected = lines[i].split(/\s+/).length / 2.6
+    const expected = lines[i].split(/\s+/).length / WORDS_PER_SECOND
     if (seconds > expected * 2.2 + 1 || seconds < expected * 0.4)
       warnings.push(`line ${i + 1} runs ${seconds.toFixed(1)} s against about ${expected.toFixed(1)} s expected; check it was read once and in order`)
     out.push({ file, seconds })
