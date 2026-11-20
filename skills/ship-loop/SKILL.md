@@ -57,7 +57,7 @@ Fallback: write a plan with current state, exact files per step, out of scope, a
 
 ### 2. Verify the plan (gate)
 
-Fallback: check the plan's files, commands, APIs and coverage of the request against the repo and current official docs. Fix the plan in place and append `## Verification notes` (date, plan source, evidence checked, confidence, findings applied). **Gate:** report findings applied and confidence. If confidence is low, stop here.
+Fallback: check the plan's files, commands, APIs and coverage of the request against the repo and current official docs. Report the findings, the corrections you would make and your confidence. **Gate:** apply the corrections the user accepts; in a run through, apply them all. Then append `## Verification notes` (date, plan source, evidence checked, confidence, findings applied), also when nothing needed correcting. If confidence is low, stop here, even in a run through.
 
 ### 3. Implement
 
