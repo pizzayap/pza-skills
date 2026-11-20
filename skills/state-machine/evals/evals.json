@@ -1,0 +1,36 @@
+{
+  "skill_name": "state-machine",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me every state of the IntegrationCard component in src/components/IntegrationCard.tsx. I want to design each one properly.",
+      "expected_output": "The agent restates the component in one sentence, reads it and the hooks that feed it, and writes a grouped state list (for example Connection, Data, Access) with Dropped and Missing in code lines before building. It then builds one dev-only lab page at /lab/states/<component> that imports the real IntegrationCard unchanged, feeds each state from outside (props, provider or mocked request), checks every state once, and hands over the State machine output block (Page, States by group, Missing in code, Keys, Remove) and stops.",
+      "assertions": [
+        "A grouped state list is written before any lab page file is created",
+        "src/components/IntegrationCard.tsx is not modified (its diff is empty)",
+        "The lab page route is under /lab/states/ and every new file lives in one folder that production does not import",
+        "The final report includes a Page link, a States count by group and a Remove line naming what to delete"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "need to design the empty + error states for the inbox list, can u set up a switcher",
+      "expected_output": "The agent maps the InboxList's real branches from the code, builds the state switcher page with realistic mock data, holds loading or syncing states still, and lists any state the code cannot reach under Missing in code instead of faking it. It hands over the link and stops.",
+      "assertions": [
+        "Fixtures use realistic names and values; no 'Lorem ipsum' or 'Test User' strings appear",
+        "Loading or syncing states use a never-settling promise or a fixed flag, not a setTimeout",
+        "Every state on the switcher corresponds to a branch found in the component's code; requested states with no branch are listed under 'Missing in code' and left off the switcher"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build a state switcher for the settings page: the profile form, the billing panel and the notifications list.",
+      "expected_output": "The request names several components. The skill handles one component per run, so the agent lists the three components and asks which one to start with, building nothing until the user answers.",
+      "assertions": [
+        "The response names the separate components and asks which one to do first",
+        "No lab page, fixture or route file is created in this run",
+        "No component source file is edited"
+      ]
+    }
+  ]
+}

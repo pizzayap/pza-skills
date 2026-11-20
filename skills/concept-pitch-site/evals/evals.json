@@ -1,0 +1,35 @@
+{
+  "skill_name": "concept-pitch-site",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Make a concept site for Harbor Lane Bakery from the facts brief in pitches/harbor-lane/brief.md (every fact there has a source and a date). Slug: harbor-lane.",
+      "expected_output": "The agent checks the brief, then writes design/concept.md with the customers and what they need, three candidate ideas from what the bakery physically does, and a 'The page is the ___' line. It presents the three candidates, recommends one with a one-line reason, and waits for the human to pick before building. No fact outside the sourced brief is invented.",
+      "assertions": [
+        "design/concept.md lists three candidate ideas and contains a 'The page is the ___' line",
+        "The agent recommends one candidate with a one-line reason and waits for the human's pick before building any section",
+        "No hours, prices, quotes, statistics or years in business appear that are not in the sourced brief"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "make a concept site for this shop: Kettle & Thread, a tailor at 14 Mill Road. Their map listing (I checked it today: https://maps.example/kettle-thread) has the phone number, hours Tue to Sat 9 to 5, and about 120 reviews.",
+      "expected_output": "The agent writes brief.md: every fact with its source and the date checked, every contact route found, the languages customers use, what reviewers praise, one sourced problem with the current web presence, and a list of gaps. It does not contact the business. Images of the real business are left to real photos with a shot list.",
+      "assertions": [
+        "brief.md lists each fact with its source and the date it was checked, plus a list of gaps",
+        "The agent does not message the business or send anything to the owner",
+        "Any planned image generation covers only generic objects, materials or textures, never the shopfront, staff, products, signage or logo"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Make a concept site for 'Juniper's', a cafe a friend mentioned somewhere in Bristol. I don't have a link or an address.",
+      "expected_output": "The brief step has a gate: if the name, address or at least one contact route cannot be sourced, the agent stops because there is no site to build yet. It says what it could not source and builds nothing.",
+      "assertions": [
+        "The agent stops before the concept step and says which of name, address or contact route could not be sourced",
+        "No HTML, CSS or concept file for the site is created",
+        "No address, phone number or opening hours are invented"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+[
+  {
+    "query": "generate concepts for the market stall pieces, look 1",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "review these concepts for the lighthouse icon against the bible",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "write the build brief for the windmill asset, all three looks are approved now",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "generate 4 concept images for the shop-icon family from our style bible, cheap quality to start",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "make concept images for our five map marker icons using the project's style bible",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "check these castle-piece renders against our style bible and tell me which are strong",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I've got a style bible for the game's tile pieces. Can we do a round of rough concepts for the harbour tile, and then I'll say yes or no to each?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "do the new spot illustrations fit our family? silhouette, never list, buildable, all that",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "my verdict on concept 3 for the tower: yes, the winch sells it. record that",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Our icon set needs a new 'archive' glyph that matches the bible. Start with low-res exploration images, then a better one once I approve the composition.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "turn my Pinterest saves into a taste file",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "taste-file"
+  },
+  {
+    "query": "write down what I like visually so I can paste it into any AI tool",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "taste-file"
+  },
+  {
+    "query": "show me a few layout directions for the settings screen",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-directions"
+  },
+  {
+    "query": "the icon set is in the app now; check it renders right on mobile",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "give me 3 options for the Badge component in the app",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-variant"
+  },
+  {
+    "query": "export the final SVG icons at 1x, 2x and 3x for the iOS build",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "help me package a video about the icon set I've been building: titles and a thumbnail line",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "build-in-public-video"
+  },
+  {
+    "query": "turn the approved tower concept into the final 3D model",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "generate a single hero photo for this blog post about sourdough",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "upscale the approved concept PNGs to 4k for the press kit",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "skill_name": "adversarial-security-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Security pass on this branch before I merge it. It adds a file upload endpoint in src/routes/upload.ts and a helper in src/lib/storage.ts.",
+      "expected_output": "A read-only, offline review of the diff against the merge-base with the default branch. The agent lists changed files with git diff --stat / --name-status first, reads trust-boundary files (upload handling, file paths) first, traces each candidate from attacker-controlled input to a sink, and reports in the fixed format: a Status line (approve, needs-attention or blocked), a Scope line, at most 10 numbered findings each with severity, CONFIRMED or PLAUSIBLE, File, Path, Impact and Fix, then Not reviewed and Unverified lines.",
+      "assertions": [
+        "The output starts with a Status line whose value is approve, needs-attention or blocked",
+        "Every reported finding names a path:line, an input-to-sink Path and an Impact",
+        "No tests, builds, installs, scanners or network calls are run and no file is edited or committed",
+        "At most 10 findings are reported"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "check PR #77 for vulnerabilities, only care about src/auth/**",
+      "expected_output": "The agent resolves the PR's diff, reads the auth files in full where they cross a trust boundary, and returns the same Status / Scope / findings / Not reviewed / Unverified format. Secret files such as .env* and key files are never opened, any secret-like value is written as [REDACTED], and any claim that would need a command to prove is listed as Unverified with the command named.",
+      "assertions": [
+        "The Scope line states the ref range and how many files were reviewed and how many skipped or truncated",
+        "No .env*, key, certificate or credential file is opened",
+        "The output includes a Not reviewed line and an Unverified line"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I can't share the code yet, only the PR description: 'Adds GitHub OAuth login, validates the state param, stores tokens in httpOnly cookies.' Is this safe to merge?",
+      "expected_output": "Because only a summary is available and the diff is the evidence, the agent returns Status: blocked with the reason that no diff was available. It does not approve on the description and does not invent findings from it.",
+      "assertions": [
+        "The Status is blocked",
+        "The stated reason is that only a description or summary was available, not the diff",
+        "No finding is reported as CONFIRMED"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "skill_name": "design-variant",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me variants of the IssueCard in src/components/IssueCard.tsx. Goal: make severity and impact easier to scan.",
+      "expected_output": "The agent restates the brief, declares one axis and three named positions before building, and builds three variant files in one dev-only lab folder at /lab/design-variant/<component>, each taking the same props and fixture data and using the project's tokens. It checks every variant against the floor, hands over the link with one line per variant naming its bet, and stops without ranking them. The real IssueCard stays untouched.",
+      "assertions": [
+        "An axis and three named positions are written before any variant file is built",
+        "Three variant files exist in one lab folder and each takes the same props as IssueCard",
+        "src/components/IssueCard.tsx is unchanged at the end of the run",
+        "The handover gives one line per variant naming its bet and does not rank them or recommend a winner"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "give me 3 options for the pricing card header, I want the plan name and price to read first",
+      "expected_output": "The goal is stated, so the agent recommends an axis in one line (or uses the one the request implies), builds three genuinely different variants behind a 1-2-3 picker, and stops after handing over the link.",
+      "assertions": [
+        "The three variants differ along one declared axis, not only in color values",
+        "Variants use existing project tokens; any new token a variant needs is called out in its note",
+        "The agent stops after handing over the page link and waits for the user's pick"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Explore other layouts for the ProfileCard and just ship whichever one looks best.",
+      "expected_output": "The designer picks; the agent never chooses a winner. The agent builds the three variants and hands them over, but asks the user to pick by number instead of promoting one itself. Production stays untouched until the user picks.",
+      "assertions": [
+        "The agent does not pick a winner or promote any variant on its own",
+        "The real ProfileCard component file is not modified in this run",
+        "The response asks the user to choose a variant by number"
+      ]
+    }
+  ]
+}

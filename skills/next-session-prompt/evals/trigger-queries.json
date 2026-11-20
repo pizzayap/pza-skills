@@ -1,0 +1,109 @@
+[
+  {
+    "query": "what's next?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "give me a prompt for a new session",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "next task?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "This session's work is merged. Check what has actually landed and hand me a short paste-in brief for the one thing to do now.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the invoices PR is merged. what should a fresh session pick up next? stay inside the billing milestone",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "what should the next session pick up after this?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "whats next on the roadmap, one task, prompt I can paste",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "that one is shipped and pushed; pick the next task and write me the prompt for a new chat",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "I just merged the auth PR. what should the next session do? write me the prompt",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "only the prompt for the next session please, nothing else",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "summarize this conversation so another agent can continue where we left off",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "run the whole loop on this change and hand off at the end",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "take the next ready issue and implement it",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "this backlog won't fit in one context, keep a lean master that dispatches workers",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "session-orchestrator"
+  },
+  {
+    "query": "write an implementation plan for #48 so the next session doesn't have to guess",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "write-plan"
+  },
+  {
+    "query": "before I move on, is the export feature actually done?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "save what we learned this session into AGENTS.md for next time",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "agents-md-revise"
+  },
+  {
+    "query": "push my two local commits to origin",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "what's next in the React 20 release notes?",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "is my plan for next sprint's search work right? check it",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "areyousure"
+  }
+]

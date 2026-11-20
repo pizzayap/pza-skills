@@ -1,0 +1,36 @@
+{
+  "skill_name": "taste-file",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Make a taste file from these: ~/Downloads/likes/liked_posts.json and ~/Downloads/likes/saved_posts.json (Instagram export).",
+      "expected_output": "The agent reads each file and reports its item count, fields and date range, defaults to the last 12 months, and opens 30 to 60 items newest first. Exports hold links and captions, not images, so if it cannot see at least 9 images it stops and asks for screenshots. Otherwise it finds patterns with three viewed examples each, drafts plain-word lines with no values, tests what each line rules out, and puts each line to the person as a question. It reads back the whole file and saves only after an explicit yes.",
+      "assertions": [
+        "Item count, fields present and date range are reported for each file before any pattern is proposed",
+        "No pattern is based on captions or account names alone; each proposed pattern names three items the agent viewed, or the agent stops and asks for screenshots",
+        "No proposed line contains a hex code, pixel size, font name, easing curve or duration",
+        "taste.md is not written before the full file is read back and the person gives an explicit yes"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "write down the taste. here are 12 screenshots of sites I saved this year. I love headlines around 80px, if that matters",
+      "expected_output": "The agent looks at the screenshots, keeps only patterns with three examples, drafts lines that each rule something out, and asks the person about each line with a recommendation before reading back the file.",
+      "assertions": [
+        "Every kept line names what it rules out, and lines that would fit anyone (such as 'modern and clean') are cut or rewritten",
+        "Each line is put to the person as a question with a recommendation",
+        "The 80px headline size is kept out of the drafted lines and set aside for the theme file"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Here's my full Instagram data download (instagram-export.zip). Make me a taste file from it.",
+      "expected_output": "A full archive also holds messages, contacts and login history, so the skill refuses it. The agent names the files to pick out (for example liked_posts.json and saved_posts.json) and waits.",
+      "assertions": [
+        "The agent does not analyze messages, contacts or login history from the archive",
+        "The agent names the specific likes and saves files to extract and waits for them",
+        "No taste.md is written"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "skill_name": "areyousure",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check this plan before I start: docs/plans/stripe-webhooks.md. It adds a /api/webhooks/stripe route, calls stripe.webhooks.constructEvent, and adds a `pnpm test:webhooks` script.",
+      "expected_output": "The agent restates the goal, reads the plan file, compares the requested outcome with the planned work and validation, splits the plan into claims (files, commands, APIs, tests) and checks local evidence first, then public docs for the Stripe API when current behavior matters. Issues are classified CONFIRMED, FALSE_POSITIVE, UNVERIFIABLE, DUPLICATE or OUT_OF_SCOPE. The report gives Verdict (pass, fix first or blocked), Summary, Solid, Fix, Next, Evidence and Lanes. If actionable CONFIRMED corrections remain it offers Apply corrections, Clarify plan with me, Simplify to MVP or Report only, and edits nothing before a choice. It never runs the plan's commands or implements the plan.",
+      "assertions": [
+        "The report gives a Verdict of pass, fix first or blocked",
+        "No command from the plan, such as pnpm test:webhooks, is executed",
+        "No source file is created or edited, and the plan file is not edited before the user chooses an option",
+        "Each CONFIRMED finding cites a local path:line or a public source"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "is this plan right?\n1. add useDebounce to src/components/SearchBox.tsx\n2. call /api/search with the debounced value\n3. done",
+      "expected_output": "A conversation-backed plan. The agent checks the claims against the repo and flags required gaps in coverage, such as the missing verification step, separately from optional improvements. If the user later picks Apply corrections, the corrected plan is returned in chat with verification notes and is not written into the repository.",
+      "assertions": [
+        "The report gives a Verdict of pass, fix first or blocked",
+        "No plan file is written into the repository",
+        "Optional improvements are kept separate from required corrections"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Validate the plan in docs/plans/invoice-sync.md --report-only. It relies on our private package @northwind-internal/ledger-client v3 and on zod's z.object().strict().",
+      "expected_output": "Public lookups are limited to obviously public identifiers (zod may be checked against its official docs); the private package is never sent to web or MCP tools, and its claims are verified locally or marked UNVERIFIABLE. Because of --report-only, the agent delivers the report and stops: no edits and no update prompt.",
+      "assertions": [
+        "No web or MCP lookup is made for @northwind-internal/ledger-client",
+        "The post-audit choices (apply corrections, clarify, simplify to MVP, report only) are not offered",
+        "No file is edited"
+      ]
+    }
+  ]
+}

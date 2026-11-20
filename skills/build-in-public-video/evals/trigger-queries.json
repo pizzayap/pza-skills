@@ -1,0 +1,22 @@
+[
+  { "query": "this post gave me a video idea: someone says SQLite is enough for most SaaS. I actually moved my side project from Postgres to SQLite last month, notes are in ./notes", "should_trigger": true, "split": "train" },
+  { "query": "plan a video about what I built this weekend, a CLI that renames screenshots with local OCR. repo is ~/code/shotname", "should_trigger": true, "split": "train" },
+  { "query": "Can you help me turn my build log from launching the Kestrel invoice app into a YouTube walkthrough? I need titles, thumbnail text and something to talk from, not a full script.", "should_trigger": true, "split": "train" },
+  { "query": "I broke prod on my Astro blog trying edge caching and fixed it 3 hours later. want to make a short about it, what should the hook and titles be", "should_trigger": true, "split": "train" },
+  { "query": "help me package this vid: 10 days building a Figma plugin, I've got the commit history and before/after screenshots", "should_trigger": true, "split": "train" },
+  { "query": "Write me 5 title options and thumbnail text for my build log video about moving my image pipeline to Cloudflare R2. Costs went from about $40 to $6 a month, receipts are in billing/.", "should_trigger": true, "split": "train" },
+  { "query": "Turn this 40-minute screen-recorded tutorial on building a RAG chatbot into a 90-minute hands-on workshop for my team", "should_trigger": false, "split": "train", "instead": "video-to-workshop" },
+  { "query": "Make a 60-second update video for stakeholders walking through the onboarding prototype in ./prototype, with captions", "should_trigger": false, "split": "train", "instead": "design-handoff" },
+  { "query": "Update our workshop slides from the recording of Tuesday's session, transcript is in transcripts/2026-11-17.txt", "should_trigger": false, "split": "train", "instead": "transcript-to-deck-coverage" },
+  { "query": "Rewrite this LinkedIn post about my new Raycast extension so it sounds like me, using my voice-profile.md", "should_trigger": false, "split": "train", "instead": "voice-kit" },
+  { "query": "Build a one-page concept site for Hollow Pine Bakery and a walkthrough video I can show the owner", "should_trigger": false, "split": "train", "instead": "concept-pitch-site" },
+  { "query": "Cut the dead air out of my recorded screencast and burn in captions", "should_trigger": false, "split": "train" },
+  { "query": "Here's a LinkedIn post that got me thinking (pasted below). I ran the same experiment on my own newsletter signup form last quarter, numbers are in analytics-export.csv. Plan a take video on it and the post to go with it.", "should_trigger": true, "split": "validation" },
+  { "query": "beat sheet pls for a live coding stream where I finish offline mode for my habit tracker app. I have the half-done branch and an issue list", "should_trigger": true, "split": "validation" },
+  { "query": "plan a vid abt what i built w/ the new Bun test runner, i benchmarked our suite before and after", "should_trigger": true, "split": "validation" },
+  { "query": "My manager wants me to share more of our internal tooling work publicly. I rebuilt our deploy dashboard in two sprints and have before/after screenshots and incident counts. Plan the video and the companion post; I record on Friday.", "should_trigger": true, "split": "validation" },
+  { "query": "Summarise the YouTube video at this link into 5 bullet points for my notes", "should_trigger": false, "split": "validation" },
+  { "query": "Hand this prototype off to the devs: I need the developer deck and the narrated video", "should_trigger": false, "split": "validation", "instead": "design-handoff" },
+  { "query": "adapt this tutorial video for a 2-hour evening class with exercises", "should_trigger": false, "split": "validation", "instead": "video-to-workshop" },
+  { "query": "Does this thread about my Raycast launch sound like me? Don't rewrite it, just flag the lines that don't", "should_trigger": false, "split": "validation", "instead": "voice-kit" }
+]

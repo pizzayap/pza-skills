@@ -1,0 +1,108 @@
+[
+  {
+    "query": "give me 3 options for the NotificationRow",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "show me variants of this card: src/components/PlanCard.tsx",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "try three properly different layouts of the BillingSummary card behind a picker so I can flip between them",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I'm not sold on the ProductTile's layout. Build a few genuinely different takes I can switch between in the app",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the PricingCard header: make me a handful of alternative designs, same data, and I'll pick one to keep",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "build 3 alternative designs of the CommentItem component in the running app with a 1-2-3 switcher, then promote the winner",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Badge component: three different emphasis directions using our existing tokens, I'll choose by number",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "can u do a density spread on the TransactionRow? comfy vs compact vs table-ish",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "explore other layouts for the SidebarNav",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Our IssueCard makes severity hard to scan. I'd like to compare a few structural alternatives in the real app before we commit to one.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "flip between the InboxList's empty, error and syncing states so I can design each",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "state-machine"
+  },
+  {
+    "query": "see how the ProductTile copes with a 90-character product name and a missing image",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "edge-case"
+  },
+  {
+    "query": "what's off about the PricingCard? the spacing feels wrong somewhere",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ui-review"
+  },
+  {
+    "query": "explore a few different directions for the whole onboarding flow before we build anything",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-directions"
+  },
+  {
+    "query": "generate 4 concept images for the shop-icon family from our style bible",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "art-direction-loop"
+  },
+  {
+    "query": "add a variant prop to the Button so it supports primary, secondary and ghost",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "explain why the current IssueCard design works so well",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "explain-design"
+  },
+  {
+    "query": "implement the card exactly as it is in this Figma frame",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "change the card's accent colour to the new brand blue across the app",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "set up an A/B test of two hero headlines in production behind a feature flag",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "skill_name": "persona-walkthrough",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Where do people get stuck in this flow: from /home, share tonight's trip with a family member (sharing emails them an invite). The app runs at http://localhost:3000.",
+      "expected_output": "The agent restates the flow, start and finish, picks the three default personas (first-time, power, screen-reader and keyboard), creates a run folder with one folder per persona, and sends one subagent per persona (or walks them one after another). Walkers stop before actually sending the share and record 'stopped before a real action'. The agent checks each walk, merges friction points into at most 10 ranked issues (Blocks, Slows, Polish), each with element, evidence and fix, builds report.html with build-report.mjs, and returns the summary. No project file is edited.",
+      "assertions": [
+        "Three personas are walked: a first-time user, a power user and a screen-reader and keyboard user",
+        "No project files are modified; walk files are written only inside the run folder",
+        "Every reported issue names an element, evidence (screenshot, measurement or exact text) and a specific fix",
+        "The walk stops before the share is actually sent, recorded as stopped before a real action"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "walk the signup flow as a new user, start at /signup, done when you land on the dashboard",
+      "expected_output": "The agent walks the signup flow with the default personas, merges results into one report.html that opens by double click with an outcome per persona, and ranks issues.",
+      "assertions": [
+        "A report.html is produced with an outcome for each persona",
+        "Issues are ranked Blocks before Slows before Polish, and no more than 10 are listed",
+        "The report does not present persona results as research findings or percentages about real users"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Test the checkout flow with personas and fix the issues you find as you go. Start at /cart.",
+      "expected_output": "The skill is read-only and never fixes in the same run. Walkers stop before paying. The agent produces the report and offers to fix the top issues as a separate request.",
+      "assertions": [
+        "No project source files are edited during the run",
+        "Walkers stop before submitting payment and record that step as stopped before a real action",
+        "The summary offers to fix the top issues as a separate request instead of fixing them"
+      ]
+    }
+  ]
+}

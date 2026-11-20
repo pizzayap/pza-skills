@@ -1,0 +1,108 @@
+[
+  {
+    "query": "hand this off: ./prototypes/trip-alerts",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "make a handoff deck for the booking prototype",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the prototype is done. capture every screen and state and put it in a deck the engineers can build from",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Package the inbox prototype for the team: a deck for the devs with tokens, states and edge cases, plus a short narrated update for the PMs",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "can you make a 60 second update for stakeholders on the onboarding prototype, captions on",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Engineering picks up the search prototype Monday. Give them something they can start from without a meeting: what's built, what's mocked, open questions.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "walk the developers through this prototype: http://localhost:5173",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "deck only pls, for the checkout prototype in apps/checkout-proto",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "I vibe-coded the new settings flow with an agent. Turn it into a handoff for the team, and include the explain-design spec sheet for the main screen.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "make an update video for the team about the map prototype, I'll record the voiceover myself",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "explain why the prototype's dashboard looks good",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "explain-design"
+  },
+  {
+    "query": "the upload prototype has no error or loading view; design the missing states",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "state-machine"
+  },
+  {
+    "query": "stress test the PriceCell with 9-digit amounts before we hand it off",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "edge-case"
+  },
+  {
+    "query": "plan a YouTube video about the prototype I built: five titles and a thumbnail line",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "build-in-public-video"
+  },
+  {
+    "query": "turn the 'what's left' list from the prototype into an implementation plan",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "write-plan"
+  },
+  {
+    "query": "make a Product Hunt launch trailer for the new search feature, with music",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "prove the prototype's header works at 390px and 1440px",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "write release notes for v2.3 from the changelog",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "export these Figma frames to a PDF for the team",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "commit the prototype and open a PR for review",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

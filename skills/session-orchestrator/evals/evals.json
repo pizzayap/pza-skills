@@ -1,0 +1,36 @@
+{
+  "skill_name": "session-orchestrator",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Orchestrate this: the 8 issues in milestone v2.3 are all labelled ready. Use 2 lanes. You can merge PRs, and when the milestone is done, kick off the production deploy too.",
+      "expected_output": "The agent reads project guidance and the queue, creates or reconciles a durable state file from the template, checks live state before each dispatch, and sends one fresh worker per unit with a self-contained brief. It accepts a unit only on evidence (diff, receipts, screenshots, real-app check) recorded in the state file. The production deploy is an owner-only approval that merge permission does not cover, so it prepares a proposal and sends one decision request instead of deploying. Status updates use the three-line Accepted / Last decision / Next shape.",
+      "assertions": [
+        "A state file is created or reconciled before the first worker is dispatched",
+        "Each worker brief covers exactly one unit",
+        "No production deploy is triggered",
+        "Status updates use the Accepted / In flight / Blocked, Last decision and Next lines"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "this asset set is way too big for one session lol. 40 icon exports listed in assets/icons/todo.md, farm it out",
+      "expected_output": "The master session stays lean: it does not do the exports itself, records units in a state file in claim order, dispatches one worker per unit, and serializes shared resources. It runs no more than 3 lanes without asking the user first.",
+      "assertions": [
+        "The master session does not export icons itself; units go to workers",
+        "A state file listing the units is created",
+        "No more than 3 lanes run without the user being asked first"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Orchestrate this: add a loading spinner to the Save button in src/components/SaveButton.tsx.",
+      "expected_output": "The queue has one unit, so the setup gate stops: the skill is overhead for a single task. The agent says so and does not create a state file or dispatch a worker.",
+      "assertions": [
+        "The response says this is a single task and orchestration is not used",
+        "No worker is dispatched",
+        "No state file is created"
+      ]
+    }
+  ]
+}

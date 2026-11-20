@@ -1,0 +1,109 @@
+[
+  {
+    "query": "check this plan: docs/plans/stripe-webhooks.md",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "validate the plan above before I hand it to a fresh session",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "is this plan right? I want to move auth into middleware.ts and drop the old _app wrapper",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Before anyone builds this, verify the file paths, scripts and API calls in plans/search-v2.md actually exist.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "does this plan cover everything in the PRD at docs/prd/referrals.md?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "here's my migration plan for prisma 6, sanity check it against the current docs",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "plan's in the chat above. can u verify it before I start coding? esp the next.js caching bits",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "review plan docs/plans/i18n.md, report only, no edits",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "is my plan to split the skill into SKILL.md plus references sound? check the paths and links it names",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "check the plan for restructuring the nested AGENTS.md files before I touch anything",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "plan out the migration from moment to date-fns",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "write-plan"
+  },
+  {
+    "query": "I finished the billing refactor, did we catch everything?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "are you sure? that doesn't sound right",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "take this plan from plan to commit: docs/plans/csv-import.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "check the implementation against the spec in specs/search.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "score this SKILL.md for me: skills/write-plan/SKILL.md",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "astra-instruction-audit"
+  },
+  {
+    "query": "give me a prompt for a new session to start phase 2 of the plan",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "what's the difference between a plan and a spec doc?",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "the plan has 14 independent tasks, farm them out to workers",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "session-orchestrator"
+  },
+  {
+    "query": "are you sure the Stripe list endpoint paginates with starting_after?",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

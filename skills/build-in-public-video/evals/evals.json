@@ -1,0 +1,37 @@
+{
+  "skill_name": "build-in-public-video",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A post I saw claims remote caching halves CI time in a monorepo. I actually did this on our monorepo last month: my notes are in notes/ci-cache.md and the before and after build logs are in logs/ci/. Plan a workflow walkthrough video about it.",
+      "expected_output": "A research note is written first (Spark quoted, First-hand material cited to notes/ci-cache.md and the logs, Verified externally with links and dates, Can't claim). Then the shape (workflow walkthrough, 8 to 15 min), five titles strongest first with character counts, thumbnail text of 3 words or fewer, a one-sentence promise, a beat sheet with a cold open showing the receipt, chapters, the turn and a landing, a description, and the summary block with claim label counts and [NUMBER] placeholders. Nothing is uploaded, scheduled or posted.",
+      "assertions": [
+        "A research note with Spark, First-hand material, Verified externally and Can't claim sections is written before any titles or beats appear",
+        "Exactly five titles are given and each is 70 characters or fewer",
+        "The beat sheet contains a cold open, chapters, a turn where something broke, cost more or failed, and a landing",
+        "No metric appears in the titles, beats or description unless it comes from the user's notes or logs, and numbers to be read off the screen while recording appear as [NUMBER]"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "help me package this, it's my thread about shipping a Raycast timer extension in one weekend (thread.md). repo is ./raycast-timer, commits tell the story",
+      "expected_output": "A research note grounded in thread.md and the commit history, then packaging: five titles with the receipt in the title (a number, tool, version or timebox), thumbnail text of 3 words or fewer that does not restate a title, a one-sentence promise, a beat sheet rather than a script, and the summary block. No full script is written because none was requested.",
+      "assertions": [
+        "Thumbnail text is 3 words or fewer and is not a restatement of any title",
+        "No title uses a banned pattern such as \"You're doing X wrong\", \"Nobody talks about\", \"This changes everything\", an all-caps word or a colon reveal",
+        "The plan is a beat sheet with one line per beat, and no word-for-word script file is produced",
+        "No em dash appears in any title, beat or description line"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Saw a viral post saying the new Quillcode agent beats every other coding agent on a benchmark. I haven't tried it yet. Make me a 12 minute comparison video plan with titles and a full script.",
+      "expected_output": "The research note shows an empty First-hand material section, so the gate stops the work. The reply is only a line in the form `Not yours yet: <what the creator would need to build, run or measure first>`, and the idea is parked. No packaging, beats or script are produced.",
+      "assertions": [
+        "The reply states what the creator would need to build, run or measure first, in a 'Not yours yet' line",
+        "No titles, thumbnail text, promise, beat sheet or script are produced",
+        "The other agent's performance is not described from the post's claims, a video title or memory as if it were the creator's finding"
+      ]
+    }
+  ]
+}

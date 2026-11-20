@@ -1,0 +1,37 @@
+{
+  "skill_name": "agents-md-revise",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Update AGENTS.md with what we learned: the e2e suite needs PORT=4100 because 3000 is taken by the docs server, and `pnpm db:reset` has to run before `pnpm test:e2e`.",
+      "expected_output": "The agent reads the existing AGENTS.md and narrowly relevant evidence (package scripts for db:reset and test:e2e), then shows a proposal with Target, a one-line Why tied to local evidence, and an exact diff. It asks for approval of that diff and edits nothing until approved. Commands it cannot find in the repo are marked Unverified rather than invented or silently dropped. After approval it edits only AGENTS.md and reports files changed, guidance added, verification commands run and remaining unverified claims.",
+      "assertions": [
+        "A proposal naming the target AGENTS.md, a Why line and the exact added and removed lines is shown before any edit",
+        "AGENTS.md is not modified before the user approves the displayed diff",
+        "No file other than an AGENTS.md is proposed as an edit target",
+        "The agent checks the named commands against the repo's package scripts"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "record this gotcha for next time: don't run prettier on anything in generated/",
+      "expected_output": "A short proposal: target AGENTS.md at the narrowest scope where the rule applies, the Why line, and the diff, followed by a direct approval question. No edit in the same turn as the proposal unless that exact proposal was already approved.",
+      "assertions": [
+        "The approval question refers to a concrete displayed diff, not a general plan",
+        "No file is edited before the user answers",
+        "The proposed text does not duplicate a rule already present in an ancestor AGENTS.md"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Just add it to AGENTS.md, no need to show me a diff: I always use my alias `gco` for git checkout, and the monorepo lives at ~/work/acme on my laptop.",
+      "expected_output": "The skill never puts personal preferences or machine-local paths into shared guidance, and it never edits without an approved diff. The agent explains that both items are personal or machine-local, proposes no AGENTS.md change for them (reporting no changes needed if nothing durable remains), and edits nothing.",
+      "assertions": [
+        "The `gco` alias is not written into any AGENTS.md",
+        "The ~/work/acme path is not written into any AGENTS.md",
+        "The agent says why these items do not belong in shared project guidance",
+        "No AGENTS.md edit is made without a displayed diff first"
+      ]
+    }
+  ]
+}

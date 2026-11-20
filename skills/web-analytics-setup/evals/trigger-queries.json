@@ -1,0 +1,22 @@
+[
+  { "query": "add analytics to the Next site, Vercel and GA4", "should_trigger": true, "split": "train" },
+  { "query": "GA isn't tracking anything on our Next.js production site but the tag shows up locally?", "should_trigger": true, "split": "train" },
+  { "query": "verify my site in Search Console, it's a Next app on vercel.app", "should_trigger": true, "split": "train" },
+  { "query": "Our marketing site is on lumenbooks.example.com and the app on app.lumenbooks.example.com, both Next.js. Wire up Google Analytics 4 across both and tell me what consent and CSP changes we need.", "should_trigger": true, "split": "train" },
+  { "query": "I turned on Web Analytics in the Vercel dashboard a week ago for my Next app and still see nothing. What's missing?", "should_trigger": true, "split": "train" },
+  { "query": "Hook up GA4 in our Next app with the measurement id from env, via next/third-parties, production only", "should_trigger": true, "split": "train" },
+  { "query": "Do an SEO audit of our Next.js site, why aren't we ranking?", "should_trigger": false, "split": "train" },
+  { "query": "Write an event tracking plan for our checkout funnel: which events and properties to send", "should_trigger": false, "split": "train" },
+  { "query": "Give our two Next apps stable https .localhost URLs so they stop clashing on ports", "should_trigger": false, "split": "train", "instead": "portless-local-dev" },
+  { "query": "Write a plan for adding GA4 and a consent banner to the marketing site; don't touch code yet", "should_trigger": false, "split": "train", "instead": "write-plan" },
+  { "query": "I added Vercel Analytics in this branch. are we done? did we miss anything?", "should_trigger": false, "split": "train", "instead": "arewedone" },
+  { "query": "Is this PR that adds a third-party tag manager script safe to merge? security pass please", "should_trigger": false, "split": "train", "instead": "adversarial-security-review" },
+  { "query": "Vercel Analytics says awaiting data on the docs app in our monorepo", "should_trigger": true, "split": "validation" },
+  { "query": "need page views and traffic sources on my next.js portfolio, plus get it into google search console w/ a sitemap", "should_trigger": true, "split": "validation" },
+  { "query": "Google Search Console keeps saying ownership verification failed for our Next site, the HTML file is in public/", "should_trigger": true, "split": "validation" },
+  { "query": "GA4 Realtime shows zero users on our Next.js site even though I can see the tag in the page source. Debug it.", "should_trigger": true, "split": "validation" },
+  { "query": "Check this plan for wiring GA4 into our Next app against the repo and the docs", "should_trigger": false, "split": "validation", "instead": "areyousure" },
+  { "query": "Does PR #57 do what issue #51 asked for the analytics consent banner?", "should_trigger": false, "split": "validation", "instead": "spec-compliance-review" },
+  { "query": "Why did our organic traffic drop 30% after the redesign?", "should_trigger": false, "split": "validation" },
+  { "query": "Add Mixpanel event tracking to the signup button in our React Native app", "should_trigger": false, "split": "validation" }
+]

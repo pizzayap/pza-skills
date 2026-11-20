@@ -1,0 +1,36 @@
+{
+  "skill_name": "ui-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review the ArticleCard component (src/components/ArticleCard.tsx) for craft issues.",
+      "expected_output": "The agent restates the component, finds the project's tokens, type scale and spacing scale and notes them, builds a dev-only lab page at /lab/ui-review/<component>, and measures the rendered component across UI, Typography, Layout, Color, Writing and Accessibility in that order. Each surviving finding becomes a callout pinned to one element (at most 8 on screen) and a table row with element, measured problem, fix and severity. It asks which rows to fix, recommending High and Medium, and edits nothing before the user says yes. With no measurable findings it says 'No findings' and stops.",
+      "assertions": [
+        "The project's tokens, type scale and spacing scale are named before findings are listed",
+        "Every finding row names one element, a measured value or quoted text, a specific fix and a severity of High, Medium or Low",
+        "Findings follow the category order UI, Typography, Layout, Color, Writing, Accessibility",
+        "ArticleCard is not edited before the user approves specific rows"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "what's off about this card? src/components/StatTile.tsx",
+      "expected_output": "The agent renders StatTile on the lab page, measures it in the browser, pins at most 8 callouts, and presents findings with measurements and fixes, then asks which to fix.",
+      "assertions": [
+        "Measurements come from the rendered component (computed styles or bounding boxes), not only from values in source files",
+        "No more than 8 callouts are pinned on the page; any extra findings are listed in the report",
+        "No finding is a judgement without a number or quoted text (for example 'feels busy')"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review the settings page UI and fix what's off.",
+      "expected_output": "A settings page is several components and the skill reviews one per run. The agent asks which one to review, building no lab page and editing nothing until the user picks.",
+      "assertions": [
+        "The agent asks which single component on the settings page to review",
+        "No lab page is built and no component file is edited before the user picks one",
+        "No findings table covering the whole page is presented"
+      ]
+    }
+  ]
+}

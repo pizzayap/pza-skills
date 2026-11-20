@@ -1,0 +1,22 @@
+[
+  { "query": "my mac is almost out of storage, what can I delete?", "should_trigger": true, "split": "train" },
+  { "query": "System Data is 200GB on my MacBook, wtf is it", "should_trigger": true, "split": "train" },
+  { "query": "Can you do a storage review of my Mac and tell me what's safe to clear?", "should_trigger": true, "split": "train" },
+  { "query": "Xcode simulators and DerivedData are probably eating my disk. Measure what's big on this Mac before I delete anything.", "should_trigger": true, "split": "train" },
+  { "query": "I need about 50 GB free on my Mac to install the new macOS update. Find where it could come from.", "should_trigger": true, "split": "train" },
+  { "query": "clean up my mac", "should_trigger": true, "split": "train" },
+  { "query": "Free up storage on my iPhone, it says the device is full", "should_trigger": false, "split": "train" },
+  { "query": "Our Ubuntu server's disk is full because of /var/log, fix it", "should_trigger": false, "split": "train" },
+  { "query": "My Mac feels slow at startup, how do I remove login items?", "should_trigger": false, "split": "train" },
+  { "query": "Reduce the size of our Docker image for the API service", "should_trigger": false, "split": "train" },
+  { "query": "Clear the Next.js build cache in this repo, the dev server keeps serving stale pages", "should_trigger": false, "split": "train" },
+  { "query": "Our S3 bucket is costing too much, find the largest objects", "should_trigger": false, "split": "train" },
+  { "query": "disk almost full on macOS, docker and ollama models might be huge, check the sizes", "should_trigger": true, "split": "validation" },
+  { "query": "Why does the Storage panel in System Settings show 90 GB of 'Other'? Explain it and walk me through clearing it by hand", "should_trigger": true, "split": "validation" },
+  { "query": "free up space on my macbook pls, only 4gb left", "should_trigger": true, "split": "validation" },
+  { "query": "I'm a developer with lots of node_modules, Homebrew and old simulator runtimes. Scan my Mac's disk usage, rank what's worth removing and tell me what I'd lose.", "should_trigger": true, "split": "validation" },
+  { "query": "Delete the merged git branches in this repo", "should_trigger": false, "split": "validation" },
+  { "query": "Compress the product photos in public/images so the site loads faster", "should_trigger": false, "split": "validation" },
+  { "query": "My Windows laptop's C: drive is full, what's using it?", "should_trigger": false, "split": "validation" },
+  { "query": "Shrink the Postgres database in our staging environment, it's 40 GB", "should_trigger": false, "split": "validation" }
+]

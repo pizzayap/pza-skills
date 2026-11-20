@@ -1,0 +1,109 @@
+[
+  {
+    "query": "break this component: src/components/OrderRow.tsx",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "test the edge cases on the ProductTile",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "how does the ProductTile cope when a merchant pastes a 90 character title? show me",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "throw the worst realistic content at the ArticleCard: super long titles, missing images, giant view counts, a 280px slot",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "the TeamCard has to survive German names, Arabic bios and an empty avatar. put it through those one scenario at a time",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Render the InvoiceRow with a 7-digit amount, no customer name and in a 320px container, then fix whatever overflows",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "before we hand off, stress test the FileRow with enormous filenames and 0-byte files",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "wat happens to the stat tile with like 999999+ users and in dark mode at 200% zoom",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "The CommentItem looks great with our Figma copy. I want to see it with the kind of content real customers write, and a before/after once it's fixed.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "RecipientChip: what does it do with a really long email address and no display name? try the narrowest slot it sits in too",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "I need to design the loading and auth-expired views of the SyncStatus widget",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "state-machine"
+  },
+  {
+    "query": "give me some alternative designs for the ProductTile, I'm not sold on the layout",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-variant"
+  },
+  {
+    "query": "review the ArticleCard's typography, spacing and colour against our tokens",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ui-review"
+  },
+  {
+    "query": "I fixed the header overflow, prove it works on mobile",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "write unit tests for parseAmount covering negative numbers, NaN and empty strings",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "walk the import flow as a power user and tell me where it slows them down",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "persona-walkthrough"
+  },
+  {
+    "query": "make the handoff deck for engineers, including the edge cases and every state",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "design-handoff"
+  },
+  {
+    "query": "add validation so the display name can't be longer than 50 characters",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "the card title overflows, just add min-width: 0 to the text column",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "flip between the free plan, trial and limit-reached versions of the UpgradeBanner",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "state-machine"
+  }
+]

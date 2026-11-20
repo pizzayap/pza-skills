@@ -1,0 +1,36 @@
+{
+  "skill_name": "visual-proof",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just reworked the pricing page layout in app/pricing/page.tsx. Prove it works. Dev server is running at http://localhost:3000/pricing and the design reference is design/pricing.png.",
+      "expected_output": "The agent says which job the reference does, writes failure modes and 3 to 6 criteria that can fail, writes a repeatable capture script, captures every planned state settled at 1440x900 and 390x844 with confirmed widths, scores each visible part out of 10 without editing, then fixes only the lowest part per round (at most 2 rounds) and recaptures. Evidence is saved under docs/verification/<id>/ with README.md, run.mjs, dated captures and SHA256SUMS. Output is the proof table, scores before and after, a Not checked list, and a decision of Block or Ready for human review with a taste question.",
+      "assertions": [
+        "Captures exist at both 1440x900 and 390x844, and the run confirms the page's innerWidth and the image width match each target",
+        "The output has a proof table with one row per state and viewport, each naming an image file and a pass, fail or not-checked verdict",
+        "Each fix round changes only one scored part, and no more than 2 rounds run",
+        "The decision is Block if any row fails or any part scores below 8, and otherwise Ready for human review with a named taste question"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "check it on mobile real quick, the nav drawer i just added. score only, don't touch anything",
+      "expected_output": "With score-only behaviour, the agent plans checks, captures the running app at the confirmed viewports with the drawer open and closed and settled, opens the captures, lists a score out of 10 for every visible part and the three lowest with what differs, and stops without editing.",
+      "assertions": [
+        "No source file is edited",
+        "Every visible part gets a score out of 10, and the three lowest are listed with what differs",
+        "Captures include the drawer open and closed at 390x844"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Typecheck and build both pass on the settings page change, so it's done. Just confirm it on mobile for me. FYI npm run dev crashes on startup with 'Missing env DATABASE_URL' and I don't have the value.",
+      "expected_output": "The app cannot be started or reached, so the agent stops and reports BLOCKED with the reason. Build and typecheck output is not treated as visual proof.",
+      "assertions": [
+        "The agent reports BLOCKED and names the missing DATABASE_URL as the reason",
+        "The agent does not say the change works on mobile on the strength of build, typecheck or test output",
+        "No proof-table row is marked as a pass"
+      ]
+    }
+  ]
+}

@@ -142,8 +142,85 @@ if fixture_text
   end
 end
 
+# Every skill ships evals/evals.json and evals/trigger-queries.json (agentskills.io formats).
+# Shape only: nothing here runs an eval or a model.
+skill_folders = skill_files.map { |file| file.dirname.basename.to_s }
+report = ->(file, message) { errors << "#{file.relative_path_from(root)}: #{message}" }
+nonempty = ->(value) { value.is_a?(String) && !value.strip.empty? }
+load_eval_json = lambda do |file, directory|
+  text = read_package_file.call(file, directory)
+  next :unreadable unless text
+  JSON.parse(text)
+rescue JSON::ParserError
+  report.call(file, 'invalid JSON')
+  :unreadable
+end
+seen_queries = {}
+skill_files.each do |file|
+  directory = file.dirname
+  next if directory.symlink?
+  skill = directory.basename.to_s
+
+  evals_file = directory.join('evals/evals.json')
+  suite = load_eval_json.call(evals_file, directory)
+  unless suite == :unreadable
+    cases = suite['evals'] if suite.is_a?(Hash)
+    report.call(evals_file, 'skill_name must equal the folder name') unless suite.is_a?(Hash) && suite['skill_name'] == skill
+    if !cases.is_a?(Array) || cases.length < 3 || !cases.all?(Hash)
+      report.call(evals_file, 'evals must be an array of at least 3 objects')
+    else
+      ids = cases.map { |entry| entry['id'] }
+      report.call(evals_file, 'eval ids must be unique integers') unless ids.all?(Integer) && ids.uniq == ids
+      cases.each_with_index do |entry, index|
+        label = "eval #{index + 1}"
+        report.call(evals_file, "#{label} needs a non-empty prompt and expected_output") unless nonempty.(entry['prompt']) && nonempty.(entry['expected_output'])
+        if entry.key?('assertions') && !(entry['assertions'].is_a?(Array) && entry['assertions'].all?(&nonempty))
+          report.call(evals_file, "#{label} assertions must be an array of non-empty strings")
+        end
+        next unless entry.key?('files')
+        inside = lambda do |path|
+          next false unless nonempty.(path) && !path.include?("\0") && !Pathname.new(path).absolute?
+          target = directory.join(path).cleanpath
+          target.file? && within.call(target.realpath, directory)
+        end
+        report.call(evals_file, "#{label} files must be existing paths inside the skill folder") unless entry['files'].is_a?(Array) && entry['files'].all?(&inside)
+      end
+    end
+  end
+
+  queries_file = directory.join('evals/trigger-queries.json')
+  queries = load_eval_json.call(queries_file, directory)
+  next if queries == :unreadable
+  unless queries.is_a?(Array) && queries.length >= 16 && queries.all?(Hash)
+    report.call(queries_file, 'must be an array of at least 16 query objects')
+    next
+  end
+  queries.each_with_index do |entry, index|
+    label = "query #{index + 1}"
+    unless nonempty.(entry['query']) && [true, false].include?(entry['should_trigger']) && %w[train validation].include?(entry['split'])
+      report.call(queries_file, "#{label} needs a non-empty query, boolean should_trigger, and split train or validation")
+    end
+    if entry.key?('instead')
+      report.call(queries_file, "#{label} has instead but should_trigger is not false") unless entry['should_trigger'] == false
+      report.call(queries_file, "#{label} instead must name another skill folder") unless skill_folders.include?(entry['instead']) && entry['instead'] != skill
+    end
+    next unless nonempty.(entry['query'])
+    key = entry['query'].strip.downcase(:fold)
+    where = "#{queries_file.relative_path_from(root)} #{label}"
+    report.call(queries_file, "#{label} duplicates #{seen_queries[key]}") if seen_queries.key?(key)
+    seen_queries[key] ||= where
+  end
+  [true, false].each do |expected|
+    report.call(queries_file, "needs at least 8 queries with should_trigger #{expected}") if queries.count { |entry| entry['should_trigger'] == expected } < 8
+  end
+  %w[train validation].each do |split|
+    labels = queries.select { |entry| entry['split'] == split }.map { |entry| entry['should_trigger'] }
+    report.call(queries_file, "#{split} split needs both should_trigger true and false queries") unless labels.include?(true) && labels.include?(false)
+  end
+end
+
 if errors.empty?
-  puts "PASS: #{names.length} independent skills; metadata, resources, catalog, dependency scans, lab kit copies, and fixture paths checked."
+  puts "PASS: #{names.length} independent skills; metadata, resources, catalog, dependency scans, lab kit copies, fixture paths, and eval file shapes checked."
 else
   errors.each { |error| warn "FAIL: #{error}" }
   exit 1

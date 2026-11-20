@@ -1,0 +1,108 @@
+[
+  {
+    "query": "taste file from the Dribbble shots I've saved, please",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "write down the taste, here's my likes export",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "turn these saves into a style guide for me",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I've got about 200 Pinterest pins I saved this year. Pull out what I actually like visually so I can reuse it anywhere.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "put what I like and avoid visually into plain words I can paste into Claude or Midjourney",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "here's my existing taste.md plus three new reference studies, fold the new patterns in",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "I keep explaining my design taste to every AI tool from scratch. Can we capture it once from the stuff I've liked?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "my liked_posts.json from instagram is attached, find my visual patterns, no hex codes",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "these are the concepts I picked in the last three design rounds. what does that say about my eye? save it as rules",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "Can you look at my saved_posts.json and these screenshots and write the likes and avoids file? Keep it to about 10 lines.",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "check these concept renders of the castle pieces against our style bible",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "art-direction-loop"
+  },
+  {
+    "query": "does this generated archive icon fit our project's style bible?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "art-direction-loop"
+  },
+  {
+    "query": "build a profile of how I write from my last 20 blog posts",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "voice-kit"
+  },
+  {
+    "query": "extract the colour tokens and type scale from https://quietfolio.example",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "browser-website-design-clone"
+  },
+  {
+    "query": "show me a few directions for my portfolio homepage",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-directions"
+  },
+  {
+    "query": "set our brand hex colours and font sizes in tailwind.config.ts",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "why does this saved shot look so good? explain the design",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "explain-design"
+  },
+  {
+    "query": "find me Pinterest boards about brutalist web design",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "summarise my Twitter bookmarks into a reading list",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "which fonts pair well with Inter for a portfolio?",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

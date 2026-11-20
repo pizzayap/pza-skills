@@ -1,0 +1,108 @@
+[
+  {
+    "query": "what's good about this design? https://driftwood-studio.example",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "break down this page: https://lumen-notes.example",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "explain why the current IssueCard design works so well, with evidence",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "our current trip page works really well and I want to know why before we touch it. teardown please",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "what makes driftwood-studio.example's homepage so effective? walk me through it section by section",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "why does this landing page look so good? hierarchy, type, and the psychology of the CTA",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "teardown of the Crumb & Co bakery site: what makes people actually pick up the phone?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "I need to defend the prototype dashboard in design crit tomorrow. what's working and why, with measurements",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "here's a screenshot of a pinterest save I love. why does it look so good?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "explain why our checkout page design works, including what the shopper is thinking at each step",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "polish the StatTile component and fix what's wrong with it",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ui-review"
+  },
+  {
+    "query": "prove the new header works on mobile",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "clone this site's design and rebuild it in Next: https://tallyhq.example",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "browser-website-design-clone"
+  },
+  {
+    "query": "give me three alternative layouts for our trip page to choose from",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-directions"
+  },
+  {
+    "query": "where do new users get stuck in our invite flow?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "persona-walkthrough"
+  },
+  {
+    "query": "turn the prototype into a handoff deck and an update video for the team",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "design-handoff"
+  },
+  {
+    "query": "what hex is the button in this screenshot?",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "convert this Figma frame into a React component",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "write alt text for these five screenshots",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "explain the CSS grid in this layout file to me",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

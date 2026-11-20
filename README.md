@@ -152,8 +152,9 @@ ruby scripts/validate-skills.rb
 ```
 
 It checks YAML metadata, names, resource links, catalog entries, accidental
-framework/personal dependencies, and fixture paths. It reads only package files;
-it does not install anything, inspect global configuration, or run skill commands.
+framework/personal dependencies, fixture paths, and eval file shapes. It reads
+only package files; it does not install anything, inspect global configuration,
+or run skill commands.
 Markdown links in this package use inline `[label](path)` syntax so resource
 validation can follow them. Instruction boundaries still require review and,
 when behavior changes materially, a realistic trial; string matching cannot
@@ -163,6 +164,22 @@ The [Astra validation record](docs/astra-instruction-audit-validation.md) includ
 synthetic audit/update fixtures and explicitly bounded historical results. Run
 affected behavior trials for substantial workflow changes and distinguish them
 from static package checks. No external reviewer service is required.
+
+### Evals
+
+Every skill folder carries `evals/evals.json`, three output cases each with a
+prompt, an expected output, and assertions, and `evals/trigger-queries.json`,
+twenty labelled queries with a fixed train/validation split. Half of the
+queries are near-misses; `instead` names the neighbouring skill that should
+handle a near-miss when one exists. The formats follow agentskills.io's guides
+to [evaluating skills](https://agentskills.io/skill-creation/evaluating-skills)
+and [optimizing descriptions](https://agentskills.io/skill-creation/optimizing-descriptions).
+
+`ruby scripts/validate-skills.rb` checks their shape only. The evals have not
+been run yet, and many output cases need a seeded project (components, a plan,
+a transcript) before they can be graded. Trigger queries for skills marked
+`disable-model-invocation: true` document the intended boundary; they test
+routing only in harnesses that route by description.
 
 ## License
 

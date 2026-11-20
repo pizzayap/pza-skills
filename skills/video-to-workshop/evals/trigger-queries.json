@@ -1,0 +1,22 @@
+[
+  { "query": "turn this video into a workshop for our design team, transcript is in ./captions/autolayout.vtt", "should_trigger": true, "split": "train" },
+  { "query": "I recorded a 35 minute tutorial on building a Notion dashboard with an AI agent. Can you make it into a hands-on page people follow step by step in a 2 hour session?", "should_trigger": true, "split": "train" },
+  { "query": "make a class from this tutorial pls, beginners, about 60 min", "should_trigger": true, "split": "train" },
+  { "query": "We run monthly lunch-and-learns. This screen recording shows how to set up a Pipedream automation; I want people to actually build it with timed stages and checks, not just watch.", "should_trigger": true, "split": "train" },
+  { "query": "adapt this for a session with 20 students, the video and SRT are attached", "should_trigger": true, "split": "train" },
+  { "query": "Convert the attached tutorial transcript into a workshop page with 5 to 8 stages, done-when checks and real frames from the video", "should_trigger": true, "split": "train" },
+  { "query": "Add what we covered in Thursday's workshop session to the existing deck, transcript in transcripts/2026-11-13.txt", "should_trigger": false, "split": "train", "instead": "transcript-to-deck-coverage" },
+  { "query": "plan a video about the workshop timer tool I built last month, I have the usage logs", "should_trigger": false, "split": "train", "instead": "build-in-public-video" },
+  { "query": "Make a narrated walkthrough video of the checkout prototype for the team, plus a deck for the devs", "should_trigger": false, "split": "train", "instead": "design-handoff" },
+  { "query": "Summarise the recording of yesterday's planning meeting and list the decisions", "should_trigger": false, "split": "train", "instead": "meeting-memory" },
+  { "query": "Just transcribe this tutorial video into plain text", "should_trigger": false, "split": "train" },
+  { "query": "Turn this tutorial video into a blog post with code snippets", "should_trigger": false, "split": "train" },
+  { "query": "Can you take this screencast on prompting image models and build an exercise sheet folks can work through on their own laptops? Transcript in docs/raw/imagegen.txt", "should_trigger": true, "split": "validation" },
+  { "query": "turn tihs video into a workhsop", "should_trigger": true, "split": "validation" },
+  { "query": "Our bootcamp wants a 90-minute hands-on version of the ship-a-landing-page tutorial we licensed. Here's the transcript and frames. Plan the parts and stages first.", "should_trigger": true, "split": "validation" },
+  { "query": "I'm teaching a half-day session next month and want to base it on this YouTube walkthrough of building a Chrome extension. Make it into a workshop where each stage ends with something visible.", "should_trigger": true, "split": "validation" },
+  { "query": "Update the deck from this recording of the session we ran on Monday", "should_trigger": false, "split": "validation", "instead": "transcript-to-deck-coverage" },
+  { "query": "I ran a workshop on Figma variables last week; package a YouTube video about how it went, I have attendee feedback and my notes", "should_trigger": false, "split": "validation", "instead": "build-in-public-video" },
+  { "query": "Who raised the concern about the workshop budget in last month's meetings?", "should_trigger": false, "split": "validation", "instead": "meeting-memory" },
+  { "query": "Make a 10-slide deck from scratch for my conference talk on local-first apps", "should_trigger": false, "split": "validation" }
+]

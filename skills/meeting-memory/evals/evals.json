@@ -1,0 +1,35 @@
+{
+  "skill_name": "meeting-memory",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Summarise docs/meetings/raw/2026-11-17.md. The transcript is from Monday's product sync with the Fernhill Studio team.",
+      "expected_output": "The agent reads the transcript, works out who is who from speaker labels and greetings, reads the 2 to 3 newest summaries in docs/meetings/summarized/ to match headings and density, and saves docs/meetings/summarized/2026-11-17.md with an H1 'Meeting Summary: [Topic], [subtitle]', a Date and Participants line, and only the sections that have real content (Decisions nearly always). Bullets stand alone, name who decided or raised what, and use absolute dates.",
+      "assertions": [
+        "The summary is saved as docs/meetings/summarized/2026-11-17.md, the same file name as the transcript",
+        "The newest existing summaries are read before the new one is drafted",
+        "Relative dates spoken in the meeting (such as 'next Monday') appear as absolute dates in the summary",
+        "The participant list includes people identified in the transcript body, not only the name on the metadata line"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "what did we decide about the pricing page launch date?",
+      "expected_output": "The agent lists the summaries, reads their H1s, reads every match on the topic (not only recent ones), and answers from summaries first in a few sentences or bullets in date order, latest decision last, calling out any reversal and stating the current position. Every claim carries a dated citation such as (2026-05-18 summary). If nothing matches, it says 'No meeting covers this' and names the closest topic.",
+      "assertions": [
+        "Every factual claim in the answer carries a citation with a YYYY-MM-DD date and its source (summary or transcript)",
+        "When more than one meeting covers the topic, the answer runs in date order with the latest decision last and states the current position",
+        "No decision is stated that the cited meetings do not support"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Here's the raw transcript from this morning's sync with Lumen Labs. We don't keep meeting notes anywhere in this repo yet. Summarise it and file it.\n\n[00:00] Recorder: ok, recording.\n[00:04] Speaker 1: Morning Jun, morning Tess.\n[00:09] Speaker 2: Morning. So are we still pushing the beta to next Monday?\n[00:15] Speaker 1: Yes, decided. Tess owns the release notes.",
+      "expected_output": "Neither docs/meetings/raw/ nor docs/meetings/summarized/ exists and no path was given, so the agent asks where meetings should live before writing anything.",
+      "assertions": [
+        "The agent asks where meeting files should live before writing a summary file",
+        "No file or folder is created in the repo in this run"
+      ]
+    }
+  ]
+}

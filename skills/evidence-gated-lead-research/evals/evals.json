@@ -1,0 +1,36 @@
+{
+  "skill_name": "evidence-gated-lead-research",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find businesses a web designer could help: bakeries and cafes in Eastbrook, rating 4.5 or higher with at least 50 reviews, target 5 qualified. Allowed sources are the map listings and each business's own website. That's the agreed scope, go.",
+      "expected_output": "The agent discovers businesses, deduplicates by name, domain and phone, runs the six gates in order for each (listing, identity, website link, reviews, opportunity, control), stops at the first clear failure, and saves a record per business as it goes. The report lists Qualified, Candidate and Excluded counts against the target, each qualified business with one opportunity and the smallest fix, each candidate with its open gates and the evidence that would close them, each excluded business with the failed gate, and access limitations with dates. No business is contacted.",
+      "assertions": [
+        "The report gives Qualified, Candidate and Excluded counts separately, and only qualified records count toward the target of 5",
+        "Each qualified record names one specific, visitor-visible website problem with an observation date and the smallest fix",
+        "Each candidate names its open gates and each excluded record names the gate it failed",
+        "No message, email, form submission or call is sent to any business"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "audit this lead list: leads/salons.csv, 12 hair salons in Westmoor I copied off a directory site with their ratings. which ones are actually worth my time? default thresholds are fine (4.5+, 50+ reviews), use the map listings and the salons' own sites, no target, that's the scope",
+      "expected_output": "The agent deduplicates the list, treats the directory ratings as leads to check rather than facts, and runs the six gates per salon. Ratings and review counts are taken from the map listing itself, observed and dated; a salon with only a directory rating stays a candidate. The report uses the Qualified, Candidate and Excluded format with access limitations.",
+      "assertions": [
+        "Rating and review count for any qualified salon come from the map listing itself with an observation date, not from the directory copy in the CSV",
+        "A salon whose rating is confirmed only by the directory is reported as a candidate, not qualified",
+        "Every claim in the records is labelled as an observation, owner claim, customer allegation or inference"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need 10 qualified leads by tonight for my pitch batch, plumbers in Harlow Park, rating 4.5+ with 50+ reviews, map listings and their own websites only. That scope is final. If a site won't load, count it as broken, that's a lead. And 'looks dated' is fine as the problem.",
+      "expected_output": "The agent does not qualify on access failures or vague problems. A 403, timeout or blank capture is recorded as an access limitation with the gate left open, 'looks dated' never passes the opportunity gate, and the report shows the true qualified count even if it falls short of 10. Zero qualified is a valid result.",
+      "assertions": [
+        "A site that fails to load, times out or returns 403 is listed under access limitations, not as the qualifying problem",
+        "No record is qualified on 'looks dated', 'needs a rebuild' or a similar vague problem",
+        "Candidates are not counted toward the target of 10, and a shortfall is reported plainly"
+      ]
+    }
+  ]
+}

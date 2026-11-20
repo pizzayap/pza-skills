@@ -1,0 +1,109 @@
+[
+  {
+    "query": "does this match the issue? branch feat/saved-searches, issue #77",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "check it against the spec: specs/saved-searches.md",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Before I merge PR #301, does it actually do what issue #77 asked, and nothing extra?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "compare this diff to the acceptance criteria in docs/prd/referrals.md and flag anything missing or out of scope",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "about to close #120. did the change cover every acceptance criterion?",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "check whether this branch does what issue #58 asked, nothing more",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "does PR #19's guidance change do what issue #18 asked?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "spec check pls, PR #140 vs the PRD",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "check the implementation against specs/search.md, anything missing or any scope creep?",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "does this branch match the issue it's for? I think it's #233",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "security pass on PR #77 before merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "adversarial-security-review"
+  },
+  {
+    "query": "does this match the design? check it on mobile",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "visual-proof"
+  },
+  {
+    "query": "code quality review of src/billing: naming, structure, dead code",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "are we done with the settings page?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "spec this out: offline drafts for the editor",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "write-plan"
+  },
+  {
+    "query": "write a PRD for the referral program",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "work #77 to a merged PR and close it",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "the spec review found 3 missing requirements, fix them and merge",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "review-fix-loop"
+  },
+  {
+    "query": "does this plan cover everything in the PRD before we build?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "areyousure"
+  },
+  {
+    "query": "turn issue #77's acceptance criteria into test cases",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

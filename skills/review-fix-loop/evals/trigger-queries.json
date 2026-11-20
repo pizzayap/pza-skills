@@ -1,0 +1,109 @@
+[
+  {
+    "query": "fix everything from the review and merge it",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "work through these findings and merge: R1 null check in users.ts:42, R2 N+1 in listUsers",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "The maintainability audit in docs/audits/2026-11.md has 9 findings. Get them implemented one commit each, re-reviewed, and merged.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "security pass flagged 3 issues on PR #212. get them fixed, re-checked by a fresh reviewer, and land it",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "take the code review above to merged, use sonnet at high effort for the fixes",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "PR #88 got a review with 6 findings, fix them all and get it merged",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "go through the review findings one by one and merge when the re-review passes",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "fix evrything from the spec review (3 missing reqs) and merge",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "the code review is finished; fix all the findings and land the branch",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "maintainability audit is done, fix everything from it and merge, --merge auto",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "review my branch and tell me if it's done",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "arewedone"
+  },
+  {
+    "query": "here's an idea for a CSV import, take it from plan to commit",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "run the backlog: 15 unrelated issues labelled ready",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "session-orchestrator"
+  },
+  {
+    "query": "write a security review of PR #77",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "adversarial-security-review"
+  },
+  {
+    "query": "reply to each review comment on PR #51 explaining our reasoning",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "merge PR #51, it's approved and green",
+    "should_trigger": false,
+    "split": "train"
+  },
+  {
+    "query": "does PR #77 match its issue?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "work #233 to merged",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "issue-to-merged-pr"
+  },
+  {
+    "query": "review this card component and apply the fixes you suggest",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "ui-review"
+  },
+  {
+    "query": "summarize the review comments on PR #51 for me",
+    "should_trigger": false,
+    "split": "validation"
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "skill_name": "write-plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Plan this: add a 'remember me' checkbox to the login form so sessions last 30 days instead of 1. No code yet. Use your defaults for any questions.",
+      "expected_output": "The agent restates the goal in one sentence, reads AGENTS.md, the files it expects to change, nearby tests, package scripts and recent git log for the area, records its defaults as locked decisions marked (assumed), compares approaches, and writes the plan: frontmatter (name, overview, todos), title, Current state with file links, Locked decisions, Implementation steps naming exact repo-relative files, Out of scope, and Verification with separate Automated commands and a Manual checklist. 4 to 6 todos, the last one verify. No source edits. The chat reply ends with the Plan / Blocking questions / Next block.",
+      "assertions": [
+        "The plan has 4 to 6 todos and the last todo is a verify step",
+        "Current state, Implementation, Out of scope and Verification sections are present, in that order",
+        "Defaults the agent chose appear under Locked decisions marked (assumed)",
+        "No source file is edited and no install, migration or commit is run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "spec this out: swap moment for date-fns everywhere. go with your defaults",
+      "expected_output": "The same plan format. Third-party API calls come from current date-fns docs rather than memory, every step names exact files, every command exists in the repo's scripts, and Verification separates automated commands from a manual checklist.",
+      "assertions": [
+        "Every Implementation step names at least one exact repo-relative file path",
+        "Verification has separate Automated and Manual parts",
+        "The final chat output includes Plan:, Blocking questions: and Next: lines"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a plan to add Apple Pay to checkout and also rebuild the admin dashboard in the new design system.",
+      "expected_output": "The scope gate: a goal that needs two sentences is two plans. The agent says so and asks which comes first instead of writing one combined plan.",
+      "assertions": [
+        "The response identifies the request as two separate plans",
+        "The agent asks which plan comes first",
+        "No single combined plan covering both goals is written"
+      ]
+    }
+  ]
+}

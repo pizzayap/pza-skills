@@ -1,0 +1,109 @@
+[
+  {
+    "query": "work #142",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "take the next ready issue",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "issue to PR: acme-tools/portal#88",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "Pick up https://github.com/acme-tools/portal/issues/64, write the failure modes and a red test first, then fix it and get the PR merged.",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "fix #42 properly: red test first, evidence doc, PR, and close it only once it's merged",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "#310 is the stored XSS in comments. take it all the way to a merged PR",
+    "should_trigger": true,
+    "split": "train"
+  },
+  {
+    "query": "wrk #233, merge when green",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "grab the next issue that's ready and take it to merged",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "issue #77 is a spike: should we adopt Drizzle? work it",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "#19 please, through to a merged PR",
+    "should_trigger": true,
+    "split": "validation"
+  },
+  {
+    "query": "work #12, #15 and #19 and merge them all",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "session-orchestrator"
+  },
+  {
+    "query": "what's the next ready issue? just give me a prompt for a fresh session",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "next-session-prompt"
+  },
+  {
+    "query": "no ticket, just ship a --verbose flag for the CLI from plan to commit",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "ship-loop"
+  },
+  {
+    "query": "does PR #301 satisfy issue #77's acceptance criteria?",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "spec-compliance-review"
+  },
+  {
+    "query": "write a plan for issue #64, no code",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "write-plan"
+  },
+  {
+    "query": "PR #301 has 6 review findings, address all of them and merge",
+    "should_trigger": false,
+    "split": "train",
+    "instead": "review-fix-loop"
+  },
+  {
+    "query": "file an issue for the flaky login test",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "close #45, it's a dupe of #40",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "triage the open issues and add labels",
+    "should_trigger": false,
+    "split": "validation"
+  },
+  {
+    "query": "I think #52 is finished. did we miss anything before I open the PR?",
+    "should_trigger": false,
+    "split": "validation",
+    "instead": "arewedone"
+  }
+]

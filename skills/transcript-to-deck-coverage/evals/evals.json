@@ -1,0 +1,37 @@
+{
+  "skill_name": "transcript-to-deck-coverage",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Update the deck from this recording. Transcript: transcripts/2026-11-12-agents-workshop.txt. Deck source: decks/agents-workshop/slides.md, served at http://localhost:4100. Current requirements: docs/run-of-show.md.",
+      "expected_output": "The agent records the canonical deck, requirements, slide count and session totals, archives the transcript verbatim with provenance, inventories every substantive item in order, and fills a coverage ledger where each item gets one destination (slide, demo, note, resource or out of scope with a reason) or is logged unresolved, with timestamps or line ranges. Changes are marked P1 or P2, the strongest reusable pattern is named, and the agent shows the ledger and waits for agreement on P1 destinations before editing the deck.",
+      "assertions": [
+        "No deck or speaker-note file is edited before the ledger is shown and the user agrees the P1 destinations",
+        "Every ledger item has exactly one of the destinations slide, demo, note, resource or out of scope with a reason, or is logged as unresolved",
+        "The ledger summary counts note items separately from slide items",
+        "Each ledger item cites a timestamp or a line range in the archived transcript"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "the ledger in docs/ledger-2026-11-12.md is approved as is, P1s included. make the edits to the deck and tell me when it's live",
+      "expected_output": "Slides and speaker notes are edited per the approved ledger, then slide count, placement language, timing claims and each ledger destination are reconciled. Immediately before reporting, the agent runs the project's deck checks if any, `curl -sI` on the served URL, a cache-busted load, a served slide count compared with the expected count, and a deep link to one changed slide. The report block gives slides before and after, ledger counts, changes, content kept from current requirements, verification results, delivery checks and unresolved items.",
+      "assertions": [
+        "The report includes an HTTP status for the served deck and a cache-busted URL",
+        "The report gives the served slide count and compares it with the expected count after the edit",
+        "Session timing totals stay as agreed unless the user approved a change",
+        "The work is not reported as done if the served-deck checks were not run or failed"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Update the talk deck in decks/local-first/ from transcripts/2026-10-02.txt. There's a docs/brief.md and a docs/brief-v2-draft.md, not sure which one is current, just use your judgement.",
+      "expected_output": "Because two documents could both be the current requirements, the agent stops and asks which one is current before editing. The transcript is not allowed to settle the conflict.",
+      "assertions": [
+        "The agent asks which brief is current before changing the deck",
+        "No deck file is changed in this run",
+        "The deck is not reported as updated"
+      ]
+    }
+  ]
+}

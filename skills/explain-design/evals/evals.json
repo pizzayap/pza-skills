@@ -1,0 +1,36 @@
+{
+  "skill_name": "explain-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Explain this design: https://lumen-notes.example/pricing",
+      "expected_output": "The agent captures the page at a stated viewport (1440 x 900 by default), reads its system (type scale, color roles, spacing, radii), writes who is looking and why, and walks the craft and behaviour lenses. It keeps 3 to 6 strengths and 0 to 5 improvements (at most 8 points), each pinned to one element with a principle and evidence, and builds one self-contained HTML spec sheet named report-<source>-<ddmmmyyyy>.html in a new temp directory. It edits nothing in the project and returns the summary (report path, source and method, counts, verdict).",
+      "assertions": [
+        "The report has 3 to 6 strengths and 0 to 5 improvements, at most 8 points in total, or the summary says fewer than 3 strengths survived",
+        "Every point names one element, a principle, and evidence such as a measurement, count or quote",
+        "One self-contained HTML report named report-<source>-<ddmmmyyyy>.html is written outside the project",
+        "The summary states whether values were measured or estimated from pixels"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "why does this look good? (screenshot attached: hero.png)",
+      "expected_output": "Working from a screenshot alone, the agent estimates values from pixels and marks each with the approximately sign, explains craft and behaviour points with principles, phrases behaviour effects as likely, and lists only improvements worth making.",
+      "assertions": [
+        "The report states the values were estimated from pixels, and estimated values carry the approximately sign (≈)",
+        "Behaviour effects are phrased as likely, with no conversion figures the user did not supply",
+        "Every improvement has a concrete fix, with a from and to value when it is a value"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Break down our landing page at http://localhost:3000 and then fix the weak spots in src/components/Hero.tsx.",
+      "expected_output": "The skill is read-only. The agent produces the teardown report and lists the weak spots as improvements with concrete fixes inside the report, but does not edit Hero.tsx or any other project file. Applying fixes is a separate request.",
+      "assertions": [
+        "src/components/Hero.tsx and other project files are not modified",
+        "The weak spots appear in the report as improvements with concrete fixes",
+        "The report file is written outside the project's source tree unless an output directory was given"
+      ]
+    }
+  ]
+}

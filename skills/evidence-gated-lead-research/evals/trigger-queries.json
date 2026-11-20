@@ -1,0 +1,22 @@
+[
+  { "query": "find businesses a web designer could help in Riverside, restaurants with good reviews", "should_trigger": true, "split": "train" },
+  { "query": "audit this lead list before I spend time on it: leads/plumbers.json", "should_trigger": true, "split": "train" },
+  { "query": "I'm a freelance designer. Which dentists around Oakmere have strong reviews but a website with an actual, provable problem I could point to?", "should_trigger": true, "split": "train" },
+  { "query": "Qualify these 8 florists for me. I only want ones with a specific broken thing on their site that I can prove, with the listing's own website link followed.", "should_trigger": true, "split": "train" },
+  { "query": "research local gyms in Millbrook with 4.5+ stars and 50+ reviews and tell me which have a real, visible website issue", "should_trigger": true, "split": "train" },
+  { "query": "Go through my prospect spreadsheet and sort each business into qualified, candidate or excluded, with the evidence", "should_trigger": true, "split": "train" },
+  { "query": "make a concept site for Hollow Pine Bakery to show the owner", "should_trigger": false, "split": "train", "instead": "concept-pitch-site" },
+  { "query": "Write cold emails to the 5 bakeries we qualified last week", "should_trigger": false, "split": "train" },
+  { "query": "Scrape every cafe in the city from the map site into a CSV with phone numbers and emails", "should_trigger": false, "split": "train" },
+  { "query": "tear down this competitor's booking flow against ours: https://slotly.example.com", "should_trigger": false, "split": "train", "instead": "competitor-teardown-to-briefs" },
+  { "query": "Clone the design of this salon's website so I can rebuild it in Next.js", "should_trigger": false, "split": "train", "instead": "browser-website-design-clone" },
+  { "query": "Walk the booking flow on fernhillyoga.example.com as a first-time visitor and a screen-reader user and show where they get stuck", "should_trigger": false, "split": "train", "instead": "persona-walkthrough" },
+  { "query": "lead research pls: auto repair shops in Harlow Park, min 4.7 rating", "should_trigger": true, "split": "validation" },
+  { "query": "find businesses a web designer could help, thinking bakeries around Eastbrook, target 5", "should_trigger": true, "split": "validation" },
+  { "query": "Second pass on last week's qualified leads: recheck each one's listing, website link and the problem we found before I count them", "should_trigger": true, "split": "validation" },
+  { "query": "My studio wants a short, honest list of local yoga studios whose sites have a concrete problem, like a dead booking link, rather than 'looks old'. Do the research; no outreach.", "should_trigger": true, "split": "validation" },
+  { "query": "Build the one-page pitch site for the florist we qualified, from the facts brief", "should_trigger": false, "split": "validation", "instead": "concept-pitch-site" },
+  { "query": "what's good about this bakery's website design? explain it", "should_trigger": false, "split": "validation", "instead": "explain-design" },
+  { "query": "DM the owners of the qualified salons on Instagram for me", "should_trigger": false, "split": "validation" },
+  { "query": "what can we learn from Slotly's site? turn the good ideas into briefs for our booking app", "should_trigger": false, "split": "validation", "instead": "competitor-teardown-to-briefs" }
+]

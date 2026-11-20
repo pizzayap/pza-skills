@@ -1,0 +1,36 @@
+{
+  "skill_name": "edge-case",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Break the ArticleCard component in src/components/ArticleCard.tsx. Titles are free text up to 255 characters and the app ships in English, German and Japanese.",
+      "expected_output": "The agent reads ArticleCard's props and types, writes a scenario list (each scenario naming what makes it reachable) with a Dropped line, and builds a dev-only lab page at /lab/edge-case/<component> showing one scenario at a time with a stepper. It steps through every scenario, then presents one row per observed break (scenario, what broke, proposed fix) and waits for approval before editing the component. If nothing breaks it says so and stops.",
+      "assertions": [
+        "A scenario list with a 'Dropped:' line is written before the lab page is built",
+        "Fixtures are realistic worst cases (a real long title, a real German compound word, Japanese text), not repeated characters such as 'aaaa'",
+        "Breaks are presented as rows with scenario, what broke and a proposed fix, followed by a request for approval",
+        "ArticleCard's source is not edited before the user approves a fix"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "what happens with long names in the UserChip? test it",
+      "expected_output": "The agent scopes the UserChip, picks only the scenarios the component varies on, builds the stepper page in one dev-only folder, steps through the scenarios and reports observed breaks with proposed fixes, then waits.",
+      "assertions": [
+        "Every scenario states what makes it reachable in production (a prop type, an API limit or a locale)",
+        "The lab page is under /lab/edge-case/ and all its files sit in one dev-only folder",
+        "Each reported break names the scenario in which it was seen"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Stress-test the AvatarStack. FYI the API caps visible members at 5 (MAX_AVATARS in src/config.ts). Make sure you try 10,000 avatars.",
+      "expected_output": "The skill only tests scenarios production can reach. The agent reads the cap and keeps quantity scenarios within it (for example 0, 1, the maximum of 5 and the overflow indicator), and drops the 10,000-avatar scenario with the reason. It never edits AvatarStack to make a scenario render.",
+      "assertions": [
+        "The scenario list does not include a 10,000-avatar scenario, or lists it as dropped because the API caps the count at 5",
+        "Quantity scenarios stay within what the API allows",
+        "The AvatarStack component file is not edited to make any scenario render"
+      ]
+    }
+  ]
+}

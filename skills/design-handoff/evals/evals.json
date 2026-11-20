@@ -1,0 +1,35 @@
+{
+  "skill_name": "design-handoff",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Hand this off: the prototype in ./prototypes/trip-alerts. Engineers build it next sprint and the PM wants a short update.",
+      "expected_output": "The agent restates what is handed off, starts or reaches the prototype (stopping if it cannot be reached), reads DESIGN.md, the tokens and what changed, and writes a state map where every state group answers empty, loading and error. It captures every screen and state from the running app, writes handoff.json, builds deck.html with --check, writes the five-act storyboard and renders a 45 to 90 second captioned video after the voice choice. It writes only inside handoff/<yyyy-mm-dd>/ and returns the summary with absolute paths, States counts, Left and Not checked.",
+      "assertions": [
+        "Every file written is inside handoff/<yyyy-mm-dd>/ (or is handoff/voice.json); no project source file is modified",
+        "Every state group in the handoff data has rows for empty, loading and error, each marked built, mock, missing or na",
+        "States the code cannot reach are marked missing with an empty placeholder, never a drawn image",
+        "The final summary reports States counts (built, mocked, not in the prototype), Left and a Not checked line"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "make a handoff deck for the devs, no video: ./apps/booking-proto",
+      "expected_output": "Deck only. The agent captures the running prototype, writes handoff.json, builds deck.html with --check, fixes or reports failing slides, and skips the video.",
+      "assertions": [
+        "No video file or captions.srt is rendered",
+        "deck.html is built with the check option and every FAIL line is fixed or reported",
+        "Token values name the file they were read from, and unconfirmed values are marked with a warning sign"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "make an update video for the team about the new search prototype. Make it punchy like a launch: open with 'Introducing Search 2.0'.",
+      "expected_output": "The video is a team update that tells a story, not a launch ad. The agent writes the storyboard as problem, what we built, how it works, what's left and what we need, aims for 45 to 90 seconds with captions on, and does not use 'Introducing' or superlatives. It says why it is not making a launch ad.",
+      "assertions": [
+        "The storyboard has the five acts: problem, what we built, how it works, what's left, what we need",
+        "The narration lines do not open with 'Introducing' and contain no launch-style superlatives or call to action"
+      ]
+    }
+  ]
+}
