@@ -6,10 +6,9 @@
 // Chromium. Nothing is installed here; a missing piece prints the command that fixes it.
 import { existsSync } from "node:fs"
 import { createRequire } from "node:module"
-import { dirname, join, resolve } from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
-
-const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..")
+import { join } from "node:path"
+import { pathToFileURL } from "node:url"
+import { SKILL_DIR } from "./cli.mjs"
 
 export async function loadPlaywright() {
   const bases = [join(process.cwd(), "noop.js"), join(SKILL_DIR, "noop.js")]
@@ -60,5 +59,3 @@ export async function launch() {
     }
   }
 }
-
-export const skillDir = SKILL_DIR

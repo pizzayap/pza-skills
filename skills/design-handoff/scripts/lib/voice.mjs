@@ -13,6 +13,7 @@ import { spawnSync } from "node:child_process"
 import { createRequire } from "node:module"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
+import { SKILL_DIR } from "./cli.mjs"
 import { readKey } from "./env.mjs"
 
 export const PROVIDERS = ["none", "local", "elevenlabs", "fish", "record", "clips"]
@@ -36,7 +37,7 @@ const ff = (args) => {
 }
 
 /** Speaks every line and returns [{ file, seconds }] in the same order. */
-export async function synthLines(provider, lines, { dir, voiceId, model, skillDir }) {
+export async function synthLines(provider, lines, { dir, voiceId, model }) {
   mkdirSync(dir, { recursive: true })
   let voice = voiceId
   let speak
@@ -44,7 +45,7 @@ export async function synthLines(provider, lines, { dir, voiceId, model, skillDi
   let variant = ""
   if (provider === "local") {
     voice ??= KOKORO.voice
-    speak = await kokoro(skillDir, voice)
+    speak = await kokoro(voice)
     variant = String(KOKORO.speed)
   } else if (provider === "elevenlabs") {
     const key = needKey(ELEVEN.keys, "ElevenLabs")
@@ -76,13 +77,13 @@ export async function synthLines(provider, lines, { dir, voiceId, model, skillDi
   return out
 }
 
-async function kokoro(skillDir, voice) {
+async function kokoro(voice) {
   let mod
   try {
-    const path = createRequire(join(skillDir, "noop.js")).resolve("kokoro-js")
+    const path = createRequire(join(SKILL_DIR, "noop.js")).resolve("kokoro-js")
     mod = await import(pathToFileURL(path).href)
   } catch {
-    throw new Error(`The free local voice is not installed (about 400 MB, plus a 90 MB model). Install it once with:\n  node "${join(skillDir, "scripts", "setup.mjs")}" --voice local`)
+    throw new Error(`The free local voice is not installed (about 400 MB, plus a 90 MB model). Install it once with:\n  node "${join(SKILL_DIR, "scripts", "setup.mjs")}" --voice local`)
   }
   let tts
   try {

@@ -17,41 +17,25 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { basename, dirname, extname, join, resolve } from "node:path"
-import { fileURLToPath } from "node:url"
+import { SKILL_DIR, failWith, inSkillDir, readArgs } from "./lib/cli.mjs"
+import { checks, isText, openManifest } from "./lib/handoff.mjs"
 import { PROVIDERS, mixTrack, readClips, splitRecording, synthLines } from "./lib/voice.mjs"
 
-const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const args = process.argv.slice(2)
-const has = (name) => {
-  const i = args.indexOf(name)
-  if (i === -1) return false
-  args.splice(i, 1)
-  return true
-}
-const flag = (name) => {
-  const i = args.indexOf(name)
-  if (i === -1) return null
-  const v = args[i + 1]
-  args.splice(i, 2)
-  return v
-}
-const voice = flag("--voice") ?? "none"
-const voiceId = flag("--voice-id")
-const model = flag("--model")
-const audioArg = flag("--audio")
-const clipsArg = flag("--clips")
-const scriptOnly = has("--script")
-const sheetOnly = has("--sheet-only")
-const sheetScene = flag("--sheet-scene")
-const shotsArg = flag("--shots")
-const outArg = flag("--out")
-const res = parseInt(flag("--res") ?? "1080", 10)
-const fps = parseInt(flag("--fps") ?? "30", 10)
-const dataPath = args[0]
-const fail = (msg) => {
-  console.error(`make-video: ${msg}`)
-  process.exit(1)
-}
+const fail = failWith("make-video: ")
+const cli = readArgs(fail)
+const voice = cli.option("--voice") ?? "none"
+const voiceId = cli.option("--voice-id")
+const model = cli.option("--model")
+const audioArg = cli.option("--audio")
+const clipsArg = cli.option("--clips")
+const scriptOnly = cli.has("--script")
+const sheetOnly = cli.has("--sheet-only")
+const sheetScene = cli.option("--sheet-scene")
+const shotsArg = cli.option("--shots")
+const outArg = cli.option("--out")
+const res = parseInt(cli.option("--res") ?? "1080", 10)
+const fps = parseInt(cli.option("--fps") ?? "30", 10)
+const dataPath = cli.rest[0]
 if (!dataPath) fail("usage: node make-video.mjs <handoff.json> [--voice none|local|elevenlabs|fish|record|clips] [--sheet-only]")
 if (!PROVIDERS.includes(voice)) fail(`--voice must be one of ${PROVIDERS.join(", ")}`)
 if (voice === "clips" && !clipsArg && !scriptOnly) fail("--voice clips needs --clips <folder>, with one audio file per line named 01.mp3, 02.mp3 and so on. Run with --script first to get the lines in lines.json.")
@@ -62,7 +46,7 @@ const data = JSON.parse(readFileSync(resolve(dataPath), "utf8"))
 const story = data.video
 if (!story?.scenes?.length) fail('handoff.json has no "video" with scenes; see references/video.md')
 const manifestPath = resolve(shotsArg ?? join(root, "shots", "manifest.json"))
-const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : []
+const { find } = openManifest(manifestPath, root)
 const outDir = resolve(outArg ?? join(root, "video"))
 const publicDir = join(outDir, "public")
 mkdirSync(join(publicDir, "shots"), { recursive: true })
@@ -77,16 +61,11 @@ const ACTS = [
 ]
 const ACT_IDS = ACTS.map((a) => a.id)
 
-const problems = []
-const warnings = []
-const isText = (v) => typeof v === "string" && v.trim() !== ""
 const plain = (s) => String(s ?? "").replace(/\*\*/g, "")
 const words = (s) => plain(s).split(/\s+/).filter(Boolean).length
-const limit = (v, n, at) => {
-  if (v != null && plain(v).length > n) problems.push(`${at} is ${plain(v).length} characters; keep it to ${n}`)
-}
+const { problems, warnings, limit, wording } = checks(plain)
 const banned = (s, at) => {
-  if (/\bAI[- ]generated\b/i.test(s ?? "")) problems.push(`${at}: do not label anything "AI-generated"`)
+  wording(s, at)
   if (/^\s*introducing\b/i.test(plain(s))) problems.push(`${at}: this is a team update, not a launch; drop "Introducing"`)
 }
 
@@ -103,9 +82,8 @@ const image = (ref, at) => {
     return null
   }
   if (images[ref]) return images[ref]
-  const m = manifest.find((x) => x.id === ref) ?? manifest.flatMap((x) => (x.images ?? []).map((i) => ({ ...i, image: i.file }))).find((x) => x.name === ref)
-  const file = m ? resolve(dirname(manifestPath), m.image) : resolve(root, ref)
-  if (!existsSync(file)) {
+  const file = find(ref)
+  if (!file || !existsSync(file)) {
     problems.push(`${at}: no capture "${ref}" in ${basename(manifestPath)} and no file at ${file}`)
     return null
   }
@@ -283,7 +261,7 @@ if (voice === "record") {
 } else if (voice !== "none" && !sheetOnly && sheetScene == null) {
   console.log(`Voice: ${voice}${voiceId ? ` (${voiceId})` : ""}`)
   try {
-    clips = await synthLines(voice, allLines, { dir: join(outDir, "voice"), voiceId, model, skillDir: SKILL_DIR })
+    clips = await synthLines(voice, allLines, { dir: join(outDir, "voice"), voiceId, model })
   } catch (e) {
     fail(e.message)
   }
@@ -334,19 +312,14 @@ const { openBrowser, renderMedia, renderStill, selectComposition } = await impor
 const t0 = Date.now()
 const serveUrl = await bundle({ entryPoint: join(SKILL_DIR, "video", "index.jsx"), publicDir, onProgress: () => {} })
 let browser
-// Remotion keeps its headless Chrome in node_modules/.remotion beside the nearest package.json of the
-// current folder. Open it from the skill folder, so setup's copy is used and nothing lands in the project.
-const projectDir = process.cwd()
+// Open Remotion's Chrome from the skill folder, so setup's copy is used and nothing lands in the project.
 try {
-  process.chdir(SKILL_DIR)
-  browser = await openBrowser("chrome")
+  browser = await inSkillDir(() => openBrowser("chrome"))
 } catch (e) {
   const cause = `${e.message}${e.cause?.code ? ` (${e.cause.code})` : ""}`
   if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|fetch failed|download/i.test(cause))
     fail(`Remotion could not download its headless Chrome from remotion.media (first render only, about 170 MB). Allow network access for this command (in the Codex app, approve the request), or run scripts/setup.mjs, then try again.\n(${cause.split("\n")[0]})`)
   fail(`Remotion's browser could not start. In a sandbox such as the Codex app, approve the request to run it, then try again.\n(${cause.split("\n")[0]})`)
-} finally {
-  process.chdir(projectDir)
 }
 const composition = await selectComposition({ serveUrl, id: "Handoff", inputProps: props, puppeteerInstance: browser })
 

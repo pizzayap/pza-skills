@@ -13,27 +13,21 @@
 import { existsSync, readFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { createRequire } from "node:module"
-import { dirname, join, resolve } from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
+import { join, resolve } from "node:path"
+import { pathToFileURL } from "node:url"
 import { KOKORO } from "./lib/voice.mjs"
 import { chromePath } from "./lib/browser.mjs"
+import { SKILL_DIR, failWith, inSkillDir, readArgs } from "./lib/cli.mjs"
 
-const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const args = process.argv.slice(2)
-const flag = (name) => {
-  const i = args.indexOf(name)
-  return i === -1 ? null : args[i + 1]
-}
-const local = flag("--voice") === "local"
-const project = flag("--project") && resolve(flag("--project")) // resolve now: step 3 changes folder
+const fail = failWith("\nSetup stopped: ")
+const cli = readArgs(fail)
+const local = cli.option("--voice") === "local"
+const projectArg = cli.option("--project")
+const project = projectArg && resolve(projectArg)
 const npm = process.platform === "win32" ? "npm.cmd" : "npm"
 // Fail fast when the network is blocked instead of retrying for a minute or more.
 const FAST = ["--fetch-retries=0", "--fetch-timeout=30000", "--no-audit", "--no-fund"]
 const step = (n, text) => console.log(`\n[${n}] ${text}`)
-const fail = (text) => {
-  console.error(`\nSetup stopped: ${text}`)
-  process.exit(1)
-}
 const networkHint = (host) =>
   `Could not reach ${host}. The download needs network access: in the Codex app, approve the request when it asks (or rerun this command with network permission), then run setup again.`
 const writeHint = (what) =>
@@ -84,9 +78,7 @@ if (r.status !== 0) {
 step(3, "Downloading Remotion's headless Chrome (about 170 MB, first time only)")
 try {
   const { ensureBrowser } = await import(pathToFileURL(createRequire(join(SKILL_DIR, "noop.js")).resolve("@remotion/renderer")).href)
-  // Remotion stores the browser beside the nearest package.json of the current folder: use the skill's.
-  process.chdir(SKILL_DIR)
-  await ensureBrowser({ logLevel: "error" })
+  await inSkillDir(() => ensureBrowser({ logLevel: "error" }))
 } catch (e) {
   const msg = `${e.message} ${e.cause?.code ?? ""}`
   if (NET.test(msg)) fail(networkHint("remotion.media"))
