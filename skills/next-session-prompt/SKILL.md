@@ -5,7 +5,8 @@ description: >-
   PRs, roadmap), picking the single next unblocked task, and returning one
   paste-ready prompt of 10 to 25 lines with a do-not list. Use when the user
   says "what's next", "give me a prompt for a new session", or "next task".
-  It does not summarise this conversation; for that use `handoff`.
+  It does not summarise this conversation; that is a separate job, such as a
+  `handoff` skill outside this collection.
 argument-hint: '[focus-area-or-milestone]'
 ---
 
@@ -13,12 +14,12 @@ argument-hint: '[focus-area-or-milestone]'
 
 A read-only skill. It does one thing: verify the real state of the work, choose one next task, and hand the user a short prompt to paste into a fresh session.
 
-It is not `handoff`. `handoff` looks back: it compacts this conversation into a document so another agent can continue the same work. This skill looks forward: it trusts the repo over the conversation, and narrows the next session to one new task.
+It does not summarise the conversation. That is a separate job, done by a skill outside this collection such as `handoff` if you have one: it looks back and compacts this conversation into a document so another agent can continue the same work. This skill looks forward: it trusts the repo over the conversation, and narrows the next session to one new task.
 
-| | `handoff` | `next-session-prompt` |
+| | Summarising the conversation | `next-session-prompt` |
 | --- | --- | --- |
 | Source of truth | This conversation | Repo, remote, issue tracker |
-| Output | A document in the temp folder | A 10 to 25 line prompt in chat |
+| Output | A document for the next agent | A 10 to 25 line prompt in chat |
 | Scope | Continue the current work | Start the one next task |
 | Use when | Mid-task and the context is full | The task is done and the question is "what now?" |
 
