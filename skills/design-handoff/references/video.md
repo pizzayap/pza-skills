@@ -4,6 +4,13 @@
 
 The video is the team update a designer would otherwise give in a meeting. It tells a story in five acts, not a tour of screens. It is not a launch ad and it has no avatar.
 
+Contents:
+
+- [The story](#the-story)
+- [Scenes](#scenes)
+- [Voice](#voice)
+- [Check, then render](#check-then-render)
+
 ## The story
 
 | Act (`act`) | Shown as | Job | Typical scenes |

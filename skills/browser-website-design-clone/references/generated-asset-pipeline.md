@@ -4,6 +4,20 @@ Use this workflow only when a requested implementation needs replacement imagery
 
 The objective is the closest observable composition and behavior while keeping every replacement traceable and adjustable. Do not present generated work as the source site's original asset, and do not reproduce third-party logos, trademarks, or restricted copy unless the user has authorization.
 
+Contents:
+
+- [Download Source Media Before Replacing It](#download-source-media-before-replacing-it)
+- [Decide Reuse, Rebuild, Or Generate](#decide-reuse-rebuild-or-generate)
+- [No Stand-In Art Gate](#no-stand-in-art-gate)
+- [Build The Asset Ledger First](#build-the-asset-ledger-first)
+- [One-By-One Replacement Loop](#one-by-one-replacement-loop)
+- [Provider Order](#provider-order)
+- [Choose The Appropriate Production Tool](#choose-the-appropriate-production-tool)
+- [Prompt For Source Fidelity](#prompt-for-source-fidelity)
+- [PNG And Transparency Contract](#png-and-transparency-contract)
+- [Video, Animated Textures, And Image Sequences](#video-animated-textures-and-image-sequences)
+- [Acceptance Gate](#acceptance-gate)
+
 ## Download Source Media Before Replacing It
 
 When the source exposes a material image or video through a normal public page request, save the exact response into `.design-reference/<site-page>/source-assets/` before writing the replacement prompt. The downloaded file is analysis evidence, not automatically a shippable project asset.

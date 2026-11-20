@@ -4,6 +4,14 @@ The report is [report-template.html](../assets/report-template.html) with one JS
 
 When the window is too small for the sheet (under 1080 × 600), or the callouts on one side don't fit, the report stacks into a scrolling page and shows numbered marks on the design instead of leader lines.
 
+Contents:
+
+- [Shape](#shape)
+- [Fields](#fields)
+- [The capture](#the-capture)
+- [Regions](#regions)
+- [Whole page](#whole-page)
+
 ## Shape
 
 Only `title`, `summary`, `works` and `improve` are required. Leave out anything you have nothing real for. The sheet hides empty parts.

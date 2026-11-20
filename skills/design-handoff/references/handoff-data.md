@@ -2,6 +2,13 @@
 
 `handoff.json` holds everything the deck says. [build-deck.mjs](../scripts/build-deck.mjs) checks it, embeds the captures and writes `deck.html` from [deck-template.html](../assets/deck-template.html). Every string renders as text, and `` `code` `` in any prose field renders in a mono font. Leave out any section you have nothing real for; the deck skips it.
 
+Contents:
+
+- [The deck it builds](#the-deck-it-builds)
+- [Shape](#shape)
+- [Fields and limits](#fields-and-limits)
+- [Writing the copy](#writing-the-copy)
+
 ## The deck it builds
 
 1. Cover: project, what changed, designer, date, branch, prototype URL, design rules file.

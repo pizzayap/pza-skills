@@ -6,6 +6,15 @@ automatically adding their destination pages. Document-only website work uses
 discovery and contracts below; local route and interaction tests apply only to
 requested implementations.
 
+Contents:
+
+- [Discover Routes And Controls](#discover-routes-and-controls)
+- [Define Layout Families And The Required Set](#define-layout-families-and-the-required-set)
+- [Source-Site Continuations](#source-site-continuations)
+- [Record The Contract](#record-the-contract)
+- [Implement Navigation And Content](#implement-navigation-and-content)
+- [Coverage Gate](#coverage-gate)
+
 ## Discover Routes And Controls
 
 Start from the canonical website homepage plus the supplied URL. Confirm the

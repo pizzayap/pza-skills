@@ -4,6 +4,18 @@ Use this mode only when subagents are available and authorized and there is inde
 
 Parallelism is a scheduling technique, not proof of fidelity. The main agent owns scope, contracts, integration, and the final claim.
 
+Contents:
+
+- [Main-Agent Responsibilities](#main-agent-responsibilities)
+- [Persistent Coordination Files](#persistent-coordination-files)
+- [Wave 0: Frame The Work](#wave-0-frame-the-work)
+- [Agent Assignment Contract](#agent-assignment-contract)
+- [Wave 1: Parallel Source Evidence](#wave-1-parallel-source-evidence)
+- [Wave 2: Parallel Implementation](#wave-2-parallel-implementation)
+- [Wave 3: Main-Agent Integration](#wave-3-main-agent-integration)
+- [Wave 4: Independent Verification And Repair](#wave-4-independent-verification-and-repair)
+- [Fidelity Scorecard](#fidelity-scorecard)
+
 ## Main-Agent Responsibilities
 
 Only the main agent may:

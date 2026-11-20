@@ -7,6 +7,12 @@ or an official score from Eric Provencher or OpenAI.
 Evidence coverage means assessed rubric weight, not test coverage or proof that
 referenced commands have run successfully.
 
+Contents:
+
+- [Five criteria, 20 points each](#five-criteria-20-points-each)
+- [Calculate and interpret](#calculate-and-interpret)
+- [Show individual and project results](#show-individual-and-project-results)
+
 ## Five criteria, 20 points each
 
 | Criterion | Skills | AGENTS.md |

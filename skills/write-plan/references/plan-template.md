@@ -5,6 +5,11 @@ Two worked examples. Copy the one closest in size and replace the content.
 - **Example A** is a feature. Every optional section appears because each trigger applies: the user settled choices (Locked decisions), the change is user-visible (Behavior contract), part of it exists (Already shipped), and approaches were compared (Rejected alternatives).
 - **Example B** is a small fix. It has only the required sections. Most plans look more like B than A.
 
+Contents:
+
+- [Example A: feature with every optional section](#example-a-feature-with-every-optional-section)
+- [Example B: small fix, required sections only](#example-b-small-fix-required-sections-only)
+
 ## Example A: feature with every optional section
 
 A mobile app adds a client-side upload queue so the Upload button never blocks.

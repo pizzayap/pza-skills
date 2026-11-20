@@ -4,6 +4,16 @@
 Every quote, date and statistic below is made up to show what a filled profile
 looks like. Do not copy these moves into a real profile. Find the author's own.
 
+Contents:
+
+- [The register](#the-register)
+- [Signature moves](#signature-moves)
+- [Shapes Sam actually writes](#shapes-sam-actually-writes)
+- [Mechanics](#mechanics)
+- [Dead register](#dead-register)
+- [Recorded preferences](#recorded-preferences)
+- [What Sam can claim](#what-sam-can-claim)
+
 Sample: 48 posts from one platform, Mar 2025 to Jun 2026, plus 30 short posts
 from a second platform (Sep 2026). Every rate describes these samples only.
 Rebuilt: 2026-09-14.
