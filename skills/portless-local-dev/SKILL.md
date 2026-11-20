@@ -34,19 +34,9 @@ Two failure modes, and the first is worse:
 6. **Always document a bypass** that runs the plain dev server.
 7. **Local-only guards accept `localhost`, `*.localhost`, `127.0.0.1` and `::1`, nothing more,** unless a security review approves a wider list.
 
-## Facts (as of Oct 2026)
-
-Portless is pre-1.0. Check its README for flag or config changes before applying.
-
-| Next.js | Does Portless `*.localhost` need `allowedDevOrigins`? |
-| --- | --- |
-| 16 | No. The dev server already allows `localhost`, its subdomains and the hostname it started with. Add nothing. |
-| 15 | No. Cross-origin dev requests are not blocked, only warned about ("will block in a future major"). Adding `allowedDevOrigins: ['*.localhost']` silences the warning and is safe for the upgrade. |
-| Any, with Portless LAN mode, `.local` names or a tunnel | Yes. Each hostname needs an entry. This is out of scope unless the user asks. |
-
-Entries are hostnames only, with no scheme or port. `*` matches one label (`*.myapp.localhost` matches `admin.myapp.localhost`); `**` matches one or more. Source: [nextjs.org allowedDevOrigins](https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins).
-
 ## The sequence
+
+Portless changes between releases. Check its README for flag or config changes before applying these steps.
 
 ### 1. Read the project
 
@@ -88,7 +78,7 @@ Give each `dev:app` its own fixed port so bypasses (`<pm> run --filter=admin dev
 
 ### 4. Fix origins, guards and URLs
 
-1. Apply the Next.js row from the facts table. On 16, change nothing.
+1. Look up the project's Next.js major in [facts.md](references/facts.md) to see whether `allowedDevOrigins` needs an entry, and apply that row.
 2. Widen any local-only guard to the rule 7 list. Use the guard and tests in [snippets.md](references/snippets.md).
 3. Update auth allowed origins and callback URLs. Env read outside the Next process (for example a backend `SITE_URL` used for payment redirects) will not see `PORTLESS_URL`; set it by hand.
 
