@@ -1,8 +1,13 @@
 ---
 name: arewedone
 description: >-
-  Review requested changes for completeness, correctness, and missing verification
-  when the user asks whether the work is done.
+  Review requested changes for completeness and correctness, run safe proof
+  commands, and report a verdict (done, fix first or blocked) with evidenced
+  findings and fix options. Use when the user says "are we done?", "is this
+  done?", or "did we miss anything?". Not for a check against a written spec
+  (`spec-compliance-review`), an attacker-minded security pass
+  (`adversarial-security-review`), or taking a finished review to merge
+  (`review-fix-loop`).
 user-invocable: true
 argument-hint: '[scope-or-notes]'
 ---

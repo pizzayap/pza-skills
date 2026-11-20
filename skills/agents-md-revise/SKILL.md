@@ -1,8 +1,12 @@
 ---
 name: agents-md-revise
 description: >-
-  Update AGENTS.md with durable project guidance from session learnings and
-  repository evidence, after approval of the proposed diff.
+  Write durable project guidance into AGENTS.md: turn session learnings and
+  repository evidence into a focused diff, show it, and edit only after the user
+  approves it. Use when the user says "update AGENTS.md with what we learned",
+  "add this rule to AGENTS.md", or "record this gotcha for next time". Not for
+  auditing or scoring AGENTS.md or skills (that's `astra-instruction-audit`),
+  and not for README or other guidance files.
 user-invocable: true
 argument-hint: '[path] [--root-only|--all]'
 ---

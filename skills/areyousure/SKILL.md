@@ -1,8 +1,12 @@
 ---
 name: areyousure
 description: >-
-  Verify an implementation plan against repository evidence and relevant public
-  documentation when the user asks to check or validate the plan.
+  Verify one implementation plan before it is built: check its files, commands,
+  APIs and coverage of the request against the repository and public docs, then
+  report a verdict (pass, fix first or blocked) with corrections to apply on
+  request. Use when the user says "check this plan", "validate the plan", or "is
+  this plan right?". Not for writing a plan (`write-plan`), reviewing finished
+  work (`arewedone`), or a bare conversational "are you sure?".
 user-invocable: true
 argument-hint: '[plan-path|pasted-plan|--report-only]'
 ---

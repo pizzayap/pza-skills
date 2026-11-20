@@ -1,6 +1,12 @@
 ---
 name: astra-instruction-audit
-description: Audit skills and AGENTS.md for scored, article-based, combined, or read-only AGENTS.md reviews; apply authorized updates.
+description: >-
+  Audit agent instructions (SKILL.md files and AGENTS.md) against local evidence
+  with a scored, article-based rubric, report findings with file and line, and
+  apply only the fixes the user authorizes. Use when the user says "audit my
+  skills", "score this SKILL.md", or "audit AGENTS.md, read-only"
+  (`--agents-only --audit`). Not for writing session learnings into AGENTS.md or
+  other routine AGENTS.md upkeep (that's `agents-md-revise`).
 user-invocable: true
 argument-hint: '[path] [--audit|--update] [--skills-only|--agents-only]'
 license: MIT
