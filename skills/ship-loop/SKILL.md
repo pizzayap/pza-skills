@@ -77,7 +77,7 @@ Apply the chosen findings in one pass. Rerun the affected checks, re-review only
 
 Keep only what a future session would need: a command that failed or needed a retry (record the working one, and the wrong one if someone will likely try it), something you had to search for that should have been written down, a plan assumption that was wrong, a boundary that caused trouble (generated files, environments, deploy targets, ports).
 
-Fallback: propose a focused diff to the repo's AGENTS.md (if the repo has only a CLAUDE.md, that is the file), with no personal preferences, secrets, machine-local paths or one-off fixes. **Gate:** wait for approval, then write it. No lessons is a valid answer.
+Fallback: propose a focused diff to the repo's AGENTS.md (if there is none, propose creating the root AGENTS.md and show the whole file), with no personal preferences, secrets, machine-local paths or one-off fixes. **Gate:** wait for approval, then write it. No lessons is a valid answer.
 
 ### 7. Commit (gate)
 
@@ -97,7 +97,7 @@ Then check the linked issue. A `Closes #N` in a PR body does not fire when you f
 
 ### 9. Hand off
 
-Recommend a fresh session for the next change instead of compacting this one. Fallback: one fenced prompt with what is done (with SHAs, marking any not yet on the remote), files to read first, the single next task and its scope, a do-not list, how to verify, and `Ask before committing or pushing.`
+Recommend a fresh session for the next change instead of compacting this one. Fallback: list housekeeping first for anything not yet pushed or closed, then one fenced prompt with what is done (on the remote, with SHAs), files to read first, the single next task and its scope, a do-not list, how to verify, and `Ask before committing or pushing.`
 
 ## Gate report
 
