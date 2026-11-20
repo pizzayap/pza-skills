@@ -91,6 +91,24 @@ skill_files.each do |file|
   end
 end
 
+# Lab chrome is copied into each skill that uses it. Same-named copies must stay byte-identical.
+lab_copies = Hash.new { |hash, key| hash[key] = [] }
+skill_files.each do |file|
+  directory = file.dirname
+  next if directory.symlink?
+  directory.glob('assets/**/lab-*').sort.each do |asset|
+    next if asset.directory? || asset.each_filename.include?('node_modules')
+    lab_copies[asset.basename.to_s] << [asset, directory]
+  end
+end
+lab_copies.sort.each do |basename, copies|
+  next if copies.length < 2
+  variants = copies.group_by { |asset, directory| read_package_file.call(asset, directory) }
+  next if variants.length < 2 || variants.key?(nil)
+  listing = variants.values.map { |group| group.map { |asset, _| asset.relative_path_from(root) }.join(', ') }.join(' | ')
+  errors << "#{basename}: copies differ across skills (#{listing}); keep every copy byte-identical"
+end
+
 errors << 'Duplicate skill names' unless names.uniq == names
 readme = read_package_file.call(root.join('README.md'), root)
 if readme
@@ -125,7 +143,7 @@ if fixture_text
 end
 
 if errors.empty?
-  puts "PASS: #{names.length} independent skills; metadata, resources, catalog, dependency scans, and fixture paths checked."
+  puts "PASS: #{names.length} independent skills; metadata, resources, catalog, dependency scans, lab kit copies, and fixture paths checked."
 else
   errors.each { |error| warn "FAIL: #{error}" }
   exit 1
