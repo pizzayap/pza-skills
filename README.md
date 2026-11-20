@@ -66,6 +66,7 @@ The core loop: `write-plan`, `areyousure`, implement, `arewedone`, fix,
 | [areyousure](skills/areyousure/SKILL.md) | Check an implementation plan against local evidence and relevant public documentation | Repository or supplied plan; web/MCP optional |
 | [ship-loop](skills/ship-loop/SKILL.md) | Take one change from plan to commit with a gate after each step | Repository access; Git |
 | [arewedone](skills/arewedone/SKILL.md) | Check requested changes for completeness, correctness, and missing verification | Repository access; relevant project tools for proof |
+| [review-fix-loop](skills/review-fix-loop/SKILL.md) | Take a finished review to merged work: ordered fixes from a delegated implementer, one finding per commit, a fresh re-review for up to 3 rounds, then a merge gate | A finished review in the conversation, a file or a PR; Git; `gh` when merging a PR; subagents optional (runs serially without them, re-review marked not independent) |
 | [next-session-prompt](skills/next-session-prompt/SKILL.md) | Check real state, pick one next task and return a paste-ready prompt for a fresh session | Repository access; Git; `gh` optional |
 | [issue-to-merged-pr](skills/issue-to-merged-pr/SKILL.md) | Take one GitHub issue from intake to merge, with failure modes first and E2E proof | Git and `gh` |
 | [session-orchestrator](skills/session-orchestrator/SKILL.md) | Run long jobs as a lean master session plus one fresh worker session per unit | A harness that can start sessions or workers; a state file |
